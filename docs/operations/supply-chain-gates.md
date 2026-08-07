@@ -15,10 +15,10 @@ actionable vulnerabilities.
    `CRITICAL` vulnerabilities. Unfixed findings remain visible but do not make
    a release permanently impossible without an available remediation.
 
-Syft and Trivy images are pinned to immutable multi-platform digests. The
-artifact uploader is pinned to a full action commit. Version or policy changes
-must update the workflow contract tests and include review of release notes and
-the new vulnerability baseline.
+Syft and Trivy images are pinned to immutable multi-platform digests. The Node
+24-based artifact uploader v7.0.1 is pinned to a full action commit. Version or
+policy changes must update the workflow contract tests and include review of
+release notes and the new vulnerability baseline.
 
 ## Handling findings
 
