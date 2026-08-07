@@ -15,6 +15,7 @@ The repository currently provides the production foundation for the new API:
 - structured, redacted request logging;
 - correlation identifiers and a stable error envelope;
 - liveness and MySQL-backed readiness endpoints;
+- read-only legacy-compatible platform type and status catalog endpoints;
 - bounded HTTP and database timeouts;
 - graceful shutdown;
 - unit, race, and container build gates;
@@ -29,8 +30,11 @@ after its compatibility and tenant-isolation gates pass.
 | --- | --- | --- |
 | `GET` | `/health/live` | Process liveness and build identity. |
 | `GET` | `/health/ready` | Readiness including a bounded MySQL ping. |
+| `GET` | `/admin/platforms/types` | Legacy-compatible read-only platform type catalog. |
+| `GET` | `/admin/platforms/status` | Legacy-compatible read-only platform status catalog. |
 
-Health responses never include database connection strings or credentials.
+Health and catalog error responses never include database connection strings or
+credentials.
 
 ## Configuration
 

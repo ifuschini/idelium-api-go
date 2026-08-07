@@ -46,8 +46,13 @@ func run(logger *slog.Logger) error {
 	}
 
 	server := &http.Server{
-		Addr:              runtimeConfig.HTTP.Address,
-		Handler:           app.NewRouter(logger, databaseChecker{database: database}, buildinfo.Current()),
+		Addr: runtimeConfig.HTTP.Address,
+		Handler: app.NewRouter(
+			logger,
+			databaseChecker{database: database},
+			buildinfo.Current(),
+			mysqlpersistence.NewPlatformCatalogRepository(database),
+		),
 		ReadHeaderTimeout: runtimeConfig.HTTP.ReadHeaderTimeout,
 		ReadTimeout:       runtimeConfig.HTTP.ReadTimeout,
 		WriteTimeout:      runtimeConfig.HTTP.WriteTimeout,

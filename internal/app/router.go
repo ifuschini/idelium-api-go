@@ -10,10 +10,16 @@ import (
 	"github.com/idelium/idelium-api-go/internal/buildinfo"
 	"github.com/idelium/idelium-api-go/internal/health"
 	"github.com/idelium/idelium-api-go/internal/httpx"
+	"github.com/idelium/idelium-api-go/internal/platforms"
 )
 
 // NewRouter builds the API router and common middleware chain.
-func NewRouter(logger *slog.Logger, checker health.Checker, info buildinfo.Info) http.Handler {
+func NewRouter(
+	logger *slog.Logger,
+	checker health.Checker,
+	info buildinfo.Info,
+	catalogRepository platforms.CatalogRepository,
+) http.Handler {
 	router := chi.NewRouter()
 	router.Use(chimiddleware.RequestID)
 	router.Use(httpx.SecureHeaders)
@@ -23,6 +29,10 @@ func NewRouter(logger *slog.Logger, checker health.Checker, info buildinfo.Info)
 	healthHandler := health.NewHandler(checker, info)
 	router.Get("/health/live", healthHandler.Live)
 	router.Get("/health/ready", healthHandler.Ready)
+
+	platformHandler := platforms.NewHandler(catalogRepository, logger)
+	router.Get("/admin/platforms/types", platformHandler.Types)
+	router.Get("/admin/platforms/status", platformHandler.Statuses)
 
 	router.NotFound(func(writer http.ResponseWriter, request *http.Request) {
 		httpx.WriteError(writer, request, http.StatusNotFound, "ROUTE_NOT_FOUND", "The requested route does not exist.")

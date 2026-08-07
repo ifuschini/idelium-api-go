@@ -10,15 +10,26 @@ import (
 	"testing"
 
 	"github.com/idelium/idelium-api-go/internal/buildinfo"
+	"github.com/idelium/idelium-api-go/internal/platforms"
 )
 
 type readyChecker struct{}
 
 func (readyChecker) Check(context.Context) error { return nil }
 
+type fakeCatalogRepository struct{}
+
+func (fakeCatalogRepository) ListTypes(context.Context) ([]platforms.CatalogItem, error) {
+	return []platforms.CatalogItem{{ID: 1, Name: "desktop"}}, nil
+}
+
+func (fakeCatalogRepository) ListStatuses(context.Context) ([]platforms.CatalogItem, error) {
+	return []platforms.CatalogItem{{ID: 1, Name: "free"}}, nil
+}
+
 func TestRouterReturnsStableNotFoundResponse(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
-	router := NewRouter(logger, readyChecker{}, buildinfo.Current())
+	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/missing", nil))
@@ -36,7 +47,7 @@ func TestRouterReturnsStableNotFoundResponse(t *testing.T) {
 
 func TestRouterRejectsUnsupportedMethod(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
-	router := NewRouter(logger, readyChecker{}, buildinfo.Current())
+	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/health/live", nil))
@@ -46,5 +57,20 @@ func TestRouterRejectsUnsupportedMethod(t *testing.T) {
 	}
 	if !strings.Contains(response.Body.String(), "METHOD_NOT_ALLOWED") {
 		t.Fatalf("stable error code missing: %s", response.Body.String())
+	}
+}
+
+func TestRouterReturnsPlatformTypes(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/types", nil))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	if !strings.Contains(response.Body.String(), `"name":"desktop"`) {
+		t.Fatalf("platform type response missing: %s", response.Body.String())
 	}
 }
