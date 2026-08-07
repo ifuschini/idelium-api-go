@@ -56,6 +56,9 @@ after its compatibility and tenant-isolation gates pass.
 
 The bounded startup, serving, signal, and shutdown behavior is documented in
 [docs/operations/runtime-lifecycle.md](docs/operations/runtime-lifecycle.md).
+Fail-closed [worker and migration process skeletons](docs/operations/process-skeletons.md)
+are compiled for future owning domains but are not shipped in the API image or
+allowed to run before a handler and ownership boundary are registered.
 
 ## Endpoints
 
