@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "policy_id": "idelium-api-route-switch-v1",
+  "ownership": {
+    "matrix": "docs/contracts/migration-ownership-matrix.json",
+    "dual_writes_allowed": false,
+    "fallback_owner": "laravel"
+  },
+  "approver_roles": [
+    "api-maintainer",
+    "database-owner",
+    "operations-on-call",
+    "security-reviewer"
+  ],
+  "evidence": [
+    "openapi-contract",
+    "sanitized-laravel-fixture",
+    "laravel-go-differential-test",
+    "authorization-and-cross-tenant-tests",
+    "consumer-smoke-tests",
+    "redacted-observability-dashboard",
+    "load-and-timeout-baseline",
+    "rollback-rehearsal"
+  ],
+  "approval_profiles": {
+    "read-route": {
+      "minimum_approvals": 2,
+      "required_roles": [
+        "api-maintainer",
+        "operations-on-call"
+      ]
+    },
+    "mutation-aggregate": {
+      "minimum_approvals": 4,
+      "required_roles": [
+        "api-maintainer",
+        "database-owner",
+        "operations-on-call",
+        "security-reviewer"
+      ]
+    }
+  },
+  "stages": [
+    {
+      "id": "release-candidate",
+      "traffic_percent": 0,
+      "required_evidence": [
+        "openapi-contract",
+        "sanitized-laravel-fixture",
+        "laravel-go-differential-test",
+        "authorization-and-cross-tenant-tests",
+        "consumer-smoke-tests",
+        "load-and-timeout-baseline"
+      ],
+      "minimum_observation_minutes": 0
+    },
+    {
+      "id": "dark-deployment",
+      "traffic_percent": 0,
+      "required_evidence": [
+        "redacted-observability-dashboard",
+        "rollback-rehearsal"
+      ],
+      "minimum_observation_minutes": 30
+    },
+    {
+      "id": "canary",
+      "traffic_percent": 5,
+      "required_evidence": [],
+      "minimum_observation_minutes": 30
+    },
+    {
+      "id": "partial",
+      "traffic_percent": 25,
+      "required_evidence": [],
+      "minimum_observation_minutes": 60
+    },
+    {
+      "id": "majority",
+      "traffic_percent": 50,
+      "required_evidence": [],
+      "minimum_observation_minutes": 120
+    },
+    {
+      "id": "complete",
+      "traffic_percent": 100,
+      "required_evidence": [],
+      "minimum_observation_minutes": 1440
+    }
+  ],
+  "stop_thresholds": {
+    "cross_tenant_access_events": 0,
+    "credential_exposure_events": 0,
+    "lost_or_duplicate_writes": 0,
+    "side_effect_mismatches": 0,
+    "http_5xx_absolute_percent": 1.0,
+    "http_5xx_increase_percentage_points": 0.5,
+    "authorization_denial_increase_percentage_points": 0.1,
+    "p95_latency_regression_percent": 20.0,
+    "consumer_smoke_failures": 0
+  },
+  "rollback": {
+    "automatic_on_stop_threshold": true,
+    "gateway_owner_after_rollback": "laravel",
+    "database_restore_required": false,
+    "reverse_application_replay_allowed": false,
+    "emergency_authorizers": [
+      "api-maintainer",
+      "operations-on-call"
+    ],
+    "required_actions": [
+      "freeze-forward-rollout",
+      "switch-gateway-owner-to-laravel",
+      "verify-laravel-readiness",
+      "verify-consumer-smoke-tests",
+      "preserve-redacted-diagnostics",
+      "open-incident-review"
+    ]
+  }
+}

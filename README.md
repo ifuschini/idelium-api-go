@@ -47,6 +47,9 @@ The generated
 [migration ownership matrix](docs/contracts/migration-ownership-matrix.md)
 assigns every production-visible route to a transaction-owning aggregate,
 records its effective owner, and enforces the no-dual-write migration rule.
+The [route-switch gate policy](docs/operations/route-switch-gates.md) defines
+required compatibility evidence, independent approvals, progressive rollout
+stages, stop thresholds, and the Laravel rollback procedure.
 
 No Laravel business route is owned by Go yet. Route ownership will move only
 after its compatibility and tenant-isolation gates pass.
