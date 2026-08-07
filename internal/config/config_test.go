@@ -3,8 +3,46 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
+
+func TestLoadPrefersSecretFileOverEnvironmentFallback(t *testing.T) {
+	clearConfigurationEnvironment(t)
+
+	secretPath := filepath.Join(t.TempDir(), "db-password")
+	if err := os.WriteFile(secretPath, []byte("file-password\n"), 0o600); err != nil {
+		t.Fatalf("write test secret: %v", err)
+	}
+	t.Setenv("IDELIUM_DB_PASSWORD_FILE", secretPath)
+	t.Setenv("IDELIUM_DB_PASSWORD", "environment-password")
+
+	loaded, err := Load()
+	if err != nil {
+		t.Fatalf("Load() returned an error: %v", err)
+	}
+	if loaded.Database.Password != "file-password" {
+		t.Fatal("Load() did not give the secret file precedence")
+	}
+}
+
+func TestLoadRedactsUnreadableSecretPath(t *testing.T) {
+	clearConfigurationEnvironment(t)
+
+	sensitivePath := filepath.Join(t.TempDir(), "customer-secret-password")
+	t.Setenv("IDELIUM_DB_PASSWORD_FILE", sensitivePath)
+	t.Setenv("IDELIUM_DB_PASSWORD", "fallback-must-not-be-printed")
+
+	_, err := Load()
+	if err == nil {
+		t.Fatal("Load() accepted an unreadable secret file")
+	}
+	diagnostic := err.Error()
+	if strings.Contains(diagnostic, sensitivePath) ||
+		strings.Contains(diagnostic, "fallback-must-not-be-printed") {
+		t.Fatalf("configuration diagnostic exposed sensitive input: %s", diagnostic)
+	}
+}
 
 func TestLoadReadsDatabasePasswordFromSecretFile(t *testing.T) {
 	clearConfigurationEnvironment(t)

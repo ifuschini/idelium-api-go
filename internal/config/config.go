@@ -127,7 +127,10 @@ func readSecret(filePath string, fallback string) (string, error) {
 
 	contents, err := os.ReadFile(filePath)
 	if err != nil {
-		return "", fmt.Errorf("secret file is not readable: %w", err)
+		return "", &safeConfigurationError{
+			message: "secret file is not readable",
+			cause:   err,
+		}
 	}
 
 	value := strings.TrimRight(string(contents), "\r\n")
@@ -136,6 +139,19 @@ func readSecret(filePath string, fallback string) (string, error) {
 	}
 
 	return value, nil
+}
+
+type safeConfigurationError struct {
+	message string
+	cause   error
+}
+
+func (err *safeConfigurationError) Error() string {
+	return err.message
+}
+
+func (err *safeConfigurationError) Unwrap() error {
+	return err.cause
 }
 
 func firstNonEmpty(names ...string) string {

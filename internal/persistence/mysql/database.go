@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net"
 
@@ -28,7 +29,7 @@ func Open(databaseConfig config.DatabaseConfig) (*sql.DB, error) {
 
 	connector, err := mysql.NewConnector(driverConfig)
 	if err != nil {
-		return nil, fmt.Errorf("create MySQL connector: %w", err)
+		return nil, safeDatabaseFailure("create MySQL connector", err)
 	}
 
 	database := sql.OpenDB(connector)
@@ -42,8 +43,26 @@ func Open(databaseConfig config.DatabaseConfig) (*sql.DB, error) {
 // Check verifies database availability within the caller's deadline.
 func Check(ctx context.Context, database *sql.DB) error {
 	if err := database.PingContext(ctx); err != nil {
-		return fmt.Errorf("MySQL readiness check failed: %w", err)
+		return safeDatabaseFailure("MySQL readiness check", err)
 	}
 
 	return nil
+}
+
+func safeDatabaseFailure(operation string, err error) error {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return fmt.Errorf("%s: deadline exceeded", operation)
+	}
+	if errors.Is(err, context.Canceled) {
+		return fmt.Errorf("%s: cancelled", operation)
+	}
+	var serverError *mysql.MySQLError
+	if errors.As(err, &serverError) {
+		return fmt.Errorf("%s: MySQL server error %d", operation, serverError.Number)
+	}
+	var networkError net.Error
+	if errors.As(err, &networkError) {
+		return fmt.Errorf("%s: network failure", operation)
+	}
+	return fmt.Errorf("%s: database unavailable", operation)
 }
