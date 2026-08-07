@@ -17,7 +17,7 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 | Wave | GitHub epic | Status | Evidence |
 | --- | --- | --- | --- |
 | Wave 0 | [#1](https://github.com/ifuschini/idelium-api-go/issues/1) | Complete | Tracks [#12](https://github.com/ifuschini/idelium-api-go/issues/12), [#13](https://github.com/ifuschini/idelium-api-go/issues/13), [#14](https://github.com/ifuschini/idelium-api-go/issues/14), and [#15](https://github.com/ifuschini/idelium-api-go/issues/15) completed |
-| Wave 1 | [#2](https://github.com/ifuschini/idelium-api-go/issues/2) | In progress | `e4e5def feat: bootstrap Go API foundation` |
+| Wave 1 | [#2](https://github.com/ifuschini/idelium-api-go/issues/2) | Complete | Tracks [#16](https://github.com/ifuschini/idelium-api-go/issues/16), [#17](https://github.com/ifuschini/idelium-api-go/issues/17), [#18](https://github.com/ifuschini/idelium-api-go/issues/18), [#19](https://github.com/ifuschini/idelium-api-go/issues/19), and [#20](https://github.com/ifuschini/idelium-api-go/issues/20) completed |
 | Wave 2 | [#3](https://github.com/ifuschini/idelium-api-go/issues/3) | Planned | Backlog materialized |
 | Wave 3 | [#4](https://github.com/ifuschini/idelium-api-go/issues/4) | In progress | `d4b7f22 feat: add read-only platform catalogs` |
 | Wave 4 | [#5](https://github.com/ifuschini/idelium-api-go/issues/5) | Planned | Backlog materialized |
