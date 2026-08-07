@@ -8,6 +8,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -18,6 +19,15 @@ import (
 )
 
 func openIntegrationDatabase(t *testing.T) *sql.DB {
+	t.Helper()
+	database, err := Open(integrationDatabaseConfig(t))
+	if err != nil {
+		t.Fatalf("Open() returned an error: %v", err)
+	}
+	return database
+}
+
+func integrationDatabaseConfig(t *testing.T) config.DatabaseConfig {
 	t.Helper()
 	host := os.Getenv("IDELIUM_TEST_MYSQL_HOST")
 	if host == "" {
@@ -31,7 +41,7 @@ func openIntegrationDatabase(t *testing.T) *sql.DB {
 		}
 		port = parsed
 	}
-	database, err := Open(config.DatabaseConfig{
+	return config.DatabaseConfig{
 		Host:                  host,
 		Port:                  port,
 		Name:                  os.Getenv("IDELIUM_TEST_MYSQL_DATABASE"),
@@ -44,11 +54,7 @@ func openIntegrationDatabase(t *testing.T) *sql.DB {
 		MaxOpenConnections:    4,
 		MaxIdleConnections:    2,
 		ConnectionMaxLifetime: time.Minute,
-	})
-	if err != nil {
-		t.Fatalf("Open() returned an error: %v", err)
 	}
-	return database
 }
 
 func TestReadinessHTTPContractIntegration(t *testing.T) {
@@ -76,37 +82,7 @@ func (checker integrationChecker) Check(ctx context.Context) error {
 }
 
 func TestDatabaseConnectionIntegration(t *testing.T) {
-	host := os.Getenv("IDELIUM_TEST_MYSQL_HOST")
-	if host == "" {
-		t.Skip("IDELIUM_TEST_MYSQL_HOST is not configured")
-	}
-
-	port := 3306
-	if value := os.Getenv("IDELIUM_TEST_MYSQL_PORT"); value != "" {
-		parsed, err := strconv.Atoi(value)
-		if err != nil {
-			t.Fatalf("parse test database port: %v", err)
-		}
-		port = parsed
-	}
-
-	database, err := Open(config.DatabaseConfig{
-		Host:                  host,
-		Port:                  port,
-		Name:                  os.Getenv("IDELIUM_TEST_MYSQL_DATABASE"),
-		User:                  os.Getenv("IDELIUM_TEST_MYSQL_USER"),
-		Password:              os.Getenv("IDELIUM_TEST_MYSQL_PASSWORD"),
-		TLSMode:               "false",
-		ConnectTimeout:        5 * time.Second,
-		ReadTimeout:           5 * time.Second,
-		WriteTimeout:          5 * time.Second,
-		MaxOpenConnections:    4,
-		MaxIdleConnections:    2,
-		ConnectionMaxLifetime: time.Minute,
-	})
-	if err != nil {
-		t.Fatalf("Open() returned an error: %v", err)
-	}
+	database := openIntegrationDatabase(t)
 	defer database.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -114,40 +90,39 @@ func TestDatabaseConnectionIntegration(t *testing.T) {
 	if err := Check(ctx, database); err != nil {
 		t.Fatalf("Check() returned an error: %v", err)
 	}
+
+	var databaseName string
+	if err := database.QueryRowContext(ctx, "SELECT DATABASE()").Scan(&databaseName); err != nil {
+		t.Fatalf("read current database: %v", err)
+	}
+	if databaseName != "idelium_test" {
+		t.Fatalf("integration test connected to unexpected database %q", databaseName)
+	}
+}
+
+func TestDatabaseAuthenticationFailureIsRedactedIntegration(t *testing.T) {
+	databaseConfig := integrationDatabaseConfig(t)
+	databaseConfig.Password = "integration-secret-that-must-not-leak"
+
+	database, err := Open(databaseConfig)
+	if err != nil {
+		t.Fatalf("create database pool: %v", err)
+	}
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err = Check(ctx, database)
+	if err == nil {
+		t.Fatal("Check() succeeded with invalid credentials")
+	}
+	if strings.Contains(err.Error(), databaseConfig.Password) || strings.Contains(err.Error(), databaseConfig.User) {
+		t.Fatalf("database authentication failure exposed credentials: %v", err)
+	}
 }
 
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
-	host := os.Getenv("IDELIUM_TEST_MYSQL_HOST")
-	if host == "" {
-		t.Skip("IDELIUM_TEST_MYSQL_HOST is not configured")
-	}
-
-	port := 3306
-	if value := os.Getenv("IDELIUM_TEST_MYSQL_PORT"); value != "" {
-		parsed, err := strconv.Atoi(value)
-		if err != nil {
-			t.Fatalf("parse test database port: %v", err)
-		}
-		port = parsed
-	}
-
-	database, err := Open(config.DatabaseConfig{
-		Host:                  host,
-		Port:                  port,
-		Name:                  os.Getenv("IDELIUM_TEST_MYSQL_DATABASE"),
-		User:                  os.Getenv("IDELIUM_TEST_MYSQL_USER"),
-		Password:              os.Getenv("IDELIUM_TEST_MYSQL_PASSWORD"),
-		TLSMode:               "false",
-		ConnectTimeout:        5 * time.Second,
-		ReadTimeout:           5 * time.Second,
-		WriteTimeout:          5 * time.Second,
-		MaxOpenConnections:    4,
-		MaxIdleConnections:    2,
-		ConnectionMaxLifetime: time.Minute,
-	})
-	if err != nil {
-		t.Fatalf("Open() returned an error: %v", err)
-	}
+	database := openIntegrationDatabase(t)
 	defer database.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

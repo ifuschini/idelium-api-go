@@ -45,6 +45,7 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 | [#82](https://github.com/ifuschini/idelium-api-go/issues/82) | Completed compatible database configuration, secret-file precedence, validation, and redacted failures. | Unit tests cover precedence, unreadable paths, missing secrets, invalid bounds, and safe database failure classifications; MySQL integration verifies connectivity. |
 | [#83](https://github.com/ifuschini/idelium-api-go/issues/83) | Stabilized non-cacheable liveness and bounded MySQL readiness contracts. | OpenAPI response headers, dependency-free liveness tests, deadline and redaction tests, and an HTTP readiness integration test against pinned MariaDB. |
 | [#84](https://github.com/ifuschini/idelium-api-go/issues/84) | Completed the common HTTP safety and observability middleware contract. | Validated correlation propagation, redacted structured access logs, safe panic recovery, response security headers, OpenAPI response headers, and regression tests. |
+| [#85](https://github.com/ifuschini/idelium-api-go/issues/85) | Completed the isolated MySQL readiness and integration-test infrastructure. | Pinned ephemeral MariaDB, real readiness HTTP coverage, schema isolation assertion, redacted authentication failure test, and documented future migration and tenant-test gates. |
 
 
 ## Update policy

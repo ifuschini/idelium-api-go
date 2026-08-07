@@ -104,6 +104,8 @@ Production deployments should provide the database password through a mounted
 secret file. Configuration errors stop startup with safe diagnostics.
 Detailed precedence, validation, redaction, and rollback behavior is documented
 in [docs/operations/database-configuration.md](docs/operations/database-configuration.md).
+The isolated MariaDB harness and its coverage boundaries are documented in
+[docs/operations/mysql-integration-testing.md](docs/operations/mysql-integration-testing.md).
 
 ## Local verification
 
