@@ -54,6 +54,9 @@ stages, stop thresholds, and the Laravel rollback procedure.
 No Laravel business route is owned by Go yet. Route ownership will move only
 after its compatibility and tenant-isolation gates pass.
 
+The bounded startup, serving, signal, and shutdown behavior is documented in
+[docs/operations/runtime-lifecycle.md](docs/operations/runtime-lifecycle.md).
+
 ## Endpoints
 
 | Method | Path | Purpose |

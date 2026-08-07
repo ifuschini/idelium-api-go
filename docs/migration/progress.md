@@ -40,6 +40,7 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 | [#77](https://github.com/ifuschini/idelium-api-go/issues/77) | Assigned every production-visible route to an aggregate and effective migration owner. | Generated 168 route assignments across 25 aggregates; tests reject implicit ownership and split mutation ownership. |
 | [#78](https://github.com/ifuschini/idelium-api-go/issues/78) | Accepted the route-level strangler migration model and established the ADR lifecycle. | ADR template, indexed decision, and structural tests for compatibility, security, ownership, and rollback sections. |
 | [#79](https://github.com/ifuschini/idelium-api-go/issues/79) | Defined release, approval, progressive route-switch, stop, and rollback gates. | Machine-readable policy and negative tests for dual writes, tenant incidents, incomplete approvals, and unsafe rollback ownership. |
+| [#80](https://github.com/ifuschini/idelium-api-go/issues/80) | Completed the bounded API process lifecycle with build identity and graceful shutdown. | Testable server lifecycle, configured timeout assertions, cancellation regression test, and documented deployment and rollback behavior. |
 
 
 ## Update policy

@@ -3,10 +3,9 @@ package main
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,6 +14,7 @@ import (
 	"github.com/idelium/idelium-api-go/internal/buildinfo"
 	"github.com/idelium/idelium-api-go/internal/config"
 	mysqlpersistence "github.com/idelium/idelium-api-go/internal/persistence/mysql"
+	"github.com/idelium/idelium-api-go/internal/server"
 )
 
 func main() {
@@ -45,52 +45,40 @@ func run(logger *slog.Logger) error {
 		return fmt.Errorf("database startup check failed: %w", err)
 	}
 
-	server := &http.Server{
-		Addr: runtimeConfig.HTTP.Address,
-		Handler: app.NewRouter(
+	httpServer := server.New(
+		runtimeConfig.HTTP,
+		app.NewRouter(
 			logger,
 			databaseChecker{database: database},
 			buildinfo.Current(),
 			mysqlpersistence.NewPlatformCatalogRepository(database),
 		),
-		ReadHeaderTimeout: runtimeConfig.HTTP.ReadHeaderTimeout,
-		ReadTimeout:       runtimeConfig.HTTP.ReadTimeout,
-		WriteTimeout:      runtimeConfig.HTTP.WriteTimeout,
-		IdleTimeout:       runtimeConfig.HTTP.IdleTimeout,
+	)
+	listener, err := net.Listen("tcp", runtimeConfig.HTTP.Address)
+	if err != nil {
+		return fmt.Errorf("listen HTTP: %w", err)
 	}
+	defer listener.Close()
 
 	shutdownSignal, stopSignals := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stopSignals()
 
-	serverErrors := make(chan error, 1)
-	go func() {
-		logger.Info(
-			"Idelium API Go started",
-			"address", runtimeConfig.HTTP.Address,
-			"environment", runtimeConfig.Environment,
-			"version", buildinfo.Version,
-			"commit", buildinfo.Commit,
-		)
-		serverErrors <- server.ListenAndServe()
-	}()
-
-	select {
-	case serverErr := <-serverErrors:
-		if !errors.Is(serverErr, http.ErrServerClosed) {
-			return fmt.Errorf("serve HTTP: %w", serverErr)
-		}
-		return nil
-	case <-shutdownSignal.Done():
-		logger.Info("Graceful shutdown started")
+	logger.Info(
+		"Idelium API Go started",
+		"address", runtimeConfig.HTTP.Address,
+		"environment", runtimeConfig.Environment,
+		"version", buildinfo.Version,
+		"commit", buildinfo.Commit,
+	)
+	if err := server.Serve(
+		shutdownSignal,
+		httpServer,
+		listener,
+		runtimeConfig.HTTP.ShutdownTimeout,
+		logger,
+	); err != nil {
+		return fmt.Errorf("serve HTTP: %w", err)
 	}
-
-	shutdownContext, cancelShutdown := context.WithTimeout(context.Background(), runtimeConfig.HTTP.ShutdownTimeout)
-	defer cancelShutdown()
-	if err := server.Shutdown(shutdownContext); err != nil {
-		return fmt.Errorf("graceful shutdown: %w", err)
-	}
-
-	logger.Info("Graceful shutdown completed")
 	return nil
 }
 
