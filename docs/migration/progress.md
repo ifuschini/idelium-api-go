@@ -16,7 +16,7 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 
 | Wave | GitHub epic | Status | Evidence |
 | --- | --- | --- | --- |
-| Wave 0 | [#1](https://github.com/ifuschini/idelium-api-go/issues/1) | In progress | Tracks [#12](https://github.com/ifuschini/idelium-api-go/issues/12) and [#13](https://github.com/ifuschini/idelium-api-go/issues/13) completed |
+| Wave 0 | [#1](https://github.com/ifuschini/idelium-api-go/issues/1) | In progress | Tracks [#12](https://github.com/ifuschini/idelium-api-go/issues/12), [#13](https://github.com/ifuschini/idelium-api-go/issues/13), and [#14](https://github.com/ifuschini/idelium-api-go/issues/14) completed |
 | Wave 1 | [#2](https://github.com/ifuschini/idelium-api-go/issues/2) | In progress | `e4e5def feat: bootstrap Go API foundation` |
 | Wave 2 | [#3](https://github.com/ifuschini/idelium-api-go/issues/3) | Planned | Backlog materialized |
 | Wave 3 | [#4](https://github.com/ifuschini/idelium-api-go/issues/4) | In progress | `d4b7f22 feat: add read-only platform catalogs` |
@@ -36,6 +36,7 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 | [#73](https://github.com/ifuschini/idelium-api-go/issues/73) | Mapped Web, CLI, runner, Docker, and wiki consumers to the Laravel inventory. | Generated route-level map, unresolved-reference register, and integrity tests. |
 | [#74](https://github.com/ifuschini/idelium-api-go/issues/74) | Classified all Laravel routes into one of five canonical migration trust paths. | Generated classifications, exhaustive category assertions, and safe handling for unknown modes. |
 | [#75](https://github.com/ifuschini/idelium-api-go/issues/75) | Established one compatibility-contract record for every production-visible Laravel route. | Generated 168 records, three explicit development-only exclusions, wave routing, and contract-gate tests. |
+| [#76](https://github.com/ifuschini/idelium-api-go/issues/76) | Defined the initial sanitized golden fixture format and capture policy. | Machine-readable schema, safe example, bounded validator, and regression tests for credentials, tenant data, and payload limits. |
 
 
 ## Update policy

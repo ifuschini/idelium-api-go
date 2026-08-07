@@ -36,6 +36,10 @@ The generated
 [compatibility contract backlog](docs/contracts/compatibility-backlog.md)
 tracks the evidence required before each production-visible Laravel route can
 move to Go.
+The [sanitized golden fixture policy](docs/contracts/golden-fixture-policy.md)
+defines the bounded, synthetic evidence format used by future Laravel-versus-Go
+differential tests and provides a validator that prevents sensitive headers,
+credentials, and real tenant identities from entering committed fixtures.
 
 No Laravel business route is owned by Go yet. Route ownership will move only
 after its compatibility and tenant-isolation gates pass.

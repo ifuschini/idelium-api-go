@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://idelium.org/schemas/golden-fixture-1.0.json",
+  "title": "Idelium sanitized HTTP golden fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixtureVersion",
+    "id",
+    "description",
+    "source",
+    "route",
+    "context",
+    "request",
+    "response",
+    "normalizations",
+    "redactions",
+    "sideEffects"
+  ],
+  "properties": {
+    "fixtureVersion": { "const": "1.0" },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 100 },
+    "description": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "repository", "revision", "capturedAt", "routeInventoryDigestSha256"],
+      "properties": {
+        "runtime": { "enum": ["laravel", "go"] },
+        "repository": { "type": "string", "pattern": "^idelium/[a-z0-9-]+$" },
+        "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "capturedAt": { "type": "string", "format": "date-time" },
+        "routeInventoryDigestSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "path", "trustPath", "tenantOwned"],
+      "properties": {
+        "method": { "enum": ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"] },
+        "path": { "type": "string", "pattern": "^/" },
+        "trustPath": { "enum": ["browser-session", "api-key", "run-token", "internal-service", "public-operational"] },
+        "tenantOwned": { "type": "boolean" }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tenant", "actor"],
+      "properties": {
+        "tenant": { "$ref": "#/$defs/syntheticIdentity" },
+        "actor": { "$ref": "#/$defs/syntheticIdentity" }
+      }
+    },
+    "request": { "$ref": "#/$defs/httpMessage" },
+    "response": {
+      "allOf": [
+        { "$ref": "#/$defs/httpMessage" },
+        {
+          "type": "object",
+          "required": ["status"],
+          "properties": { "status": { "type": "integer", "minimum": 100, "maximum": 599 } }
+        }
+      ]
+    },
+    "normalizations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/transformation" },
+      "maxItems": 100
+    },
+    "redactions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/transformation" },
+      "maxItems": 100
+    },
+    "sideEffects": {
+      "type": "array",
+      "items": { "type": "object" },
+      "maxItems": 100
+    }
+  },
+  "$defs": {
+    "syntheticIdentity": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["id", "synthetic"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^fixture-[a-z0-9-]+$" },
+        "synthetic": { "const": true }
+      }
+    },
+    "httpMessage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["headers", "body"],
+      "properties": {
+        "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+        "headers": { "type": "object", "maxProperties": 50, "additionalProperties": { "type": "string" } },
+        "query": { "type": "object" },
+        "body": {}
+      }
+    },
+    "transformation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "rule"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "rule": { "type": "string", "minLength": 1, "maxLength": 200 }
+      }
+    }
+  }
+}
