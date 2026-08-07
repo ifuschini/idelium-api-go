@@ -32,6 +32,10 @@ machine-readable counterpart in
 The [route consumer map](docs/contracts/consumer-route-map.md) records which
 Laravel routes are used by Idelium Web, CLI, runners, Docker operations, and
 the published wiki workflows, including unresolved consumer references.
+The generated
+[compatibility contract backlog](docs/contracts/compatibility-backlog.md)
+tracks the evidence required before each production-visible Laravel route can
+move to Go.
 
 No Laravel business route is owned by Go yet. Route ownership will move only
 after its compatibility and tenant-isolation gates pass.

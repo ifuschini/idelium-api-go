@@ -4,6 +4,8 @@
 > [complete route inventory](laravel-routes.md) and its
 > [machine-readable contract](laravel-routes.json). Consumer evidence is tracked
 > in the generated [route consumer map](consumer-route-map.md).
+> Contract readiness for every production-visible route is tracked in the
+> generated [compatibility backlog](compatibility-backlog.md).
 
 ## Purpose
 
