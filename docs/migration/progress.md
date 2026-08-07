@@ -38,6 +38,7 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 | [#75](https://github.com/ifuschini/idelium-api-go/issues/75) | Established one compatibility-contract record for every production-visible Laravel route. | Generated 168 records, three explicit development-only exclusions, wave routing, and contract-gate tests. |
 | [#76](https://github.com/ifuschini/idelium-api-go/issues/76) | Defined the initial sanitized golden fixture format and capture policy. | Machine-readable schema, safe example, bounded validator, and regression tests for credentials, tenant data, and payload limits. |
 | [#77](https://github.com/ifuschini/idelium-api-go/issues/77) | Assigned every production-visible route to an aggregate and effective migration owner. | Generated 168 route assignments across 25 aggregates; tests reject implicit ownership and split mutation ownership. |
+| [#78](https://github.com/ifuschini/idelium-api-go/issues/78) | Accepted the route-level strangler migration model and established the ADR lifecycle. | ADR template, indexed decision, and structural tests for compatibility, security, ownership, and rollback sections. |
 
 
 ## Update policy

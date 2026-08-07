@@ -10,6 +10,9 @@ and translated into executable epics in
 [docs/migration/epics.md](docs/migration/epics.md).
 The current migration cursor and GitHub issue mapping are maintained in
 [docs/migration/progress.md](docs/migration/progress.md).
+Consequential architecture choices are indexed in
+[docs/adr/README.md](docs/adr/README.md), beginning with the accepted
+[route-level strangler migration model](docs/adr/0001-strangler-migration-model.md).
 
 ## Current scope
 
