@@ -21,179 +21,179 @@ removal without compatibility review.
 
 ## Route-level mapping
 
-| Method | Path | Authentication | Consumers |
-| --- | --- | --- | --- |
-| `GET|HEAD` | `/` | `public` | — |
-| `POST` | `/_ignition/execute-solution` | `development-only` | — |
-| `GET|HEAD` | `/_ignition/health-check` | `development-only` | — |
-| `POST` | `/_ignition/update-config` | `development-only` | — |
-| `GET|HEAD` | `/api/admin/accounts` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/accounts` | `browser-session` | `idelium-web` (direct) |
-| `DELETE` | `/api/admin/accounts/{idUser}` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/accounts/{idUser}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/agents` | `browser-session` | — |
-| `PUT` | `/api/admin/agents/{agentRegistration}/status` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/apikey` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/apikey` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/costumers` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/costumers` | `browser-session` | `idelium-web` (direct) |
-| `DELETE` | `/api/admin/costumers/{idCostumer}` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/costumers/{idCostumer}` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/environments` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/environments/{idProject}` | `browser-session` | `idelium-web` (direct) |
-| `DELETE` | `/api/admin/environments/{idProject}/{environment}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/environments/{idProject}/{environment}` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/environments/{idProject}/{environment}` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/grid/bulk-jobs` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}/export` | `browser-session` | — |
-| `POST` | `/api/admin/grid/query-snapshots` | `browser-session` | — |
-| `PUT` | `/api/admin/identity/accounts/{user}/break-glass` | `browser-session` | — |
-| `POST` | `/api/admin/identity/accounts/{user}/break-glass/test` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/identity/providers` | `browser-session` | — |
-| `POST` | `/api/admin/identity/providers` | `browser-session` | — |
-| `POST` | `/api/admin/identity/providers/{identityProvider}/scim/users` | `browser-session` | — |
-| `POST` | `/api/admin/importtest` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/launchtest` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/platforms/brands` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/platforms/brands` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/platforms/brands` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/platforms/browsers` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/platforms/browsers` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/platforms/browsers/{idOs}` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/platforms/browserversions` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/platforms/browserversions` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/platforms/browserversions/{idBrowser}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/platforms/locations` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/platforms/locations` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/platforms/locations` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/platforms/manageplatforms` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/platforms/manageplatforms` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/platforms/manageplatforms/{type}` | `browser-session` | `idelium-web` (direct) |
-| `DELETE` | `/api/admin/platforms/manageplatforms/{type}/{id}` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/platforms/models` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/platforms/models` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/platforms/models/{idBrand}` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/platforms/os` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/platforms/os` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/platforms/os/{idType}` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/platforms/osversion` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/platforms/osversion` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/platforms/osversion/{idOs}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/platforms/status` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/platforms/types` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/plugins` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/plugins/{idProject}` | `browser-session` | `idelium-web` (direct) |
-| `DELETE` | `/api/admin/plugins/{idProject}/{plugin}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/plugins/{idProject}/{plugin}` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/plugins/{idProject}/{step}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/profile` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/profile` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/profile/mfa/confirm` | `browser-session` | — |
-| `POST` | `/api/admin/profile/mfa/enroll` | `browser-session` | — |
-| `POST` | `/api/admin/profile/mfa/step-up` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/projects` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/projects` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/projects/create` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-versions/{assetVersion}` | `browser-session` | — |
-| `POST` | `/api/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/integration-deliveries` | `browser-session` | — |
-| `POST` | `/api/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/integrations` | `browser-session` | — |
-| `POST` | `/api/admin/projects/{idProject}/integrations` | `browser-session` | — |
-| `POST` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret` | `browser-session` | — |
-| `PUT` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status` | `browser-session` | — |
-| `POST` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/matrix` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}` | `browser-session` | — |
-| `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive` | `browser-session` | — |
-| `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact` | `browser-session` | — |
-| `PUT` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold` | `browser-session` | — |
-| `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore` | `browser-session` | — |
-| `DELETE` | `/api/admin/projects/{project}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/projects/{project}` | `browser-session` | `idelium-web` (direct) |
-| `PUT|PATCH` | `/api/admin/projects/{project}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/projects/{project}/edit` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/result-exports` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/result-exports/{resultExport}` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/result-exports/{resultExport}/download` | `browser-session` | — |
-| `GET|HEAD` | `/api/admin/roles` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/service-accounts` | `browser-session` | — |
-| `POST` | `/api/admin/service-accounts` | `browser-session` | — |
-| `POST` | `/api/admin/service-accounts/{serviceAccount}/revoke` | `browser-session` | — |
-| `POST` | `/api/admin/steps` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/steps/{idProject}` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/steps/{idProject}/updateorder` | `browser-session` | `idelium-web` (direct) |
-| `DELETE` | `/api/admin/steps/{idProject}/{environment}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/steps/{idProject}/{step}` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/steps/{idProject}/{step}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/stepsperfomed/{idTestPerformed}` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/testcycles` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/testcycles/{idProject}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/testcycles/{idProject}/{testcycle}` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/testcycles/{idProject}/{testcycle}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/testcyclesperfomed/{idTestCyclePerformed}` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/admin/tests` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/tests/{idProject}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/tests/{idProject}/{test}` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/admin/tests/{idProject}/{test}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/admin/testsperfomed/{idTestPerformed}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/audit-events` | `browser-session` | — |
-| `GET|HEAD` | `/api/clear` | `public` | — |
-| `GET|HEAD` | `/api/csrf-cookie` | `public` | — |
-| `POST` | `/api/ideliumcl/agents/register` | `api-key` | — |
-| `GET|HEAD` | `/api/ideliumcl/environment/{idEnvironment}` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
-| `GET|HEAD` | `/api/ideliumcl/environments/{idProject}` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
-| `GET|HEAD` | `/api/ideliumcl/plugin/{idPlugin}` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
-| `GET|HEAD` | `/api/ideliumcl/plugins/{idProject}` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
-| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `api-key` | — |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `api-key` | — |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/matrix` | `api-key` | — |
-| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}` | `api-key` | — |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `api-key` | — |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `api-key` | — |
-| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results` | `api-key` | — |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens` | `api-key` | — |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke` | `api-key` | — |
-| `PUT` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `api-key` | — |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `api-key` | — |
-| `POST` | `/api/ideliumcl/step` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
-| `PUT` | `/api/ideliumcl/step` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
-| `GET|HEAD` | `/api/ideliumcl/step/{idStep}` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
-| `POST` | `/api/ideliumcl/test` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
-| `PUT` | `/api/ideliumcl/test` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
-| `GET|HEAD` | `/api/ideliumcl/test/{idTest}` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
-| `POST` | `/api/ideliumcl/testcycle` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
-| `PUT` | `/api/ideliumcl/testcycle` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
-| `GET|HEAD` | `/api/ideliumcl/testcycle/{idTestCycle}` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
-| `POST` | `/api/ideliumrunner/claim` | `run-token` | `idelium-runner` (direct-contract) |
-| `POST` | `/api/ideliumrunner/heartbeat` | `run-token` | `idelium-runner` (direct-contract) |
-| `PUT` | `/api/ideliumrunner/worker` | `run-token` | `idelium-runner` (direct-contract) |
-| `POST` | `/api/login` | `browser-auth-bootstrap` | `idelium-web` (direct) |
-| `POST` | `/api/logout` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/me/capabilities` | `browser-session` | — |
-| `GET|HEAD` | `/api/menu/header` | `browser-session` | `idelium-web` (direct) |
-| `PUT` | `/api/menu/header/{idCostumer}` | `browser-session` | `idelium-web` (direct) |
-| `GET|HEAD` | `/api/menu/sidebar` | `browser-session` | `idelium-web` (direct) |
-| `POST` | `/api/oidc/token-exchange` | `workload-identity-exchange` | — |
-| `GET|HEAD` | `/api/sanctum/csrf-cookie` | `browser-auth-bootstrap` | `idelium-web` (direct), `idelium-docker` (direct-operational-probe) |
-| `POST` | `/api/sso/{identityProvider}/oidc/callback` | `sso-bootstrap-or-callback` | — |
-| `POST` | `/api/sso/{identityProvider}/saml/callback` | `sso-bootstrap-or-callback` | — |
-| `POST` | `/api/sso/{identityProvider}/start` | `sso-bootstrap-or-callback` | — |
-| `GET|HEAD` | `/api/user` | `browser-session` | — |
+| Method | Path | Trust path | Authentication detail | Consumers |
+| --- | --- | --- | --- | --- |
+| `GET|HEAD` | `/` | `public-operational` | `public` | — |
+| `POST` | `/_ignition/execute-solution` | `public-operational` | `development-only` | — |
+| `GET|HEAD` | `/_ignition/health-check` | `public-operational` | `development-only` | — |
+| `POST` | `/_ignition/update-config` | `public-operational` | `development-only` | — |
+| `GET|HEAD` | `/api/admin/accounts` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/accounts` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `DELETE` | `/api/admin/accounts/{idUser}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/accounts/{idUser}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/agents` | `browser-session` | `browser-session` | — |
+| `PUT` | `/api/admin/agents/{agentRegistration}/status` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/apikey` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/apikey` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/costumers` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/costumers` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `DELETE` | `/api/admin/costumers/{idCostumer}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/costumers/{idCostumer}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/environments` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/environments/{idProject}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `DELETE` | `/api/admin/environments/{idProject}/{environment}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/environments/{idProject}/{environment}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/environments/{idProject}/{environment}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/grid/bulk-jobs` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}/export` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/grid/query-snapshots` | `browser-session` | `browser-session` | — |
+| `PUT` | `/api/admin/identity/accounts/{user}/break-glass` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/identity/accounts/{user}/break-glass/test` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/identity/providers` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/identity/providers` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/identity/providers/{identityProvider}/scim/users` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/importtest` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/launchtest` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/platforms/brands` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/platforms/brands` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/platforms/brands` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/platforms/browsers` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/platforms/browsers` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/platforms/browsers/{idOs}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/platforms/browserversions` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/platforms/browserversions` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/platforms/browserversions/{idBrowser}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/platforms/locations` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/platforms/locations` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/platforms/locations` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/platforms/manageplatforms` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/platforms/manageplatforms` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/platforms/manageplatforms/{type}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `DELETE` | `/api/admin/platforms/manageplatforms/{type}/{id}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/platforms/models` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/platforms/models` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/platforms/models/{idBrand}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/platforms/os` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/platforms/os` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/platforms/os/{idType}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/platforms/osversion` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/platforms/osversion` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/platforms/osversion/{idOs}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/platforms/status` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/platforms/types` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/plugins` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/plugins/{idProject}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `DELETE` | `/api/admin/plugins/{idProject}/{plugin}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/plugins/{idProject}/{plugin}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/plugins/{idProject}/{step}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/profile` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/profile` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/profile/mfa/confirm` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/profile/mfa/enroll` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/profile/mfa/step-up` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/projects` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/projects` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/projects/create` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-versions/{assetVersion}` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/integration-deliveries` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/integrations` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/projects/{idProject}/integrations` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret` | `browser-session` | `browser-session` | — |
+| `PUT` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/matrix` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact` | `browser-session` | `browser-session` | — |
+| `PUT` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore` | `browser-session` | `browser-session` | — |
+| `DELETE` | `/api/admin/projects/{project}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/projects/{project}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT|PATCH` | `/api/admin/projects/{project}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/projects/{project}/edit` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/result-exports` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/result-exports/{resultExport}` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/result-exports/{resultExport}/download` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/admin/roles` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/service-accounts` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/service-accounts` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/service-accounts/{serviceAccount}/revoke` | `browser-session` | `browser-session` | — |
+| `POST` | `/api/admin/steps` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/steps/{idProject}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/steps/{idProject}/updateorder` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `DELETE` | `/api/admin/steps/{idProject}/{environment}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/steps/{idProject}/{step}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/steps/{idProject}/{step}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/stepsperfomed/{idTestPerformed}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/testcycles` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/testcycles/{idProject}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/testcycles/{idProject}/{testcycle}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/testcycles/{idProject}/{testcycle}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/testcyclesperfomed/{idTestCyclePerformed}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/admin/tests` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/tests/{idProject}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/tests/{idProject}/{test}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/admin/tests/{idProject}/{test}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/admin/testsperfomed/{idTestPerformed}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/audit-events` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/clear` | `public-operational` | `public` | — |
+| `GET|HEAD` | `/api/csrf-cookie` | `public-operational` | `public` | — |
+| `POST` | `/api/ideliumcl/agents/register` | `api-key` | `api-key` | — |
+| `GET|HEAD` | `/api/ideliumcl/environment/{idEnvironment}` | `api-key` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
+| `GET|HEAD` | `/api/ideliumcl/environments/{idProject}` | `api-key` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
+| `GET|HEAD` | `/api/ideliumcl/plugin/{idPlugin}` | `api-key` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
+| `GET|HEAD` | `/api/ideliumcl/plugins/{idProject}` | `api-key` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
+| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `api-key` | `api-key` | — |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `api-key` | `api-key` | — |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/matrix` | `api-key` | `api-key` | — |
+| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}` | `api-key` | `api-key` | — |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `api-key` | `api-key` | — |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `api-key` | `api-key` | — |
+| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results` | `api-key` | `api-key` | — |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens` | `api-key` | `api-key` | — |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke` | `api-key` | `api-key` | — |
+| `PUT` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `api-key` | `api-key` | — |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `api-key` | `api-key` | — |
+| `POST` | `/api/ideliumcl/step` | `api-key` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
+| `PUT` | `/api/ideliumcl/step` | `api-key` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
+| `GET|HEAD` | `/api/ideliumcl/step/{idStep}` | `api-key` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
+| `POST` | `/api/ideliumcl/test` | `api-key` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
+| `PUT` | `/api/ideliumcl/test` | `api-key` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
+| `GET|HEAD` | `/api/ideliumcl/test/{idTest}` | `api-key` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
+| `POST` | `/api/ideliumcl/testcycle` | `api-key` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
+| `PUT` | `/api/ideliumcl/testcycle` | `api-key` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
+| `GET|HEAD` | `/api/ideliumcl/testcycle/{idTestCycle}` | `api-key` | `api-key` | `idelium-cli` (direct), `idelium-docker-wiki` (indirect-through-cli) |
+| `POST` | `/api/ideliumrunner/claim` | `run-token` | `run-token` | `idelium-runner` (direct-contract) |
+| `POST` | `/api/ideliumrunner/heartbeat` | `run-token` | `run-token` | `idelium-runner` (direct-contract) |
+| `PUT` | `/api/ideliumrunner/worker` | `run-token` | `run-token` | `idelium-runner` (direct-contract) |
+| `POST` | `/api/login` | `browser-session` | `browser-auth-bootstrap` | `idelium-web` (direct) |
+| `POST` | `/api/logout` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/me/capabilities` | `browser-session` | `browser-session` | — |
+| `GET|HEAD` | `/api/menu/header` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `PUT` | `/api/menu/header/{idCostumer}` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `GET|HEAD` | `/api/menu/sidebar` | `browser-session` | `browser-session` | `idelium-web` (direct) |
+| `POST` | `/api/oidc/token-exchange` | `internal-service` | `workload-identity-exchange` | — |
+| `GET|HEAD` | `/api/sanctum/csrf-cookie` | `browser-session` | `browser-auth-bootstrap` | `idelium-web` (direct), `idelium-docker` (direct-operational-probe) |
+| `POST` | `/api/sso/{identityProvider}/oidc/callback` | `browser-session` | `sso-bootstrap-or-callback` | — |
+| `POST` | `/api/sso/{identityProvider}/saml/callback` | `browser-session` | `sso-bootstrap-or-callback` | — |
+| `POST` | `/api/sso/{identityProvider}/start` | `browser-session` | `sso-bootstrap-or-callback` | — |
+| `GET|HEAD` | `/api/user` | `browser-session` | `browser-session` | — |
 
 ## Consumer references without a registered Laravel route
 

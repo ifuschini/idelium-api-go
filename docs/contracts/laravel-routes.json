@@ -5,7 +5,7 @@
     "revision": "ef97a6b3f42105cad583b3f1a68acf637a9d086e"
   },
   "route_count": 171,
-  "route_digest_sha256": "b59c86f112ed71de23b5563c36973c9e01fabd2dfd1f11b7f226892328a14a07",
+  "route_digest_sha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9",
   "routes": [
     {
       "method": "GET|HEAD",
@@ -13,6 +13,7 @@
       "name": null,
       "controller": "Closure",
       "authentication_mode": "public",
+      "trust_path": "public-operational",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -26,6 +27,7 @@
       "name": "ignition.executeSolution",
       "controller": "Spatie\\LaravelIgnition\\Http\\Controllers\\ExecuteSolutionController",
       "authentication_mode": "development-only",
+      "trust_path": "public-operational",
       "tenant_context": false,
       "current_owner": "development-dependency",
       "middleware": [
@@ -39,6 +41,7 @@
       "name": "ignition.healthCheck",
       "controller": "Spatie\\LaravelIgnition\\Http\\Controllers\\HealthCheckController",
       "authentication_mode": "development-only",
+      "trust_path": "public-operational",
       "tenant_context": false,
       "current_owner": "development-dependency",
       "middleware": [
@@ -52,6 +55,7 @@
       "name": "ignition.updateConfig",
       "controller": "Spatie\\LaravelIgnition\\Http\\Controllers\\UpdateConfigController",
       "authentication_mode": "development-only",
+      "trust_path": "public-operational",
       "tenant_context": false,
       "current_owner": "development-dependency",
       "middleware": [
@@ -65,6 +69,7 @@
       "name": "accounts.index",
       "controller": "App\\Http\\Controllers\\UserController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -80,6 +85,7 @@
       "name": "accounts.store",
       "controller": "App\\Http\\Controllers\\UserController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -95,6 +101,7 @@
       "name": "accounts.destroy",
       "controller": "App\\Http\\Controllers\\UserController@destroy",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -110,6 +117,7 @@
       "name": "accounts.update",
       "controller": "App\\Http\\Controllers\\UserController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -125,6 +133,7 @@
       "name": "agents.index",
       "controller": "App\\Http\\Controllers\\AgentRegistrationController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -140,6 +149,7 @@
       "name": "agents.updateStatus",
       "controller": "App\\Http\\Controllers\\AgentRegistrationController@updateStatus",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -155,6 +165,7 @@
       "name": "costumers.getKey",
       "controller": "App\\Http\\Controllers\\CostumerController@getKey",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -170,6 +181,7 @@
       "name": "costumers.updateKey",
       "controller": "App\\Http\\Controllers\\CostumerController@updateKey",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -185,6 +197,7 @@
       "name": "costumers.index",
       "controller": "App\\Http\\Controllers\\CostumerController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -200,6 +213,7 @@
       "name": "costumers.store",
       "controller": "App\\Http\\Controllers\\CostumerController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -215,6 +229,7 @@
       "name": "costumers.destroy",
       "controller": "App\\Http\\Controllers\\CostumerController@destroy",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -230,6 +245,7 @@
       "name": "costumers.update",
       "controller": "App\\Http\\Controllers\\CostumerController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -245,6 +261,7 @@
       "name": "environments.store",
       "controller": "App\\Http\\Controllers\\EnvironmentController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -260,6 +277,7 @@
       "name": "environments.index",
       "controller": "App\\Http\\Controllers\\EnvironmentController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -275,6 +293,7 @@
       "name": "environments.destroy",
       "controller": "App\\Http\\Controllers\\EnvironmentController@destroy",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -290,6 +309,7 @@
       "name": "environments.show",
       "controller": "App\\Http\\Controllers\\EnvironmentController@show",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -305,6 +325,7 @@
       "name": "environments.update",
       "controller": "App\\Http\\Controllers\\EnvironmentController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -320,6 +341,7 @@
       "name": "grid.bulkJobs.store",
       "controller": "App\\Http\\Controllers\\GridBulkOperationController@storeJob",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -335,6 +357,7 @@
       "name": "grid.bulkJobs.show",
       "controller": "App\\Http\\Controllers\\GridBulkOperationController@showJob",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -350,6 +373,7 @@
       "name": "grid.bulkJobs.export",
       "controller": "App\\Http\\Controllers\\GridBulkOperationController@exportJob",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -365,6 +389,7 @@
       "name": "grid.querySnapshots.store",
       "controller": "App\\Http\\Controllers\\GridBulkOperationController@storeSnapshot",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -380,6 +405,7 @@
       "name": "identity.updateBreakGlass",
       "controller": "App\\Http\\Controllers\\IdentityLifecycleController@updateBreakGlass",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -395,6 +421,7 @@
       "name": "identity.recordBreakGlassTest",
       "controller": "App\\Http\\Controllers\\IdentityLifecycleController@recordBreakGlassTest",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -410,6 +437,7 @@
       "name": "identity.providers",
       "controller": "App\\Http\\Controllers\\IdentityLifecycleController@providers",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -425,6 +453,7 @@
       "name": "identity.storeProvider",
       "controller": "App\\Http\\Controllers\\IdentityLifecycleController@storeProvider",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -440,6 +469,7 @@
       "name": "identity.scimUpsertUser",
       "controller": "App\\Http\\Controllers\\IdentityLifecycleController@scimUpsertUser",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -455,6 +485,7 @@
       "name": "importtest.store",
       "controller": "App\\Http\\Controllers\\ImportTestController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -470,6 +501,7 @@
       "name": "testlauncher.launchTest",
       "controller": "App\\Http\\Controllers\\TestLauncherController@launchTest",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -485,6 +517,7 @@
       "name": "brandevice.index",
       "controller": "App\\Http\\Controllers\\BrandDeviceController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -500,6 +533,7 @@
       "name": "brandevice.store",
       "controller": "App\\Http\\Controllers\\BrandDeviceController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -515,6 +549,7 @@
       "name": "brandevice.update",
       "controller": "App\\Http\\Controllers\\BrandDeviceController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -530,6 +565,7 @@
       "name": "browser.store",
       "controller": "App\\Http\\Controllers\\BrowserController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -545,6 +581,7 @@
       "name": "browser.update",
       "controller": "App\\Http\\Controllers\\BrowserController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -560,6 +597,7 @@
       "name": "browser.index",
       "controller": "App\\Http\\Controllers\\BrowserController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -575,6 +613,7 @@
       "name": "versionbrowser.store",
       "controller": "App\\Http\\Controllers\\VersionBrowserController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -590,6 +629,7 @@
       "name": "versionbrowser.update",
       "controller": "App\\Http\\Controllers\\VersionBrowserController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -605,6 +645,7 @@
       "name": "versionbrowser.index",
       "controller": "App\\Http\\Controllers\\VersionBrowserController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -620,6 +661,7 @@
       "name": "location.index",
       "controller": "App\\Http\\Controllers\\LocationController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -635,6 +677,7 @@
       "name": "location.store",
       "controller": "App\\Http\\Controllers\\LocationController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -650,6 +693,7 @@
       "name": "location.update",
       "controller": "App\\Http\\Controllers\\LocationController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -665,6 +709,7 @@
       "name": "platform.store",
       "controller": "App\\Http\\Controllers\\PlatformController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -680,6 +725,7 @@
       "name": "platform.update",
       "controller": "App\\Http\\Controllers\\PlatformController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -695,6 +741,7 @@
       "name": "platform.index",
       "controller": "App\\Http\\Controllers\\PlatformController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -710,6 +757,7 @@
       "name": "platform.delete",
       "controller": "App\\Http\\Controllers\\PlatformController@delete",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -725,6 +773,7 @@
       "name": "model.store",
       "controller": "App\\Http\\Controllers\\ModelDeviceController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -740,6 +789,7 @@
       "name": "model.update",
       "controller": "App\\Http\\Controllers\\ModelDeviceController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -755,6 +805,7 @@
       "name": "model.index",
       "controller": "App\\Http\\Controllers\\ModelDeviceController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -770,6 +821,7 @@
       "name": "os.store",
       "controller": "App\\Http\\Controllers\\OsController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -785,6 +837,7 @@
       "name": "os.update",
       "controller": "App\\Http\\Controllers\\OsController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -800,6 +853,7 @@
       "name": "os.index",
       "controller": "App\\Http\\Controllers\\OsController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -815,6 +869,7 @@
       "name": "osversion.store",
       "controller": "App\\Http\\Controllers\\VersionOsController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -830,6 +885,7 @@
       "name": "osversion.update",
       "controller": "App\\Http\\Controllers\\VersionOsController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -845,6 +901,7 @@
       "name": "osversion.index",
       "controller": "App\\Http\\Controllers\\VersionOsController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -860,6 +917,7 @@
       "name": "status.index",
       "controller": "App\\Http\\Controllers\\StatusController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -875,6 +933,7 @@
       "name": "types.index",
       "controller": "App\\Http\\Controllers\\TypeController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -890,6 +949,7 @@
       "name": "plugins.store",
       "controller": "App\\Http\\Controllers\\PluginController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -905,6 +965,7 @@
       "name": "plugins.index",
       "controller": "App\\Http\\Controllers\\PluginController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -920,6 +981,7 @@
       "name": "plugins.destroy",
       "controller": "App\\Http\\Controllers\\PluginController@destroy",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -935,6 +997,7 @@
       "name": "plugins.show",
       "controller": "App\\Http\\Controllers\\PluginController@show",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -950,6 +1013,7 @@
       "name": "plugins.update",
       "controller": "App\\Http\\Controllers\\PluginController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -965,6 +1029,7 @@
       "name": "accounts.getuser",
       "controller": "App\\Http\\Controllers\\UserController@getuser",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -980,6 +1045,7 @@
       "name": "accounts.updatePasswordUser",
       "controller": "App\\Http\\Controllers\\UserController@updatePasswordUser",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -995,6 +1061,7 @@
       "name": "mfa.confirm",
       "controller": "App\\Http\\Controllers\\MfaController@confirm",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1010,6 +1077,7 @@
       "name": "mfa.enroll",
       "controller": "App\\Http\\Controllers\\MfaController@enroll",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1025,6 +1093,7 @@
       "name": "mfa.stepUp",
       "controller": "App\\Http\\Controllers\\MfaController@stepUp",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1040,6 +1109,7 @@
       "name": "projects.index",
       "controller": "App\\Http\\Controllers\\ProjectController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1055,6 +1125,7 @@
       "name": "projects.store",
       "controller": "App\\Http\\Controllers\\ProjectController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1070,6 +1141,7 @@
       "name": "projects.create",
       "controller": "App\\Http\\Controllers\\ProjectController@create",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1085,6 +1157,7 @@
       "name": "assetimpact.show",
       "controller": "App\\Http\\Controllers\\AssetImpactController@show",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1100,6 +1173,7 @@
       "name": "assetversions.index",
       "controller": "App\\Http\\Controllers\\AssetVersionController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1115,6 +1189,7 @@
       "name": "assetversions.show",
       "controller": "App\\Http\\Controllers\\AssetVersionController@show",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1130,6 +1205,7 @@
       "name": "assetversions.transitionReview",
       "controller": "App\\Http\\Controllers\\AssetVersionController@transitionReview",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1145,6 +1221,7 @@
       "name": "assetversions.diff",
       "controller": "App\\Http\\Controllers\\AssetVersionController@diff",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1160,6 +1237,7 @@
       "name": "integrations.deliveries",
       "controller": "App\\Http\\Controllers\\IntegrationEndpointController@deliveries",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1175,6 +1253,7 @@
       "name": "integrations.replay",
       "controller": "App\\Http\\Controllers\\IntegrationEndpointController@replay",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1190,6 +1269,7 @@
       "name": "integrations.index",
       "controller": "App\\Http\\Controllers\\IntegrationEndpointController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1205,6 +1285,7 @@
       "name": "integrations.store",
       "controller": "App\\Http\\Controllers\\IntegrationEndpointController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1220,6 +1301,7 @@
       "name": "integrations.rotateSecret",
       "controller": "App\\Http\\Controllers\\IntegrationEndpointController@rotateSecret",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1235,6 +1317,7 @@
       "name": "integrations.updateStatus",
       "controller": "App\\Http\\Controllers\\IntegrationEndpointController@updateStatus",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1250,6 +1333,7 @@
       "name": "integrations.test",
       "controller": "App\\Http\\Controllers\\IntegrationEndpointController@test",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1265,6 +1349,7 @@
       "name": "parallelruns.index",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1280,6 +1365,7 @@
       "name": "parallelruns.store",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1295,6 +1381,7 @@
       "name": "parallelruns.storeMatrix",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@storeMatrix",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1310,6 +1397,7 @@
       "name": "parallelruns.show",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@show",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1325,6 +1413,7 @@
       "name": "parallelruns.cancel",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@cancel",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1340,6 +1429,7 @@
       "name": "parallelruns.claimWorker",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@claimWorker",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1355,6 +1445,7 @@
       "name": "parallelruns.results",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@results",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1370,6 +1461,7 @@
       "name": "parallelruns.updateWorker",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@updateWorker",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1385,6 +1477,7 @@
       "name": "parallelruns.heartbeatWorker",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@heartbeatWorker",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1400,6 +1493,7 @@
       "name": "artifacts.index",
       "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1415,6 +1509,7 @@
       "name": "artifacts.show",
       "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@show",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1430,6 +1525,7 @@
       "name": "artifacts.archive",
       "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@archive",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1445,6 +1541,7 @@
       "name": "artifacts.markDeleted",
       "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@markDeleted",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1460,6 +1557,7 @@
       "name": "artifacts.impact",
       "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@impact",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1475,6 +1573,7 @@
       "name": "artifacts.legalHold",
       "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@legalHold",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1490,6 +1589,7 @@
       "name": "artifacts.restore",
       "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@restore",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1505,6 +1605,7 @@
       "name": "projects.destroy",
       "controller": "App\\Http\\Controllers\\ProjectController@destroy",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1520,6 +1621,7 @@
       "name": "projects.show",
       "controller": "App\\Http\\Controllers\\ProjectController@show",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1535,6 +1637,7 @@
       "name": "projects.update",
       "controller": "App\\Http\\Controllers\\ProjectController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1550,6 +1653,7 @@
       "name": "projects.edit",
       "controller": "App\\Http\\Controllers\\ProjectController@edit",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1565,6 +1669,7 @@
       "name": "result-exports.store",
       "controller": "App\\Http\\Controllers\\ResultExportController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1580,6 +1685,7 @@
       "name": "result-exports.show",
       "controller": "App\\Http\\Controllers\\ResultExportController@show",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1595,6 +1701,7 @@
       "name": "result-exports.download",
       "controller": "App\\Http\\Controllers\\ResultExportController@download",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1610,6 +1717,7 @@
       "name": "roles.index",
       "controller": "App\\Http\\Controllers\\RoleController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1625,6 +1733,7 @@
       "name": "service-accounts.index",
       "controller": "App\\Http\\Controllers\\ServiceAccountController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1640,6 +1749,7 @@
       "name": "service-accounts.store",
       "controller": "App\\Http\\Controllers\\ServiceAccountController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1655,6 +1765,7 @@
       "name": "service-accounts.revoke",
       "controller": "App\\Http\\Controllers\\ServiceAccountController@revoke",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1670,6 +1781,7 @@
       "name": "steps.store",
       "controller": "App\\Http\\Controllers\\StepController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1685,6 +1797,7 @@
       "name": "steps.index",
       "controller": "App\\Http\\Controllers\\StepController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1700,6 +1813,7 @@
       "name": "steps.updateorder",
       "controller": "App\\Http\\Controllers\\StepController@updateorder",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1715,6 +1829,7 @@
       "name": "steps.destroy",
       "controller": "App\\Http\\Controllers\\StepController@destroy",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1730,6 +1845,7 @@
       "name": "steps.show",
       "controller": "App\\Http\\Controllers\\StepController@show",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1745,6 +1861,7 @@
       "name": "steps.update",
       "controller": "App\\Http\\Controllers\\StepController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1760,6 +1877,7 @@
       "name": "testsperfomed.index",
       "controller": "App\\Http\\Controllers\\PerformedStepController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1775,6 +1893,7 @@
       "name": "testcycles.store",
       "controller": "App\\Http\\Controllers\\TestCycleController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1790,6 +1909,7 @@
       "name": "testcycles.index",
       "controller": "App\\Http\\Controllers\\TestCycleController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1805,6 +1925,7 @@
       "name": "testcycles.show",
       "controller": "App\\Http\\Controllers\\TestCycleController@show",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1820,6 +1941,7 @@
       "name": "testcycles.update",
       "controller": "App\\Http\\Controllers\\TestCycleController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1835,6 +1957,7 @@
       "name": "testcyclesperfomed.index",
       "controller": "App\\Http\\Controllers\\PerformedTestCycleController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1850,6 +1973,7 @@
       "name": "tests.store",
       "controller": "App\\Http\\Controllers\\TestController@store",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1865,6 +1989,7 @@
       "name": "tests.index",
       "controller": "App\\Http\\Controllers\\TestController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1880,6 +2005,7 @@
       "name": "tests.show",
       "controller": "App\\Http\\Controllers\\TestController@show",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1895,6 +2021,7 @@
       "name": "tests.update",
       "controller": "App\\Http\\Controllers\\TestController@update",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1910,6 +2037,7 @@
       "name": "testsperfomed.index",
       "controller": "App\\Http\\Controllers\\PerformedTestController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1925,6 +2053,7 @@
       "name": "audit-events.index",
       "controller": "App\\Http\\Controllers\\AuditEventController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1940,6 +2069,7 @@
       "name": null,
       "controller": "Closure",
       "authentication_mode": "public",
+      "trust_path": "public-operational",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1953,6 +2083,7 @@
       "name": "sanctum.csrf-cookie",
       "controller": "Laravel\\Sanctum\\Http\\Controllers\\CsrfCookieController@show",
       "authentication_mode": "public",
+      "trust_path": "public-operational",
       "tenant_context": false,
       "current_owner": "laravel-framework",
       "middleware": [
@@ -1966,6 +2097,7 @@
       "name": "cl.agents.register",
       "controller": "App\\Http\\Controllers\\AgentRegistrationController@register",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1980,6 +2112,7 @@
       "name": "cl.getEnvironment",
       "controller": "App\\Http\\Controllers\\IdeliumClController@getEnvironment",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -1994,6 +2127,7 @@
       "name": "cl.getEnvironments",
       "controller": "App\\Http\\Controllers\\IdeliumClController@getEnvironments",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2008,6 +2142,7 @@
       "name": "cl.getPlugin",
       "controller": "App\\Http\\Controllers\\IdeliumClController@getPlugin",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2022,6 +2157,7 @@
       "name": "cl.getPlugins",
       "controller": "App\\Http\\Controllers\\IdeliumClController@getPlugins",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2036,6 +2172,7 @@
       "name": "cl.parallelruns.index",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@index",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2050,6 +2187,7 @@
       "name": "cl.parallelruns.store",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@store",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2064,6 +2202,7 @@
       "name": "cl.parallelruns.storeMatrix",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@storeMatrix",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2078,6 +2217,7 @@
       "name": "cl.parallelruns.show",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@show",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2092,6 +2232,7 @@
       "name": "cl.parallelruns.cancel",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@cancel",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2106,6 +2247,7 @@
       "name": "cl.parallelruns.claimWorker",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@claimWorker",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2120,6 +2262,7 @@
       "name": "cl.parallelruns.results",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@results",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2134,6 +2277,7 @@
       "name": "cl.parallelruns.issueRunToken",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@issueRunToken",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2148,6 +2292,7 @@
       "name": "cl.parallelruns.revokeRunToken",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@revokeRunToken",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2162,6 +2307,7 @@
       "name": "cl.parallelruns.updateWorker",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@updateWorker",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2176,6 +2322,7 @@
       "name": "cl.parallelruns.heartbeatWorker",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@heartbeatWorker",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2190,6 +2337,7 @@
       "name": "cl.createStep",
       "controller": "App\\Http\\Controllers\\IdeliumInsertClController@createStep",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2204,6 +2352,7 @@
       "name": "cl.updateStep",
       "controller": "App\\Http\\Controllers\\IdeliumInsertClController@updateStep",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2218,6 +2367,7 @@
       "name": "cl.getStep",
       "controller": "App\\Http\\Controllers\\IdeliumClController@getStep",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2232,6 +2382,7 @@
       "name": "cl.createTest",
       "controller": "App\\Http\\Controllers\\IdeliumInsertClController@createTest",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2246,6 +2397,7 @@
       "name": "cl.updateTest",
       "controller": "App\\Http\\Controllers\\IdeliumInsertClController@updateTest",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2260,6 +2412,7 @@
       "name": "cl.getTest",
       "controller": "App\\Http\\Controllers\\IdeliumClController@getTest",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2274,6 +2427,7 @@
       "name": "cl.createFolder",
       "controller": "App\\Http\\Controllers\\IdeliumInsertClController@createFolder",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2288,6 +2442,7 @@
       "name": "cl.updateFolder",
       "controller": "App\\Http\\Controllers\\IdeliumInsertClController@updateFolder",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2302,6 +2457,7 @@
       "name": "cl.getTestCycle",
       "controller": "App\\Http\\Controllers\\IdeliumClController@getTestCycle",
       "authentication_mode": "api-key",
+      "trust_path": "api-key",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2316,6 +2472,7 @@
       "name": "runner.claim",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@claimWorkerWithRunToken",
       "authentication_mode": "run-token",
+      "trust_path": "run-token",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2329,6 +2486,7 @@
       "name": "runner.heartbeat",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@heartbeatWorkerWithToken",
       "authentication_mode": "run-token",
+      "trust_path": "run-token",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2342,6 +2500,7 @@
       "name": "runner.updateWorker",
       "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@updateWorkerWithToken",
       "authentication_mode": "run-token",
+      "trust_path": "run-token",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2355,6 +2514,7 @@
       "name": "login",
       "controller": "App\\Http\\Controllers\\LoginController@login",
       "authentication_mode": "browser-auth-bootstrap",
+      "trust_path": "browser-session",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2368,6 +2528,7 @@
       "name": "logout",
       "controller": "App\\Http\\Controllers\\LoginController@logout",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2383,6 +2544,7 @@
       "name": "capabilities.me",
       "controller": "App\\Http\\Controllers\\CapabilityController@me",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2398,6 +2560,7 @@
       "name": "header.index",
       "controller": "App\\Http\\Controllers\\HeaderController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2413,6 +2576,7 @@
       "name": "header.changeCostumer",
       "controller": "App\\Http\\Controllers\\HeaderController@changeCostumer",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2428,6 +2592,7 @@
       "name": "sidebar.index",
       "controller": "App\\Http\\Controllers\\SideBarController@index",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2443,6 +2608,7 @@
       "name": "oidc.token-exchange",
       "controller": "App\\Http\\Controllers\\OidcWorkloadIdentityController@exchange",
       "authentication_mode": "workload-identity-exchange",
+      "trust_path": "internal-service",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2456,6 +2622,7 @@
       "name": "csrf.show",
       "controller": "Laravel\\Sanctum\\Http\\Controllers\\CsrfCookieController@show",
       "authentication_mode": "browser-auth-bootstrap",
+      "trust_path": "browser-session",
       "tenant_context": false,
       "current_owner": "laravel-framework",
       "middleware": [
@@ -2469,6 +2636,7 @@
       "name": "sso.oidcCallback",
       "controller": "App\\Http\\Controllers\\SsoAuthenticationController@oidcCallback",
       "authentication_mode": "sso-bootstrap-or-callback",
+      "trust_path": "browser-session",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2482,6 +2650,7 @@
       "name": "sso.samlCallback",
       "controller": "App\\Http\\Controllers\\SsoAuthenticationController@samlCallback",
       "authentication_mode": "sso-bootstrap-or-callback",
+      "trust_path": "browser-session",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2495,6 +2664,7 @@
       "name": "sso.start",
       "controller": "App\\Http\\Controllers\\SsoAuthenticationController@start",
       "authentication_mode": "sso-bootstrap-or-callback",
+      "trust_path": "browser-session",
       "tenant_context": false,
       "current_owner": "laravel-application",
       "middleware": [
@@ -2508,6 +2678,7 @@
       "name": null,
       "controller": "Closure",
       "authentication_mode": "browser-session",
+      "trust_path": "browser-session",
       "tenant_context": true,
       "current_owner": "laravel-application",
       "middleware": [

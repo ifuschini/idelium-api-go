@@ -37,6 +37,15 @@ route surface is backed by 46 controllers, 41 models, and 66 migrations.
 | Workload | OIDC workload token exchange | Late/identity |
 | SSO | OIDC/SAML callback and identity lifecycle | Last |
 
+The generated inventory assigns every route to one canonical migration trust
+path: `browser-session`, `api-key`, `run-token`, `internal-service`, or
+`public-operational`. The more detailed authentication mode is retained beside
+that classification so bootstrap and callback behavior is not obscured.
+
+`public-operational` is an inventory classification, not a security approval.
+It intentionally exposes the current public root, cache-clear route, and local
+Ignition routes for explicit deployment hardening and compatibility decisions.
+
 ## Domain route groups
 
 | Domain | Representative route prefixes | Proposed wave |

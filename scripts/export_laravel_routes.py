@@ -92,6 +92,25 @@ def current_owner(route: dict[str, Any]) -> str:
     return "laravel-framework"
 
 
+def trust_path(authentication: str) -> str:
+    mapping = {
+        "api-key": "api-key",
+        "browser-auth-bootstrap": "browser-session",
+        "browser-session": "browser-session",
+        "development-only": "public-operational",
+        "public": "public-operational",
+        "run-token": "run-token",
+        "sso-bootstrap-or-callback": "browser-session",
+        "workload-identity-exchange": "internal-service",
+    }
+    try:
+        return mapping[authentication]
+    except KeyError as error:
+        raise ValueError(
+            f"Authentication mode has no canonical trust path: {authentication}."
+        ) from error
+
+
 def normalize_route(route: dict[str, Any]) -> dict[str, Any]:
     required = {"method", "uri", "action", "middleware"}
     missing = required.difference(route)
@@ -100,12 +119,14 @@ def normalize_route(route: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(route["middleware"], list):
         raise ValueError("Route middleware must be a JSON array.")
 
+    authentication = authentication_mode(route)
     normalized = {
         "method": route["method"],
         "path": "/" + route["uri"].lstrip("/"),
         "name": route.get("name"),
         "controller": route["action"],
-        "authentication_mode": authentication_mode(route),
+        "authentication_mode": authentication,
+        "trust_path": trust_path(authentication),
         "tenant_context": any(
             "ResolveTenantContext" in item for item in route["middleware"]
         ),
@@ -142,6 +163,7 @@ def build_document(routes: list[dict[str, Any]], source: Source) -> dict[str, An
 def markdown(document: dict[str, Any]) -> str:
     routes = document["routes"]
     auth_counts = Counter(route["authentication_mode"] for route in routes)
+    trust_path_counts = Counter(route["trust_path"] for route in routes)
     owner_counts = Counter(route["current_owner"] for route in routes)
     tenant_count = sum(route["tenant_context"] for route in routes)
 
@@ -173,6 +195,24 @@ def markdown(document: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
+            "### Canonical trust paths",
+            "",
+            "Every route is assigned to exactly one migration trust path. Browser",
+            "authentication bootstrap and SSO callbacks belong to the browser-session",
+            "path even though they execute before a session exists. Workload identity",
+            "exchange belongs to the internal-service path. Framework, development, and",
+            "otherwise public routes remain visible as public-operational endpoints.",
+            "",
+            "| Trust path | Routes |",
+            "| --- | ---: |",
+        ]
+    )
+    lines.extend(
+        f"| `{path}` | {count} |" for path, count in sorted(trust_path_counts.items())
+    )
+    lines.extend(
+        [
+            "",
             "### Current owners",
             "",
             "| Owner | Routes |",
@@ -187,15 +227,15 @@ def markdown(document: dict[str, Any]) -> str:
             "",
             "## Complete route inventory",
             "",
-            "| Method | Path | Controller or action | Authentication | Tenant context | Current owner |",
-            "| --- | --- | --- | --- | --- | --- |",
+            "| Method | Path | Controller or action | Trust path | Authentication detail | Tenant context | Current owner |",
+            "| --- | --- | --- | --- | --- | --- | --- |",
         ]
     )
     for route in routes:
         action = route["controller"].replace("|", "\\|")
         lines.append(
             f"| `{route['method']}` | `{route['path']}` | `{action}` | "
-            f"`{route['authentication_mode']}` | "
+            f"`{route['trust_path']}` | `{route['authentication_mode']}` | "
             f"{'yes' if route['tenant_context'] else 'no'} | "
             f"`{route['current_owner']}` |"
         )

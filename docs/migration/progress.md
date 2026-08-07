@@ -16,7 +16,7 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 
 | Wave | GitHub epic | Status | Evidence |
 | --- | --- | --- | --- |
-| Wave 0 | [#1](https://github.com/ifuschini/idelium-api-go/issues/1) | In progress | Route inventory tickets [#72](https://github.com/ifuschini/idelium-api-go/issues/72) and [#73](https://github.com/ifuschini/idelium-api-go/issues/73) completed |
+| Wave 0 | [#1](https://github.com/ifuschini/idelium-api-go/issues/1) | In progress | Route and consumer inventory track [#12](https://github.com/ifuschini/idelium-api-go/issues/12) completed |
 | Wave 1 | [#2](https://github.com/ifuschini/idelium-api-go/issues/2) | In progress | `e4e5def feat: bootstrap Go API foundation` |
 | Wave 2 | [#3](https://github.com/ifuschini/idelium-api-go/issues/3) | Planned | Backlog materialized |
 | Wave 3 | [#4](https://github.com/ifuschini/idelium-api-go/issues/4) | In progress | `d4b7f22 feat: add read-only platform catalogs` |
@@ -34,6 +34,7 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 | --- | --- | --- |
 | [#72](https://github.com/ifuschini/idelium-api-go/issues/72) | Exported and classified all 171 routes registered by Laravel. | Generated JSON and Markdown inventories; exporter unit and integrity tests. |
 | [#73](https://github.com/ifuschini/idelium-api-go/issues/73) | Mapped Web, CLI, runner, Docker, and wiki consumers to the Laravel inventory. | Generated route-level map, unresolved-reference register, and integrity tests. |
+| [#74](https://github.com/ifuschini/idelium-api-go/issues/74) | Classified all Laravel routes into one of five canonical migration trust paths. | Generated classifications, exhaustive category assertions, and safe handling for unknown modes. |
 
 
 ## Update policy

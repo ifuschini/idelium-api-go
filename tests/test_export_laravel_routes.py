@@ -68,6 +68,24 @@ class LaravelRouteExportTest(unittest.TestCase):
                 self.assertEqual(expected_mode, exported["authentication_mode"])
                 self.assertEqual(expected_tenant_context, exported["tenant_context"])
 
+    def test_assigns_every_authentication_detail_to_a_canonical_trust_path(self):
+        expected = {
+            "api-key": "api-key",
+            "browser-auth-bootstrap": "browser-session",
+            "browser-session": "browser-session",
+            "development-only": "public-operational",
+            "public": "public-operational",
+            "run-token": "run-token",
+            "sso-bootstrap-or-callback": "browser-session",
+            "workload-identity-exchange": "internal-service",
+        }
+        self.assertEqual(
+            expected,
+            {mode: MODULE.trust_path(mode) for mode in expected},
+        )
+        with self.assertRaisesRegex(ValueError, "no canonical trust path"):
+            MODULE.trust_path("unclassified")
+
     def test_rejects_duplicate_method_and_path(self):
         route = self.route("api/example")
         with self.assertRaisesRegex(ValueError, "Duplicate method/path"):
@@ -86,6 +104,17 @@ class LaravelRouteExportTest(unittest.TestCase):
         self.assertEqual(171, inventory["route_count"])
         self.assertEqual(inventory["route_count"], len(routes))
         self.assertTrue(all(route["authentication_mode"] for route in routes))
+        self.assertTrue(all(route["trust_path"] for route in routes))
+        self.assertEqual(
+            {
+                "api-key",
+                "browser-session",
+                "internal-service",
+                "public-operational",
+                "run-token",
+            },
+            {route["trust_path"] for route in routes},
+        )
         self.assertTrue(all(route["current_owner"] for route in routes))
         self.assertTrue(all(route["controller"] for route in routes))
         identities = {(route["method"], route["path"]) for route in routes}

@@ -62,6 +62,7 @@ def build_map(inventory: dict[str, Any], rules: dict[str, Any]) -> dict[str, Any
                 "method": route["method"],
                 "path": route["path"],
                 "authentication_mode": route["authentication_mode"],
+                "trust_path": route["trust_path"],
                 "current_owner": route["current_owner"],
                 "consumers": route_consumers,
             }
@@ -122,8 +123,8 @@ def markdown(document: dict[str, Any]) -> str:
             "",
             "## Route-level mapping",
             "",
-            "| Method | Path | Authentication | Consumers |",
-            "| --- | --- | --- | --- |",
+            "| Method | Path | Trust path | Authentication detail | Consumers |",
+            "| --- | --- | --- | --- | --- |",
         ]
     )
     for route in document["routes"]:
@@ -133,7 +134,7 @@ def markdown(document: dict[str, Any]) -> str:
         ) or "—"
         lines.append(
             f"| `{route['method']}` | `{route['path']}` | "
-            f"`{route['authentication_mode']}` | {consumers} |"
+            f"`{route['trust_path']}` | `{route['authentication_mode']}` | {consumers} |"
         )
 
     lines.extend(
