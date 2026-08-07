@@ -40,6 +40,10 @@ The [sanitized golden fixture policy](docs/contracts/golden-fixture-policy.md)
 defines the bounded, synthetic evidence format used by future Laravel-versus-Go
 differential tests and provides a validator that prevents sensitive headers,
 credentials, and real tenant identities from entering committed fixtures.
+The generated
+[migration ownership matrix](docs/contracts/migration-ownership-matrix.md)
+assigns every production-visible route to a transaction-owning aggregate,
+records its effective owner, and enforces the no-dual-write migration rule.
 
 No Laravel business route is owned by Go yet. Route ownership will move only
 after its compatibility and tenant-isolation gates pass.
