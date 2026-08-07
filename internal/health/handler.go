@@ -29,6 +29,7 @@ func NewHandler(checker Checker, info buildinfo.Info) *Handler {
 
 // Live reports process liveness without querying dependencies.
 func (handler *Handler) Live(writer http.ResponseWriter, _ *http.Request) {
+	writer.Header().Set("Cache-Control", "no-store")
 	httpx.WriteJSON(writer, http.StatusOK, struct {
 		Status string `json:"status"`
 		buildinfo.Info
@@ -40,6 +41,7 @@ func (handler *Handler) Live(writer http.ResponseWriter, _ *http.Request) {
 
 // Ready reports readiness only when the database is reachable.
 func (handler *Handler) Ready(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Cache-Control", "no-store")
 	ctx, cancel := context.WithTimeout(request.Context(), readinessTimeout)
 	defer cancel()
 

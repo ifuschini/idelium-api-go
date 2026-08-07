@@ -71,6 +71,8 @@ allowed to run before a handler and ownership boundary are registered.
 
 Health and catalog error responses never include database connection strings or
 credentials.
+Health probe semantics, caching rules, and orchestrator guidance are documented
+in [docs/operations/health-contracts.md](docs/operations/health-contracts.md).
 
 ## Configuration
 

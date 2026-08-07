@@ -2,15 +2,78 @@ package mysql
 
 import (
 	"context"
+	"database/sql"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"reflect"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/idelium/idelium-api-go/internal/buildinfo"
 	"github.com/idelium/idelium-api-go/internal/config"
+	"github.com/idelium/idelium-api-go/internal/health"
 	"github.com/idelium/idelium-api-go/internal/platforms"
 )
+
+func openIntegrationDatabase(t *testing.T) *sql.DB {
+	t.Helper()
+	host := os.Getenv("IDELIUM_TEST_MYSQL_HOST")
+	if host == "" {
+		t.Skip("IDELIUM_TEST_MYSQL_HOST is not configured")
+	}
+	port := 3306
+	if value := os.Getenv("IDELIUM_TEST_MYSQL_PORT"); value != "" {
+		parsed, err := strconv.Atoi(value)
+		if err != nil {
+			t.Fatalf("parse test database port: %v", err)
+		}
+		port = parsed
+	}
+	database, err := Open(config.DatabaseConfig{
+		Host:                  host,
+		Port:                  port,
+		Name:                  os.Getenv("IDELIUM_TEST_MYSQL_DATABASE"),
+		User:                  os.Getenv("IDELIUM_TEST_MYSQL_USER"),
+		Password:              os.Getenv("IDELIUM_TEST_MYSQL_PASSWORD"),
+		TLSMode:               "false",
+		ConnectTimeout:        5 * time.Second,
+		ReadTimeout:           5 * time.Second,
+		WriteTimeout:          5 * time.Second,
+		MaxOpenConnections:    4,
+		MaxIdleConnections:    2,
+		ConnectionMaxLifetime: time.Minute,
+	})
+	if err != nil {
+		t.Fatalf("Open() returned an error: %v", err)
+	}
+	return database
+}
+
+func TestReadinessHTTPContractIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	handler := health.NewHandler(integrationChecker{database: database}, buildinfo.Current())
+	response := httptest.NewRecorder()
+	handler.Ready(response, httptest.NewRequest(http.MethodGet, "/health/ready", nil))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected readiness status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if response.Header().Get("Cache-Control") != "no-store" {
+		t.Fatal("readiness response is cacheable")
+	}
+}
+
+type integrationChecker struct {
+	database *sql.DB
+}
+
+func (checker integrationChecker) Check(ctx context.Context) error {
+	return Check(ctx, checker.database)
+}
 
 func TestDatabaseConnectionIntegration(t *testing.T) {
 	host := os.Getenv("IDELIUM_TEST_MYSQL_HOST")

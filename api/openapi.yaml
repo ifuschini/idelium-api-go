@@ -16,6 +16,9 @@ paths:
       responses:
         "200":
           description: The API process is alive.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/HealthCacheControl"
           content:
             application/json:
               schema:
@@ -28,12 +31,18 @@ paths:
       responses:
         "200":
           description: Required dependencies are ready.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/HealthCacheControl"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReadinessResponse"
         "503":
           description: A required dependency is unavailable.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/HealthCacheControl"
           content:
             application/json:
               schema:
@@ -79,6 +88,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 components:
+  headers:
+    HealthCacheControl:
+      description: Health responses must not be served from a cache.
+      schema:
+        type: string
+        enum: [no-store]
   schemas:
     BuildInfo:
       type: object
@@ -136,4 +151,3 @@ components:
           format: int64
         name:
           type: string
-
