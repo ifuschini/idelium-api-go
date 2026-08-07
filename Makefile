@@ -1,9 +1,12 @@
 GO ?= go
 
-.PHONY: build format format-check integration-test test test-race vet verify
+.PHONY: build contract-test format format-check integration-test test test-race vet verify
 
 build:
 	$(GO) build ./...
+
+contract-test:
+	python3 -m unittest discover -s tests -p 'test_*.py'
 
 format:
 	$(GO) fmt ./...
@@ -23,4 +26,4 @@ integration-test:
 vet:
 	$(GO) vet ./...
 
-verify: format-check vet test test-race build
+verify: format-check vet test test-race contract-test build

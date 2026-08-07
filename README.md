@@ -25,6 +25,11 @@ The repository currently provides the production foundation for the new API:
 - unit, race, and container build gates;
 - the initial OpenAPI contract and Laravel route inventory.
 
+The complete, reproducible Laravel route baseline is available in
+[docs/contracts/laravel-routes.md](docs/contracts/laravel-routes.md), with its
+machine-readable counterpart in
+[docs/contracts/laravel-routes.json](docs/contracts/laravel-routes.json).
+
 No Laravel business route is owned by Go yet. Route ownership will move only
 after its compatibility and tenant-isolation gates pass.
 

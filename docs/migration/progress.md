@@ -16,7 +16,7 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 
 | Wave | GitHub epic | Status | Evidence |
 | --- | --- | --- | --- |
-| Wave 0 | [#1](https://github.com/ifuschini/idelium-api-go/issues/1) | Planned | Backlog materialized |
+| Wave 0 | [#1](https://github.com/ifuschini/idelium-api-go/issues/1) | In progress | Route inventory ticket [#72](https://github.com/ifuschini/idelium-api-go/issues/72) completed |
 | Wave 1 | [#2](https://github.com/ifuschini/idelium-api-go/issues/2) | In progress | `e4e5def feat: bootstrap Go API foundation` |
 | Wave 2 | [#3](https://github.com/ifuschini/idelium-api-go/issues/3) | Planned | Backlog materialized |
 | Wave 3 | [#4](https://github.com/ifuschini/idelium-api-go/issues/4) | In progress | `d4b7f22 feat: add read-only platform catalogs` |
@@ -27,6 +27,12 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 | Wave 8 | [#9](https://github.com/ifuschini/idelium-api-go/issues/9) | Planned | Backlog materialized |
 | Wave 9 | [#10](https://github.com/ifuschini/idelium-api-go/issues/10) | Planned | Backlog materialized |
 | Wave 10 | [#11](https://github.com/ifuschini/idelium-api-go/issues/11) | Planned | Backlog materialized |
+
+## Completed tickets
+
+| Ticket | Result | Verification |
+| --- | --- | --- |
+| [#72](https://github.com/ifuschini/idelium-api-go/issues/72) | Exported and classified all 171 routes registered by Laravel. | Generated JSON and Markdown inventories; exporter unit and integrity tests. |
 
 
 ## Update policy

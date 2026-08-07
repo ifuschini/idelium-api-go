@@ -1,5 +1,9 @@
 # Laravel Route Inventory Baseline
 
+> This planning summary is complemented by the generated
+> [complete route inventory](laravel-routes.md) and its
+> [machine-readable contract](laravel-routes.json).
+
 ## Purpose
 
 This inventory is the starting point for contract extraction from `idelium-api`.
@@ -74,3 +78,14 @@ contract. The current Laravel implementation can return a plain `"ok"` payload
 for unauthorized roles, which should not be copied into Go without an explicit
 compatibility and security decision.
 
+## Inventory deployment and rollback
+
+The generated inventory does not move traffic, change a database schema, or
+alter Laravel behavior. Deployment therefore consists only of publishing the
+versioned contract artifacts. Rollback is a normal Git revert of the inventory
+commit. Any unexpected route delta must be investigated in Laravel before an
+updated baseline is accepted; it must not be hidden by editing generated files.
+
+Laravel-Go differential execution is not applicable to this inventory-only
+ticket because no HTTP behavior changes. The exported contracts are the input
+to differential coverage in later route migration tickets.

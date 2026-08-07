@@ -1,0 +1,2521 @@
+{
+  "schema_version": 1,
+  "source": {
+    "label": "idelium/idelium-api",
+    "revision": "ef97a6b3f42105cad583b3f1a68acf637a9d086e"
+  },
+  "route_count": 171,
+  "route_digest_sha256": "b59c86f112ed71de23b5563c36973c9e01fabd2dfd1f11b7f226892328a14a07",
+  "routes": [
+    {
+      "method": "GET|HEAD",
+      "path": "/",
+      "name": null,
+      "controller": "Closure",
+      "authentication_mode": "public",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "web"
+      ],
+      "source": "routes/web.php:17"
+    },
+    {
+      "method": "POST",
+      "path": "/_ignition/execute-solution",
+      "name": "ignition.executeSolution",
+      "controller": "Spatie\\LaravelIgnition\\Http\\Controllers\\ExecuteSolutionController",
+      "authentication_mode": "development-only",
+      "tenant_context": false,
+      "current_owner": "development-dependency",
+      "middleware": [
+        "Spatie\\LaravelIgnition\\Http\\Middleware\\RunnableSolutionsEnabled"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/_ignition/health-check",
+      "name": "ignition.healthCheck",
+      "controller": "Spatie\\LaravelIgnition\\Http\\Controllers\\HealthCheckController",
+      "authentication_mode": "development-only",
+      "tenant_context": false,
+      "current_owner": "development-dependency",
+      "middleware": [
+        "Spatie\\LaravelIgnition\\Http\\Middleware\\RunnableSolutionsEnabled"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/_ignition/update-config",
+      "name": "ignition.updateConfig",
+      "controller": "Spatie\\LaravelIgnition\\Http\\Controllers\\UpdateConfigController",
+      "authentication_mode": "development-only",
+      "tenant_context": false,
+      "current_owner": "development-dependency",
+      "middleware": [
+        "Spatie\\LaravelIgnition\\Http\\Middleware\\RunnableSolutionsEnabled"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/accounts",
+      "name": "accounts.index",
+      "controller": "App\\Http\\Controllers\\UserController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/accounts",
+      "name": "accounts.store",
+      "controller": "App\\Http\\Controllers\\UserController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/accounts/{idUser}",
+      "name": "accounts.destroy",
+      "controller": "App\\Http\\Controllers\\UserController@destroy",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/accounts/{idUser}",
+      "name": "accounts.update",
+      "controller": "App\\Http\\Controllers\\UserController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/agents",
+      "name": "agents.index",
+      "controller": "App\\Http\\Controllers\\AgentRegistrationController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/agents/{agentRegistration}/status",
+      "name": "agents.updateStatus",
+      "controller": "App\\Http\\Controllers\\AgentRegistrationController@updateStatus",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/apikey",
+      "name": "costumers.getKey",
+      "controller": "App\\Http\\Controllers\\CostumerController@getKey",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/apikey",
+      "name": "costumers.updateKey",
+      "controller": "App\\Http\\Controllers\\CostumerController@updateKey",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/costumers",
+      "name": "costumers.index",
+      "controller": "App\\Http\\Controllers\\CostumerController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/costumers",
+      "name": "costumers.store",
+      "controller": "App\\Http\\Controllers\\CostumerController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/costumers/{idCostumer}",
+      "name": "costumers.destroy",
+      "controller": "App\\Http\\Controllers\\CostumerController@destroy",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/costumers/{idCostumer}",
+      "name": "costumers.update",
+      "controller": "App\\Http\\Controllers\\CostumerController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/environments",
+      "name": "environments.store",
+      "controller": "App\\Http\\Controllers\\EnvironmentController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/environments/{idProject}",
+      "name": "environments.index",
+      "controller": "App\\Http\\Controllers\\EnvironmentController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/environments/{idProject}/{environment}",
+      "name": "environments.destroy",
+      "controller": "App\\Http\\Controllers\\EnvironmentController@destroy",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/environments/{idProject}/{environment}",
+      "name": "environments.show",
+      "controller": "App\\Http\\Controllers\\EnvironmentController@show",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/environments/{idProject}/{environment}",
+      "name": "environments.update",
+      "controller": "App\\Http\\Controllers\\EnvironmentController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/grid/bulk-jobs",
+      "name": "grid.bulkJobs.store",
+      "controller": "App\\Http\\Controllers\\GridBulkOperationController@storeJob",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/grid/bulk-jobs/{jobId}",
+      "name": "grid.bulkJobs.show",
+      "controller": "App\\Http\\Controllers\\GridBulkOperationController@showJob",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/grid/bulk-jobs/{jobId}/export",
+      "name": "grid.bulkJobs.export",
+      "controller": "App\\Http\\Controllers\\GridBulkOperationController@exportJob",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/grid/query-snapshots",
+      "name": "grid.querySnapshots.store",
+      "controller": "App\\Http\\Controllers\\GridBulkOperationController@storeSnapshot",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/identity/accounts/{user}/break-glass",
+      "name": "identity.updateBreakGlass",
+      "controller": "App\\Http\\Controllers\\IdentityLifecycleController@updateBreakGlass",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/identity/accounts/{user}/break-glass/test",
+      "name": "identity.recordBreakGlassTest",
+      "controller": "App\\Http\\Controllers\\IdentityLifecycleController@recordBreakGlassTest",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/identity/providers",
+      "name": "identity.providers",
+      "controller": "App\\Http\\Controllers\\IdentityLifecycleController@providers",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/identity/providers",
+      "name": "identity.storeProvider",
+      "controller": "App\\Http\\Controllers\\IdentityLifecycleController@storeProvider",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/identity/providers/{identityProvider}/scim/users",
+      "name": "identity.scimUpsertUser",
+      "controller": "App\\Http\\Controllers\\IdentityLifecycleController@scimUpsertUser",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/importtest",
+      "name": "importtest.store",
+      "controller": "App\\Http\\Controllers\\ImportTestController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/launchtest",
+      "name": "testlauncher.launchTest",
+      "controller": "App\\Http\\Controllers\\TestLauncherController@launchTest",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/brands",
+      "name": "brandevice.index",
+      "controller": "App\\Http\\Controllers\\BrandDeviceController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/brands",
+      "name": "brandevice.store",
+      "controller": "App\\Http\\Controllers\\BrandDeviceController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/brands",
+      "name": "brandevice.update",
+      "controller": "App\\Http\\Controllers\\BrandDeviceController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/browsers",
+      "name": "browser.store",
+      "controller": "App\\Http\\Controllers\\BrowserController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/browsers",
+      "name": "browser.update",
+      "controller": "App\\Http\\Controllers\\BrowserController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/browsers/{idOs}",
+      "name": "browser.index",
+      "controller": "App\\Http\\Controllers\\BrowserController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/browserversions",
+      "name": "versionbrowser.store",
+      "controller": "App\\Http\\Controllers\\VersionBrowserController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/browserversions",
+      "name": "versionbrowser.update",
+      "controller": "App\\Http\\Controllers\\VersionBrowserController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/browserversions/{idBrowser}",
+      "name": "versionbrowser.index",
+      "controller": "App\\Http\\Controllers\\VersionBrowserController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/locations",
+      "name": "location.index",
+      "controller": "App\\Http\\Controllers\\LocationController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/locations",
+      "name": "location.store",
+      "controller": "App\\Http\\Controllers\\LocationController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/locations",
+      "name": "location.update",
+      "controller": "App\\Http\\Controllers\\LocationController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/manageplatforms",
+      "name": "platform.store",
+      "controller": "App\\Http\\Controllers\\PlatformController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/manageplatforms",
+      "name": "platform.update",
+      "controller": "App\\Http\\Controllers\\PlatformController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/manageplatforms/{type}",
+      "name": "platform.index",
+      "controller": "App\\Http\\Controllers\\PlatformController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/platforms/manageplatforms/{type}/{id}",
+      "name": "platform.delete",
+      "controller": "App\\Http\\Controllers\\PlatformController@delete",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/models",
+      "name": "model.store",
+      "controller": "App\\Http\\Controllers\\ModelDeviceController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/models",
+      "name": "model.update",
+      "controller": "App\\Http\\Controllers\\ModelDeviceController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/models/{idBrand}",
+      "name": "model.index",
+      "controller": "App\\Http\\Controllers\\ModelDeviceController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/os",
+      "name": "os.store",
+      "controller": "App\\Http\\Controllers\\OsController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/os",
+      "name": "os.update",
+      "controller": "App\\Http\\Controllers\\OsController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/os/{idType}",
+      "name": "os.index",
+      "controller": "App\\Http\\Controllers\\OsController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/osversion",
+      "name": "osversion.store",
+      "controller": "App\\Http\\Controllers\\VersionOsController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/osversion",
+      "name": "osversion.update",
+      "controller": "App\\Http\\Controllers\\VersionOsController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/osversion/{idOs}",
+      "name": "osversion.index",
+      "controller": "App\\Http\\Controllers\\VersionOsController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/status",
+      "name": "status.index",
+      "controller": "App\\Http\\Controllers\\StatusController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/types",
+      "name": "types.index",
+      "controller": "App\\Http\\Controllers\\TypeController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/plugins",
+      "name": "plugins.store",
+      "controller": "App\\Http\\Controllers\\PluginController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/plugins/{idProject}",
+      "name": "plugins.index",
+      "controller": "App\\Http\\Controllers\\PluginController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/plugins/{idProject}/{plugin}",
+      "name": "plugins.destroy",
+      "controller": "App\\Http\\Controllers\\PluginController@destroy",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/plugins/{idProject}/{plugin}",
+      "name": "plugins.show",
+      "controller": "App\\Http\\Controllers\\PluginController@show",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/plugins/{idProject}/{step}",
+      "name": "plugins.update",
+      "controller": "App\\Http\\Controllers\\PluginController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/profile",
+      "name": "accounts.getuser",
+      "controller": "App\\Http\\Controllers\\UserController@getuser",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/profile",
+      "name": "accounts.updatePasswordUser",
+      "controller": "App\\Http\\Controllers\\UserController@updatePasswordUser",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/profile/mfa/confirm",
+      "name": "mfa.confirm",
+      "controller": "App\\Http\\Controllers\\MfaController@confirm",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/profile/mfa/enroll",
+      "name": "mfa.enroll",
+      "controller": "App\\Http\\Controllers\\MfaController@enroll",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/profile/mfa/step-up",
+      "name": "mfa.stepUp",
+      "controller": "App\\Http\\Controllers\\MfaController@stepUp",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects",
+      "name": "projects.index",
+      "controller": "App\\Http\\Controllers\\ProjectController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects",
+      "name": "projects.store",
+      "controller": "App\\Http\\Controllers\\ProjectController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/create",
+      "name": "projects.create",
+      "controller": "App\\Http\\Controllers\\ProjectController@create",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}",
+      "name": "assetimpact.show",
+      "controller": "App\\Http\\Controllers\\AssetImpactController@show",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}",
+      "name": "assetversions.index",
+      "controller": "App\\Http\\Controllers\\AssetVersionController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/asset-versions/{assetVersion}",
+      "name": "assetversions.show",
+      "controller": "App\\Http\\Controllers\\AssetVersionController@show",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events",
+      "name": "assetversions.transitionReview",
+      "controller": "App\\Http\\Controllers\\AssetVersionController@transitionReview",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}",
+      "name": "assetversions.diff",
+      "controller": "App\\Http\\Controllers\\AssetVersionController@diff",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/integration-deliveries",
+      "name": "integrations.deliveries",
+      "controller": "App\\Http\\Controllers\\IntegrationEndpointController@deliveries",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay",
+      "name": "integrations.replay",
+      "controller": "App\\Http\\Controllers\\IntegrationEndpointController@replay",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/integrations",
+      "name": "integrations.index",
+      "controller": "App\\Http\\Controllers\\IntegrationEndpointController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/integrations",
+      "name": "integrations.store",
+      "controller": "App\\Http\\Controllers\\IntegrationEndpointController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret",
+      "name": "integrations.rotateSecret",
+      "controller": "App\\Http\\Controllers\\IntegrationEndpointController@rotateSecret",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status",
+      "name": "integrations.updateStatus",
+      "controller": "App\\Http\\Controllers\\IntegrationEndpointController@updateStatus",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test",
+      "name": "integrations.test",
+      "controller": "App\\Http\\Controllers\\IntegrationEndpointController@test",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/parallel-runs",
+      "name": "parallelruns.index",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/parallel-runs",
+      "name": "parallelruns.store",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/matrix",
+      "name": "parallelruns.storeMatrix",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@storeMatrix",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}",
+      "name": "parallelruns.show",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@show",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
+      "name": "parallelruns.cancel",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@cancel",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim",
+      "name": "parallelruns.claimWorker",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@claimWorker",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results",
+      "name": "parallelruns.results",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@results",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
+      "name": "parallelruns.updateWorker",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@updateWorker",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
+      "name": "parallelruns.heartbeatWorker",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@heartbeatWorker",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts",
+      "name": "artifacts.index",
+      "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}",
+      "name": "artifacts.show",
+      "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@show",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive",
+      "name": "artifacts.archive",
+      "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@archive",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker",
+      "name": "artifacts.markDeleted",
+      "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@markDeleted",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact",
+      "name": "artifacts.impact",
+      "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@impact",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold",
+      "name": "artifacts.legalHold",
+      "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@legalHold",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore",
+      "name": "artifacts.restore",
+      "controller": "App\\Http\\Controllers\\ArtifactDescriptorController@restore",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/projects/{project}",
+      "name": "projects.destroy",
+      "controller": "App\\Http\\Controllers\\ProjectController@destroy",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{project}",
+      "name": "projects.show",
+      "controller": "App\\Http\\Controllers\\ProjectController@show",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT|PATCH",
+      "path": "/api/admin/projects/{project}",
+      "name": "projects.update",
+      "controller": "App\\Http\\Controllers\\ProjectController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{project}/edit",
+      "name": "projects.edit",
+      "controller": "App\\Http\\Controllers\\ProjectController@edit",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/result-exports",
+      "name": "result-exports.store",
+      "controller": "App\\Http\\Controllers\\ResultExportController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/result-exports/{resultExport}",
+      "name": "result-exports.show",
+      "controller": "App\\Http\\Controllers\\ResultExportController@show",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/result-exports/{resultExport}/download",
+      "name": "result-exports.download",
+      "controller": "App\\Http\\Controllers\\ResultExportController@download",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/roles",
+      "name": "roles.index",
+      "controller": "App\\Http\\Controllers\\RoleController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/service-accounts",
+      "name": "service-accounts.index",
+      "controller": "App\\Http\\Controllers\\ServiceAccountController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/service-accounts",
+      "name": "service-accounts.store",
+      "controller": "App\\Http\\Controllers\\ServiceAccountController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/service-accounts/{serviceAccount}/revoke",
+      "name": "service-accounts.revoke",
+      "controller": "App\\Http\\Controllers\\ServiceAccountController@revoke",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/steps",
+      "name": "steps.store",
+      "controller": "App\\Http\\Controllers\\StepController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/steps/{idProject}",
+      "name": "steps.index",
+      "controller": "App\\Http\\Controllers\\StepController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/steps/{idProject}/updateorder",
+      "name": "steps.updateorder",
+      "controller": "App\\Http\\Controllers\\StepController@updateorder",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/steps/{idProject}/{environment}",
+      "name": "steps.destroy",
+      "controller": "App\\Http\\Controllers\\StepController@destroy",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/steps/{idProject}/{step}",
+      "name": "steps.show",
+      "controller": "App\\Http\\Controllers\\StepController@show",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/steps/{idProject}/{step}",
+      "name": "steps.update",
+      "controller": "App\\Http\\Controllers\\StepController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/stepsperfomed/{idTestPerformed}",
+      "name": "testsperfomed.index",
+      "controller": "App\\Http\\Controllers\\PerformedStepController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/testcycles",
+      "name": "testcycles.store",
+      "controller": "App\\Http\\Controllers\\TestCycleController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/testcycles/{idProject}",
+      "name": "testcycles.index",
+      "controller": "App\\Http\\Controllers\\TestCycleController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/testcycles/{idProject}/{testcycle}",
+      "name": "testcycles.show",
+      "controller": "App\\Http\\Controllers\\TestCycleController@show",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/testcycles/{idProject}/{testcycle}",
+      "name": "testcycles.update",
+      "controller": "App\\Http\\Controllers\\TestCycleController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/testcyclesperfomed/{idTestCyclePerformed}",
+      "name": "testcyclesperfomed.index",
+      "controller": "App\\Http\\Controllers\\PerformedTestCycleController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/tests",
+      "name": "tests.store",
+      "controller": "App\\Http\\Controllers\\TestController@store",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/tests/{idProject}",
+      "name": "tests.index",
+      "controller": "App\\Http\\Controllers\\TestController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/tests/{idProject}/{test}",
+      "name": "tests.show",
+      "controller": "App\\Http\\Controllers\\TestController@show",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/tests/{idProject}/{test}",
+      "name": "tests.update",
+      "controller": "App\\Http\\Controllers\\TestController@update",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/testsperfomed/{idTestPerformed}",
+      "name": "testsperfomed.index",
+      "controller": "App\\Http\\Controllers\\PerformedTestController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/audit-events",
+      "name": "audit-events.index",
+      "controller": "App\\Http\\Controllers\\AuditEventController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/clear",
+      "name": null,
+      "controller": "Closure",
+      "authentication_mode": "public",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "web"
+      ],
+      "source": "routes/web.php:20"
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/csrf-cookie",
+      "name": "sanctum.csrf-cookie",
+      "controller": "Laravel\\Sanctum\\Http\\Controllers\\CsrfCookieController@show",
+      "authentication_mode": "public",
+      "tenant_context": false,
+      "current_owner": "laravel-framework",
+      "middleware": [
+        "web"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/agents/register",
+      "name": "cl.agents.register",
+      "controller": "App\\Http\\Controllers\\AgentRegistrationController@register",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/environment/{idEnvironment}",
+      "name": "cl.getEnvironment",
+      "controller": "App\\Http\\Controllers\\IdeliumClController@getEnvironment",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/environments/{idProject}",
+      "name": "cl.getEnvironments",
+      "controller": "App\\Http\\Controllers\\IdeliumClController@getEnvironments",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/plugin/{idPlugin}",
+      "name": "cl.getPlugin",
+      "controller": "App\\Http\\Controllers\\IdeliumClController@getPlugin",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/plugins/{idProject}",
+      "name": "cl.getPlugins",
+      "controller": "App\\Http\\Controllers\\IdeliumClController@getPlugins",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs",
+      "name": "cl.parallelruns.index",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@index",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs",
+      "name": "cl.parallelruns.store",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@store",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/matrix",
+      "name": "cl.parallelruns.storeMatrix",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@storeMatrix",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}",
+      "name": "cl.parallelruns.show",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@show",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
+      "name": "cl.parallelruns.cancel",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@cancel",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim",
+      "name": "cl.parallelruns.claimWorker",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@claimWorker",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results",
+      "name": "cl.parallelruns.results",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@results",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens",
+      "name": "cl.parallelruns.issueRunToken",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@issueRunToken",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke",
+      "name": "cl.parallelruns.revokeRunToken",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@revokeRunToken",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
+      "name": "cl.parallelruns.updateWorker",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@updateWorker",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
+      "name": "cl.parallelruns.heartbeatWorker",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@heartbeatWorker",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/step",
+      "name": "cl.createStep",
+      "controller": "App\\Http\\Controllers\\IdeliumInsertClController@createStep",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/ideliumcl/step",
+      "name": "cl.updateStep",
+      "controller": "App\\Http\\Controllers\\IdeliumInsertClController@updateStep",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/step/{idStep}",
+      "name": "cl.getStep",
+      "controller": "App\\Http\\Controllers\\IdeliumClController@getStep",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/test",
+      "name": "cl.createTest",
+      "controller": "App\\Http\\Controllers\\IdeliumInsertClController@createTest",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/ideliumcl/test",
+      "name": "cl.updateTest",
+      "controller": "App\\Http\\Controllers\\IdeliumInsertClController@updateTest",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/test/{idTest}",
+      "name": "cl.getTest",
+      "controller": "App\\Http\\Controllers\\IdeliumClController@getTest",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/testcycle",
+      "name": "cl.createFolder",
+      "controller": "App\\Http\\Controllers\\IdeliumInsertClController@createFolder",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/ideliumcl/testcycle",
+      "name": "cl.updateFolder",
+      "controller": "App\\Http\\Controllers\\IdeliumInsertClController@updateFolder",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/testcycle/{idTestCycle}",
+      "name": "cl.getTestCycle",
+      "controller": "App\\Http\\Controllers\\IdeliumClController@getTestCycle",
+      "authentication_mode": "api-key",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\AuthenticateIdeliumKey"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumrunner/claim",
+      "name": "runner.claim",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@claimWorkerWithRunToken",
+      "authentication_mode": "run-token",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumrunner/heartbeat",
+      "name": "runner.heartbeat",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@heartbeatWorkerWithToken",
+      "authentication_mode": "run-token",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/ideliumrunner/worker",
+      "name": "runner.updateWorker",
+      "controller": "App\\Http\\Controllers\\ParallelRunScheduleController@updateWorkerWithToken",
+      "authentication_mode": "run-token",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/login",
+      "name": "login",
+      "controller": "App\\Http\\Controllers\\LoginController@login",
+      "authentication_mode": "browser-auth-bootstrap",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/logout",
+      "name": "logout",
+      "controller": "App\\Http\\Controllers\\LoginController@logout",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/me/capabilities",
+      "name": "capabilities.me",
+      "controller": "App\\Http\\Controllers\\CapabilityController@me",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/menu/header",
+      "name": "header.index",
+      "controller": "App\\Http\\Controllers\\HeaderController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/menu/header/{idCostumer}",
+      "name": "header.changeCostumer",
+      "controller": "App\\Http\\Controllers\\HeaderController@changeCostumer",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/menu/sidebar",
+      "name": "sidebar.index",
+      "controller": "App\\Http\\Controllers\\SideBarController@index",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/oidc/token-exchange",
+      "name": "oidc.token-exchange",
+      "controller": "App\\Http\\Controllers\\OidcWorkloadIdentityController@exchange",
+      "authentication_mode": "workload-identity-exchange",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/sanctum/csrf-cookie",
+      "name": "csrf.show",
+      "controller": "Laravel\\Sanctum\\Http\\Controllers\\CsrfCookieController@show",
+      "authentication_mode": "browser-auth-bootstrap",
+      "tenant_context": false,
+      "current_owner": "laravel-framework",
+      "middleware": [
+        "api"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/sso/{identityProvider}/oidc/callback",
+      "name": "sso.oidcCallback",
+      "controller": "App\\Http\\Controllers\\SsoAuthenticationController@oidcCallback",
+      "authentication_mode": "sso-bootstrap-or-callback",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/sso/{identityProvider}/saml/callback",
+      "name": "sso.samlCallback",
+      "controller": "App\\Http\\Controllers\\SsoAuthenticationController@samlCallback",
+      "authentication_mode": "sso-bootstrap-or-callback",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api"
+      ],
+      "source": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/sso/{identityProvider}/start",
+      "name": "sso.start",
+      "controller": "App\\Http\\Controllers\\SsoAuthenticationController@start",
+      "authentication_mode": "sso-bootstrap-or-callback",
+      "tenant_context": false,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api"
+      ],
+      "source": null
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/user",
+      "name": null,
+      "controller": "Closure",
+      "authentication_mode": "browser-session",
+      "tenant_context": true,
+      "current_owner": "laravel-application",
+      "middleware": [
+        "api",
+        "App\\Http\\Middleware\\Authenticate:sanctum",
+        "App\\Http\\Middleware\\ResolveTenantContext"
+      ],
+      "source": "routes/api.php:401"
+    }
+  ]
+}
