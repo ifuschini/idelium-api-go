@@ -1,0 +1,1262 @@
+{
+  "repository": "ifuschini/idelium-api-go",
+  "source": "docs/migration/epics.md",
+  "waves": [
+    {
+      "number": 0,
+      "name": "Baseline And Governance",
+      "issue": {
+        "number": 1,
+        "title": "[Epic][Wave 0] Baseline And Governance",
+        "url": "https://github.com/ifuschini/idelium-api-go/issues/1"
+      },
+      "tracks": [
+        {
+          "name": "Route and consumer inventory",
+          "issue": {
+            "number": 12,
+            "title": "[Track][Wave 0] Route and consumer inventory",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/12"
+          },
+          "tickets": [
+            {
+              "number": 72,
+              "title": "[Ticket][Wave 0] Export every Laravel route with method, path, controller, authentication mode, and current owner",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/72"
+            },
+            {
+              "number": 73,
+              "title": "[Ticket][Wave 0] Map Idelium Web, Idelium CLI, runners, Docker scripts, and wiki examples to the routes they consume",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/73"
+            },
+            {
+              "number": 74,
+              "title": "[Ticket][Wave 0] Classify every route as browser session, API key, run token, internal service, or public operational endpoint",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/74"
+            }
+          ]
+        },
+        {
+          "name": "Compatibility contract backlog",
+          "issue": {
+            "number": 13,
+            "title": "[Track][Wave 0] Compatibility contract backlog",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/13"
+          },
+          "tickets": [
+            {
+              "number": 75,
+              "title": "[Ticket][Wave 0] Establish the initial compatibility-contract backlog for every inventoried public route",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/75"
+            }
+          ]
+        },
+        {
+          "name": "Golden fixture strategy",
+          "issue": {
+            "number": 14,
+            "title": "[Track][Wave 0] Golden fixture strategy",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/14"
+          },
+          "tickets": [
+            {
+              "number": 76,
+              "title": "[Ticket][Wave 0] Create the initial sanitized golden fixture policy",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/76"
+            }
+          ]
+        },
+        {
+          "name": "Rollout, ownership, and rollback governance",
+          "issue": {
+            "number": 15,
+            "title": "[Track][Wave 0] Rollout, ownership, and rollback governance",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/15"
+          },
+          "tickets": [
+            {
+              "number": 77,
+              "title": "[Ticket][Wave 0] Define the migration ownership matrix with one mutation owner per aggregate",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/77"
+            },
+            {
+              "number": 78,
+              "title": "[Ticket][Wave 0] Add an ADR template and write the first ADR for the strangler migration model",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/78"
+            },
+            {
+              "number": 79,
+              "title": "[Ticket][Wave 0] Define release, rollback, and route-switch approval gates",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/79"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 1,
+      "name": "Production-Grade Go Service Foundation",
+      "issue": {
+        "number": 2,
+        "title": "[Epic][Wave 1] Production-Grade Go Service Foundation",
+        "url": "https://github.com/ifuschini/idelium-api-go/issues/2"
+      },
+      "tracks": [
+        {
+          "name": "Runtime lifecycle",
+          "issue": {
+            "number": 16,
+            "title": "[Track][Wave 1] Runtime lifecycle",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/16"
+          },
+          "tickets": [
+            {
+              "number": 80,
+              "title": "[Ticket][Wave 1] Scaffold the API process with graceful shutdown, bounded timeouts, and build metadata",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/80"
+            },
+            {
+              "number": 81,
+              "title": "[Ticket][Wave 1] Add worker and migrate process skeletons when their first owning domains are scheduled",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/81"
+            }
+          ]
+        },
+        {
+          "name": "Configuration and secret loading",
+          "issue": {
+            "number": 17,
+            "title": "[Track][Wave 1] Configuration and secret loading",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/17"
+          },
+          "tickets": [
+            {
+              "number": 82,
+              "title": "[Ticket][Wave 1] Add database configuration with secret-file support and redacted failures",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/82"
+            }
+          ]
+        },
+        {
+          "name": "HTTP safety and observability",
+          "issue": {
+            "number": 18,
+            "title": "[Track][Wave 1] HTTP safety and observability",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/18"
+          },
+          "tickets": [
+            {
+              "number": 83,
+              "title": "[Ticket][Wave 1] Add health and readiness endpoints with stable response contracts",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/83"
+            },
+            {
+              "number": 84,
+              "title": "[Ticket][Wave 1] Add structured request logging, correlation IDs, panic recovery, and secure headers",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/84"
+            }
+          ]
+        },
+        {
+          "name": "MySQL connectivity",
+          "issue": {
+            "number": 19,
+            "title": "[Track][Wave 1] MySQL connectivity",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/19"
+          },
+          "tickets": [
+            {
+              "number": 85,
+              "title": "[Ticket][Wave 1] Add MySQL readiness and integration-test infrastructure",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/85"
+            }
+          ]
+        },
+        {
+          "name": "CI and container build",
+          "issue": {
+            "number": 20,
+            "title": "[Track][Wave 1] CI and container build",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/20"
+          },
+          "tickets": [
+            {
+              "number": 86,
+              "title": "[Ticket][Wave 1] Create repository directives, README, Apache 2.0 license, Makefile, and pinned Dockerfile",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/86"
+            },
+            {
+              "number": 87,
+              "title": "[Ticket][Wave 1] Add CI gates for formatting, vet, unit tests, race tests, integration tests, and image build",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/87"
+            },
+            {
+              "number": 88,
+              "title": "[Ticket][Wave 1] Add SBOM and vulnerability scanning gates",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/88"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "name": "Contract And Differential Harness",
+      "issue": {
+        "number": 3,
+        "title": "[Epic][Wave 2] Contract And Differential Harness",
+        "url": "https://github.com/ifuschini/idelium-api-go/issues/3"
+      },
+      "tracks": [
+        {
+          "name": "OpenAPI generation",
+          "issue": {
+            "number": 21,
+            "title": "[Track][Wave 2] OpenAPI generation",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/21"
+          },
+          "tickets": [
+            {
+              "number": 89,
+              "title": "[Ticket][Wave 2] Expand OpenAPI to include every externally consumed Laravel route",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/89"
+            },
+            {
+              "number": 90,
+              "title": "[Ticket][Wave 2] Add generated server interfaces and drift checks",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/90"
+            }
+          ]
+        },
+        {
+          "name": "Laravel-Go golden comparison",
+          "issue": {
+            "number": 22,
+            "title": "[Track][Wave 2] Laravel-Go golden comparison",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/22"
+          },
+          "tickets": [
+            {
+              "number": 91,
+              "title": "[Ticket][Wave 2] Build a golden request/response comparator for safe reads",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/91"
+            },
+            {
+              "number": 92,
+              "title": "[Ticket][Wave 2] Normalize nondeterministic fields such as timestamps, UUIDs, and correlation IDs",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/92"
+            },
+            {
+              "number": 93,
+              "title": "[Ticket][Wave 2] Add fixture redaction for credentials, session IDs, cookies, authorization headers, and test payload secrets",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/93"
+            },
+            {
+              "number": 94,
+              "title": "[Ticket][Wave 2] Add a performance baseline report for representative reads and writes",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/94"
+            }
+          ]
+        },
+        {
+          "name": "Tenant isolation test library",
+          "issue": {
+            "number": 23,
+            "title": "[Track][Wave 2] Tenant isolation test library",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/23"
+          },
+          "tickets": [
+            {
+              "number": 95,
+              "title": "[Ticket][Wave 2] Add tenant-isolation test helpers for cross-tenant negative checks",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/95"
+            }
+          ]
+        },
+        {
+          "name": "Web and CLI smoke targeting",
+          "issue": {
+            "number": 24,
+            "title": "[Track][Wave 2] Web and CLI smoke targeting",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/24"
+          },
+          "tickets": [
+            {
+              "number": 96,
+              "title": "[Ticket][Wave 2] Add Web smoke tests that can target Laravel or Go by route owner",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/96"
+            },
+            {
+              "number": 97,
+              "title": "[Ticket][Wave 2] Add CLI smoke tests that can target Laravel or Go by route owner",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/97"
+            }
+          ]
+        },
+        {
+          "name": "Side-effect comparison",
+          "issue": {
+            "number": 25,
+            "title": "[Track][Wave 2] Side-effect comparison",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/25"
+          },
+          "tickets": [
+            {
+              "number": 98,
+              "title": "[Ticket][Wave 2] Build a database side-effect comparator for mutations",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/98"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "name": "Low-Risk Stateless Reads",
+      "issue": {
+        "number": 4,
+        "title": "[Epic][Wave 3] Low-Risk Stateless Reads",
+        "url": "https://github.com/ifuschini/idelium-api-go/issues/4"
+      },
+      "tracks": [
+        {
+          "name": "Operational metadata",
+          "issue": {
+            "number": 26,
+            "title": "[Track][Wave 3] Operational metadata",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/26"
+          },
+          "tickets": [
+            {
+              "number": 99,
+              "title": "[Ticket][Wave 3] Migrate platform type reads",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/99"
+            },
+            {
+              "number": 100,
+              "title": "[Ticket][Wave 3] Migrate platform status reads",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/100"
+            }
+          ]
+        },
+        {
+          "name": "Platform catalog reads",
+          "issue": {
+            "number": 27,
+            "title": "[Track][Wave 3] Platform catalog reads",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/27"
+          },
+          "tickets": [
+            {
+              "number": 101,
+              "title": "[Ticket][Wave 3] Migrate location reads",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/101"
+            },
+            {
+              "number": 102,
+              "title": "[Ticket][Wave 3] Migrate brand reads",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/102"
+            },
+            {
+              "number": 103,
+              "title": "[Ticket][Wave 3] Migrate model reads",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/103"
+            },
+            {
+              "number": 104,
+              "title": "[Ticket][Wave 3] Migrate operating-system reads",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/104"
+            },
+            {
+              "number": 105,
+              "title": "[Ticket][Wave 3] Migrate OS-version reads",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/105"
+            },
+            {
+              "number": 106,
+              "title": "[Ticket][Wave 3] Migrate browser reads",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/106"
+            },
+            {
+              "number": 107,
+              "title": "[Ticket][Wave 3] Migrate browser-version reads",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/107"
+            },
+            {
+              "number": 108,
+              "title": "[Ticket][Wave 3] Add Laravel-Go differential tests for each catalog endpoint",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/108"
+            }
+          ]
+        },
+        {
+          "name": "Safe lookup reads",
+          "issue": {
+            "number": 28,
+            "title": "[Track][Wave 3] Safe lookup reads",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/28"
+          },
+          "tickets": [
+            {
+              "number": 109,
+              "title": "[Ticket][Wave 3] Define and migrate any remaining safe lookup reads discovered by the route inventory",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/109"
+            }
+          ]
+        },
+        {
+          "name": "Shadow traffic and route switching",
+          "issue": {
+            "number": 29,
+            "title": "[Track][Wave 3] Shadow traffic and route switching",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/29"
+          },
+          "tickets": [
+            {
+              "number": 110,
+              "title": "[Ticket][Wave 3] Add gateway route ownership configuration for platform catalog reads",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/110"
+            },
+            {
+              "number": 111,
+              "title": "[Ticket][Wave 3] Add shadow-read comparison for safe GET requests",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/111"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "name": "Idelium CLI Configuration Reads",
+      "issue": {
+        "number": 5,
+        "title": "[Epic][Wave 4] Idelium CLI Configuration Reads",
+        "url": "https://github.com/ifuschini/idelium-api-go/issues/5"
+      },
+      "tracks": [
+        {
+          "name": "API-key authentication",
+          "issue": {
+            "number": 30,
+            "title": "[Track][Wave 4] API-key authentication",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/30"
+          },
+          "tickets": [
+            {
+              "number": 112,
+              "title": "[Ticket][Wave 4] Implement legacy customer API-key authentication with redacted diagnostics",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/112"
+            }
+          ]
+        },
+        {
+          "name": "Test cycle graph reads",
+          "issue": {
+            "number": 31,
+            "title": "[Track][Wave 4] Test cycle graph reads",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/31"
+          },
+          "tickets": [
+            {
+              "number": 113,
+              "title": "[Ticket][Wave 4] Migrate test-cycle read endpoints",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/113"
+            },
+            {
+              "number": 114,
+              "title": "[Ticket][Wave 4] Add complete remote CLI execution smoke tests against Go",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/114"
+            },
+            {
+              "number": 115,
+              "title": "[Ticket][Wave 4] Add Laravel-Go graph equivalence tests for the same cycle",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/115"
+            }
+          ]
+        },
+        {
+          "name": "Test, step, plugin, and environment reads",
+          "issue": {
+            "number": 32,
+            "title": "[Track][Wave 4] Test, step, plugin, and environment reads",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/32"
+          },
+          "tickets": [
+            {
+              "number": 116,
+              "title": "[Ticket][Wave 4] Migrate test read endpoints",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/116"
+            },
+            {
+              "number": 117,
+              "title": "[Ticket][Wave 4] Migrate step read endpoints",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/117"
+            },
+            {
+              "number": 118,
+              "title": "[Ticket][Wave 4] Migrate plugin and plugin-list read endpoints",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/118"
+            },
+            {
+              "number": 119,
+              "title": "[Ticket][Wave 4] Migrate environment and environment-list read endpoints",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/119"
+            }
+          ]
+        },
+        {
+          "name": "Missing-reference diagnostics",
+          "issue": {
+            "number": 33,
+            "title": "[Track][Wave 4] Missing-reference diagnostics",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/33"
+          },
+          "tickets": [
+            {
+              "number": 120,
+              "title": "[Ticket][Wave 4] Preserve CLI missing-reference diagnostics and tenant-scoped 404 behavior",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/120"
+            }
+          ]
+        },
+        {
+          "name": "Cross-tenant denial",
+          "issue": {
+            "number": 34,
+            "title": "[Track][Wave 4] Cross-tenant denial",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/34"
+          },
+          "tickets": [
+            {
+              "number": 121,
+              "title": "[Ticket][Wave 4] Add cross-tenant denial tests for every CLI configuration graph resource",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/121"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "name": "CLI Result Writes And Execution Lifecycle",
+      "issue": {
+        "number": 6,
+        "title": "[Epic][Wave 5] CLI Result Writes And Execution Lifecycle",
+        "url": "https://github.com/ifuschini/idelium-api-go/issues/6"
+      },
+      "tracks": [
+        {
+          "name": "Performed cycle lifecycle",
+          "issue": {
+            "number": 35,
+            "title": "[Track][Wave 5] Performed cycle lifecycle",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/35"
+          },
+          "tickets": [
+            {
+              "number": 122,
+              "title": "[Ticket][Wave 5] Migrate performed-cycle creation and update",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/122"
+            },
+            {
+              "number": 123,
+              "title": "[Ticket][Wave 5] Enforce artifact size and storage policy",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/123"
+            },
+            {
+              "number": 124,
+              "title": "[Ticket][Wave 5] Add Web result-display parity tests for Go-produced executions",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/124"
+            }
+          ]
+        },
+        {
+          "name": "Performed test lifecycle",
+          "issue": {
+            "number": 36,
+            "title": "[Track][Wave 5] Performed test lifecycle",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/36"
+          },
+          "tickets": [
+            {
+              "number": 125,
+              "title": "[Ticket][Wave 5] Migrate performed-test creation and update",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/125"
+            }
+          ]
+        },
+        {
+          "name": "Performed step lifecycle",
+          "issue": {
+            "number": 37,
+            "title": "[Track][Wave 5] Performed step lifecycle",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/37"
+          },
+          "tickets": [
+            {
+              "number": 126,
+              "title": "[Ticket][Wave 5] Migrate performed-step creation and update",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/126"
+            }
+          ]
+        },
+        {
+          "name": "Runtime metadata snapshots",
+          "issue": {
+            "number": 38,
+            "title": "[Track][Wave 5] Runtime metadata snapshots",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/38"
+          },
+          "tickets": [
+            {
+              "number": 127,
+              "title": "[Ticket][Wave 5] Persist environment, platform, browser, operating system, and device snapshots",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/127"
+            }
+          ]
+        },
+        {
+          "name": "Postman execution detail",
+          "issue": {
+            "number": 39,
+            "title": "[Track][Wave 5] Postman execution detail",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/39"
+          },
+          "tickets": [
+            {
+              "number": 128,
+              "title": "[Ticket][Wave 5] Persist Postman request-level details, payload summaries, assertions, and response metadata with redaction",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/128"
+            }
+          ]
+        },
+        {
+          "name": "Failure finalization",
+          "issue": {
+            "number": 40,
+            "title": "[Track][Wave 5] Failure finalization",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/40"
+          },
+          "tickets": [
+            {
+              "number": 129,
+              "title": "[Ticket][Wave 5] Add idempotency keys for retries",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/129"
+            },
+            {
+              "number": 130,
+              "title": "[Ticket][Wave 5] Ensure failed or interrupted CLI runs always reach a terminal state",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/130"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "name": "Authoring And Project Resources",
+      "issue": {
+        "number": 7,
+        "title": "[Epic][Wave 6] Authoring And Project Resources",
+        "url": "https://github.com/ifuschini/idelium-api-go/issues/7"
+      },
+      "tracks": [
+        {
+          "name": "Projects",
+          "issue": {
+            "number": 41,
+            "title": "[Track][Wave 6] Projects",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/41"
+          },
+          "tickets": [
+            {
+              "number": 131,
+              "title": "[Ticket][Wave 6] Migrate project reads and writes",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/131"
+            }
+          ]
+        },
+        {
+          "name": "Environments",
+          "issue": {
+            "number": 42,
+            "title": "[Track][Wave 6] Environments",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/42"
+          },
+          "tickets": [
+            {
+              "number": 132,
+              "title": "[Ticket][Wave 6] Migrate environment reads and writes with secret policy",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/132"
+            }
+          ]
+        },
+        {
+          "name": "Plugins",
+          "issue": {
+            "number": 43,
+            "title": "[Track][Wave 6] Plugins",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/43"
+          },
+          "tickets": [
+            {
+              "number": 133,
+              "title": "[Ticket][Wave 6] Migrate plugin reads, writes, and manifest validation",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/133"
+            }
+          ]
+        },
+        {
+          "name": "Steps, JSON, wizard, and DSL",
+          "issue": {
+            "number": 44,
+            "title": "[Track][Wave 6] Steps, JSON, wizard, and DSL",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/44"
+          },
+          "tickets": [
+            {
+              "number": 134,
+              "title": "[Ticket][Wave 6] Migrate step reads, writes, ordering, JSON, wizard, and DSL payload handling",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/134"
+            },
+            {
+              "number": 135,
+              "title": "[Ticket][Wave 6] Migrate Idelium JSON import",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/135"
+            }
+          ]
+        },
+        {
+          "name": "Tests and step membership",
+          "issue": {
+            "number": 45,
+            "title": "[Track][Wave 6] Tests and step membership",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/45"
+          },
+          "tickets": [
+            {
+              "number": 136,
+              "title": "[Ticket][Wave 6] Migrate test reads, writes, and step membership",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/136"
+            }
+          ]
+        },
+        {
+          "name": "Test cycles and ordering",
+          "issue": {
+            "number": 46,
+            "title": "[Track][Wave 6] Test cycles and ordering",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/46"
+          },
+          "tickets": [
+            {
+              "number": 137,
+              "title": "[Ticket][Wave 6] Migrate test-cycle reads, writes, and test ordering",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/137"
+            }
+          ]
+        },
+        {
+          "name": "Imports and launcher setup",
+          "issue": {
+            "number": 47,
+            "title": "[Track][Wave 6] Imports and launcher setup",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/47"
+          },
+          "tickets": [
+            {
+              "number": 138,
+              "title": "[Ticket][Wave 6] Migrate Postman collection import",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/138"
+            },
+            {
+              "number": 139,
+              "title": "[Ticket][Wave 6] Migrate launcher configuration reads",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/139"
+            },
+            {
+              "number": 140,
+              "title": "[Ticket][Wave 6] Add end-to-end Web authoring workflow tests",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/140"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "name": "Results, Artifacts, Grid, And Integrations",
+      "issue": {
+        "number": 8,
+        "title": "[Epic][Wave 7] Results, Artifacts, Grid, And Integrations",
+        "url": "https://github.com/ifuschini/idelium-api-go/issues/8"
+      },
+      "tracks": [
+        {
+          "name": "Performed result exploration",
+          "issue": {
+            "number": 48,
+            "title": "[Track][Wave 7] Performed result exploration",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/48"
+          },
+          "tickets": [
+            {
+              "number": 141,
+              "title": "[Ticket][Wave 7] Migrate performed cycle, test, and step exploration APIs",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/141"
+            }
+          ]
+        },
+        {
+          "name": "Exports and downloads",
+          "issue": {
+            "number": 49,
+            "title": "[Track][Wave 7] Exports and downloads",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/49"
+          },
+          "tickets": [
+            {
+              "number": 142,
+              "title": "[Ticket][Wave 7] Migrate result export creation, status, and download",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/142"
+            }
+          ]
+        },
+        {
+          "name": "Artifact lifecycle",
+          "issue": {
+            "number": 50,
+            "title": "[Track][Wave 7] Artifact lifecycle",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/50"
+          },
+          "tickets": [
+            {
+              "number": 143,
+              "title": "[Ticket][Wave 7] Migrate artifact descriptor reads and writes",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/143"
+            },
+            {
+              "number": 144,
+              "title": "[Ticket][Wave 7] Migrate retention, archive, restore, legal hold, and deletion workflows",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/144"
+            }
+          ]
+        },
+        {
+          "name": "Grid query snapshots",
+          "issue": {
+            "number": 51,
+            "title": "[Track][Wave 7] Grid query snapshots",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/51"
+          },
+          "tickets": [
+            {
+              "number": 145,
+              "title": "[Ticket][Wave 7] Migrate enterprise grid query snapshots and bulk jobs",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/145"
+            }
+          ]
+        },
+        {
+          "name": "Integrations and deliveries",
+          "issue": {
+            "number": 52,
+            "title": "[Track][Wave 7] Integrations and deliveries",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/52"
+          },
+          "tickets": [
+            {
+              "number": 146,
+              "title": "[Ticket][Wave 7] Migrate integration endpoints, deliveries, retry, and secret rotation",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/146"
+            }
+          ]
+        },
+        {
+          "name": "Audit and asset review workflows",
+          "issue": {
+            "number": 53,
+            "title": "[Track][Wave 7] Audit and asset review workflows",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/53"
+          },
+          "tickets": [
+            {
+              "number": 147,
+              "title": "[Ticket][Wave 7] Migrate audit event reads and writes",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/147"
+            },
+            {
+              "number": 148,
+              "title": "[Ticket][Wave 7] Migrate asset impact and asset version review workflows",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/148"
+            },
+            {
+              "number": 149,
+              "title": "[Ticket][Wave 7] Drain Laravel jobs before moving queue ownership",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/149"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "name": "Parallel Runs, Agents, And Runner API",
+      "issue": {
+        "number": 9,
+        "title": "[Epic][Wave 8] Parallel Runs, Agents, And Runner API",
+        "url": "https://github.com/ifuschini/idelium-api-go/issues/9"
+      },
+      "tracks": [
+        {
+          "name": "Schedules and matrices",
+          "issue": {
+            "number": 54,
+            "title": "[Track][Wave 8] Schedules and matrices",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/54"
+          },
+          "tickets": [
+            {
+              "number": 150,
+              "title": "[Ticket][Wave 8] Migrate schedule and matrix reads and writes",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/150"
+            }
+          ]
+        },
+        {
+          "name": "Worker claims and leases",
+          "issue": {
+            "number": 55,
+            "title": "[Track][Wave 8] Worker claims and leases",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/55"
+          },
+          "tickets": [
+            {
+              "number": 151,
+              "title": "[Ticket][Wave 8] Migrate worker claim logic with row-locking tests",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/151"
+            }
+          ]
+        },
+        {
+          "name": "Heartbeats and cancellation",
+          "issue": {
+            "number": 56,
+            "title": "[Track][Wave 8] Heartbeats and cancellation",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/56"
+          },
+          "tickets": [
+            {
+              "number": 152,
+              "title": "[Ticket][Wave 8] Migrate worker heartbeat updates",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/152"
+            },
+            {
+              "number": 153,
+              "title": "[Ticket][Wave 8] Migrate cancellation convergence",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/153"
+            }
+          ]
+        },
+        {
+          "name": "Run tokens",
+          "issue": {
+            "number": 57,
+            "title": "[Track][Wave 8] Run tokens",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/57"
+          },
+          "tickets": [
+            {
+              "number": 154,
+              "title": "[Ticket][Wave 8] Migrate run-token issue, validation, and revocation",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/154"
+            }
+          ]
+        },
+        {
+          "name": "Agents",
+          "issue": {
+            "number": 58,
+            "title": "[Track][Wave 8] Agents",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/58"
+          },
+          "tickets": [
+            {
+              "number": 155,
+              "title": "[Ticket][Wave 8] Migrate agent registration and status APIs",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/155"
+            }
+          ]
+        },
+        {
+          "name": "Runner-only endpoints",
+          "issue": {
+            "number": 59,
+            "title": "[Track][Wave 8] Runner-only endpoints",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/59"
+          },
+          "tickets": [
+            {
+              "number": 156,
+              "title": "[Ticket][Wave 8] Migrate runner-only endpoints",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/156"
+            },
+            {
+              "number": 157,
+              "title": "[Ticket][Wave 8] Add clock-skew, lease-expiry, race, load, and failure-injection tests",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/157"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "name": "Browser Authentication And Administration",
+      "issue": {
+        "number": 10,
+        "title": "[Epic][Wave 9] Browser Authentication And Administration",
+        "url": "https://github.com/ifuschini/idelium-api-go/issues/10"
+      },
+      "tracks": [
+        {
+          "name": "Login, logout, sessions, cookies, CSRF",
+          "issue": {
+            "number": 60,
+            "title": "[Track][Wave 9] Login, logout, sessions, cookies, CSRF",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/60"
+          },
+          "tickets": [
+            {
+              "number": 158,
+              "title": "[Ticket][Wave 9] Build the temporary Laravel browser-auth introspection bridge",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/158"
+            },
+            {
+              "number": 159,
+              "title": "[Ticket][Wave 9] Migrate login, logout, session expiry, and CSRF behavior",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/159"
+            }
+          ]
+        },
+        {
+          "name": "Current user, menu, customer switching",
+          "issue": {
+            "number": 61,
+            "title": "[Track][Wave 9] Current user, menu, customer switching",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/61"
+          },
+          "tickets": [
+            {
+              "number": 160,
+              "title": "[Ticket][Wave 9] Migrate current-user and capability-resolution endpoints",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/160"
+            },
+            {
+              "number": 161,
+              "title": "[Ticket][Wave 9] Migrate customer switching",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/161"
+            }
+          ]
+        },
+        {
+          "name": "Accounts, roles, profiles, password policy",
+          "issue": {
+            "number": 62,
+            "title": "[Track][Wave 9] Accounts, roles, profiles, password policy",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/62"
+          },
+          "tickets": [
+            {
+              "number": 162,
+              "title": "[Ticket][Wave 9] Migrate accounts, roles, profiles, and password policy",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/162"
+            }
+          ]
+        },
+        {
+          "name": "Customer administration and legacy API-key lifecycle",
+          "issue": {
+            "number": 63,
+            "title": "[Track][Wave 9] Customer administration and legacy API-key lifecycle",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/63"
+          },
+          "tickets": [
+            {
+              "number": 163,
+              "title": "[Ticket][Wave 9] Migrate customer administration",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/163"
+            },
+            {
+              "number": 164,
+              "title": "[Ticket][Wave 9] Migrate legacy API-key lifecycle",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/164"
+            }
+          ]
+        },
+        {
+          "name": "Service accounts and credentials",
+          "issue": {
+            "number": 64,
+            "title": "[Track][Wave 9] Service accounts and credentials",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/64"
+          },
+          "tickets": [
+            {
+              "number": 165,
+              "title": "[Ticket][Wave 9] Migrate service accounts and scoped credentials",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/165"
+            }
+          ]
+        },
+        {
+          "name": "MFA, SSO, OIDC, SCIM, workload identity, and break-glass controls",
+          "issue": {
+            "number": 65,
+            "title": "[Track][Wave 9] MFA, SSO, OIDC, SCIM, workload identity, and break-glass controls",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/65"
+          },
+          "tickets": [
+            {
+              "number": 166,
+              "title": "[Ticket][Wave 9] Migrate MFA and step-up authentication",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/166"
+            },
+            {
+              "number": 167,
+              "title": "[Ticket][Wave 9] Migrate SSO, OIDC callbacks, SCIM, workload identity, and break-glass controls",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/167"
+            },
+            {
+              "number": 168,
+              "title": "[Ticket][Wave 9] Remove the temporary auth bridge after compatibility passes",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/168"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "name": "Schema Handover And Final Cutover",
+      "issue": {
+        "number": 11,
+        "title": "[Epic][Wave 10] Schema Handover And Final Cutover",
+        "url": "https://github.com/ifuschini/idelium-api-go/issues/11"
+      },
+      "tracks": [
+        {
+          "name": "Go migration baseline",
+          "issue": {
+            "number": 66,
+            "title": "[Track][Wave 10] Go migration baseline",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/66"
+          },
+          "tickets": [
+            {
+              "number": 169,
+              "title": "[Ticket][Wave 10] Produce the reviewed Go baseline migration",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/169"
+            },
+            {
+              "number": 170,
+              "title": "[Ticket][Wave 10] Add a bridge command that marks a migrated Laravel schema as applied",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/170"
+            }
+          ]
+        },
+        {
+          "name": "Empty install and upgrade verification",
+          "issue": {
+            "number": 67,
+            "title": "[Track][Wave 10] Empty install and upgrade verification",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/67"
+          },
+          "tickets": [
+            {
+              "number": 171,
+              "title": "[Ticket][Wave 10] Verify empty installs using Go migrations",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/171"
+            },
+            {
+              "number": 172,
+              "title": "[Ticket][Wave 10] Verify upgrades from the last Laravel-owned release",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/172"
+            }
+          ]
+        },
+        {
+          "name": "Route ownership cutover",
+          "issue": {
+            "number": 68,
+            "title": "[Track][Wave 10] Route ownership cutover",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/68"
+          },
+          "tickets": [
+            {
+              "number": 173,
+              "title": "[Ticket][Wave 10] Move all remaining route ownership to Go in staging",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/173"
+            }
+          ]
+        },
+        {
+          "name": "Laravel queue drain and write freeze",
+          "issue": {
+            "number": 69,
+            "title": "[Track][Wave 10] Laravel queue drain and write freeze",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/69"
+          },
+          "tickets": [
+            {
+              "number": 174,
+              "title": "[Ticket][Wave 10] Freeze Laravel schema changes",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/174"
+            },
+            {
+              "number": 175,
+              "title": "[Ticket][Wave 10] Enter a time-boxed Laravel read-only maintenance period before archival",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/175"
+            }
+          ]
+        },
+        {
+          "name": "Docker default image switch",
+          "issue": {
+            "number": 70,
+            "title": "[Track][Wave 10] Docker default image switch",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/70"
+          },
+          "tickets": [
+            {
+              "number": 176,
+              "title": "[Ticket][Wave 10] Switch Docker defaults to the Go API image",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/176"
+            }
+          ]
+        },
+        {
+          "name": "Rollback rehearsal and operations documentation",
+          "issue": {
+            "number": 71,
+            "title": "[Track][Wave 10] Rollback rehearsal and operations documentation",
+            "url": "https://github.com/ifuschini/idelium-api-go/issues/71"
+          },
+          "tickets": [
+            {
+              "number": 177,
+              "title": "[Ticket][Wave 10] Rehearse rollback to the last dual-runtime release",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/177"
+            },
+            {
+              "number": 178,
+              "title": "[Ticket][Wave 10] Update backup, recovery, release, and operations documentation",
+              "url": "https://github.com/ifuschini/idelium-api-go/issues/178"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

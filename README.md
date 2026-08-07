@@ -8,6 +8,8 @@ throughout the migration.
 The migration strategy is documented in [MIGRATION_PLAN.md](MIGRATION_PLAN.md)
 and translated into executable epics in
 [docs/migration/epics.md](docs/migration/epics.md).
+The current migration cursor and GitHub issue mapping are maintained in
+[docs/migration/progress.md](docs/migration/progress.md).
 
 ## Current scope
 

@@ -26,7 +26,7 @@ updated as needed.
 | --- | --- | --- |
 | Wave 1 foundation | Done | `e4e5def feat: bootstrap Go API foundation` |
 | Wave 3 first vertical slice | Done | `d4b7f22 feat: add read-only platform catalogs` |
-| GitHub issue materialization | Pending | Create issues after this backlog is reviewed. |
+| GitHub issue materialization | Done | 11 epics, 60 tracks, and 107 tickets mapped in `github-issues.json`. |
 
 ## Wave 0 Epic: Baseline And Governance
 
@@ -49,6 +49,8 @@ Tickets:
 - Classify every route as browser session, API key, run token, internal service,
   or public operational endpoint.
 - Define the migration ownership matrix with one mutation owner per aggregate.
+- Establish the initial compatibility-contract backlog for every inventoried
+  public route.
 - Create the initial sanitized golden fixture policy.
 - Add an ADR template and write the first ADR for the strangler migration model.
 - Define release, rollback, and route-switch approval gates.
@@ -148,6 +150,8 @@ Tickets:
 - Migrate OS-version reads.
 - Migrate browser reads.
 - Migrate browser-version reads.
+- Define and migrate any remaining safe lookup reads discovered by the route
+  inventory.
 - Add Laravel-Go differential tests for each catalog endpoint.
 - Add gateway route ownership configuration for platform catalog reads.
 - Add shadow-read comparison for safe GET requests.
@@ -178,6 +182,7 @@ Tickets:
 - Migrate plugin and plugin-list read endpoints.
 - Migrate environment and environment-list read endpoints.
 - Preserve CLI missing-reference diagnostics and tenant-scoped 404 behavior.
+- Add cross-tenant denial tests for every CLI configuration graph resource.
 - Add complete remote CLI execution smoke tests against Go.
 - Add Laravel-Go graph equivalence tests for the same cycle.
 
