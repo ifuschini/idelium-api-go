@@ -2,7 +2,8 @@
 
 > This planning summary is complemented by the generated
 > [complete route inventory](laravel-routes.md) and its
-> [machine-readable contract](laravel-routes.json).
+> [machine-readable contract](laravel-routes.json). Consumer evidence is tracked
+> in the generated [route consumer map](consumer-route-map.md).
 
 ## Purpose
 

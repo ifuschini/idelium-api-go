@@ -1,0 +1,2777 @@
+{
+  "schema_version": 1,
+  "route_inventory_digest_sha256": "b59c86f112ed71de23b5563c36973c9e01fabd2dfd1f11b7f226892328a14a07",
+  "sources": {
+    "idelium-web": "23a21a7ce469bc4e0e417be42b0cfe089768a3bd",
+    "idelium-cli": "34191d99c6f5c42118bf7622c4ec124251edeffa",
+    "idelium-runner": "idelium-docker@2b0f084d1cde906b36c2f6ce49dd90137edefa68",
+    "idelium-docker": "2b0f084d1cde906b36c2f6ce49dd90137edefa68",
+    "idelium-docker-wiki": "59b406379c09ddbb66c21263fd4b477311c2e20e"
+  },
+  "route_count": 171,
+  "mapped_route_count": 107,
+  "unmapped_route_count": 64,
+  "routes": [
+    {
+      "method": "GET|HEAD",
+      "path": "/",
+      "authentication_mode": "public",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/_ignition/execute-solution",
+      "authentication_mode": "development-only",
+      "current_owner": "development-dependency",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/_ignition/health-check",
+      "authentication_mode": "development-only",
+      "current_owner": "development-dependency",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/_ignition/update-config",
+      "authentication_mode": "development-only",
+      "current_owner": "development-dependency",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/accounts",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/accounts*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/accounts",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/accounts*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/accounts/{idUser}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/accounts*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/accounts/{idUser}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/accounts*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/agents",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/agents/{agentRegistration}/status",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/apikey",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/apikey*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/apikey",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/apikey*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/costumers",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/costumers*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/costumers",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/costumers*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/costumers/{idCostumer}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/costumers*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/costumers/{idCostumer}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/costumers*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/environments",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/environments*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/environments/{idProject}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/environments*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/environments/{idProject}/{environment}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/environments*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/environments/{idProject}/{environment}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/environments*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/environments/{idProject}/{environment}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/environments*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/grid/bulk-jobs",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/grid/bulk-jobs/{jobId}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/grid/bulk-jobs/{jobId}/export",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/grid/query-snapshots",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/identity/accounts/{user}/break-glass",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/identity/accounts/{user}/break-glass/test",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/identity/providers",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/identity/providers",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/identity/providers/{identityProvider}/scim/users",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/importtest",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/importtest"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/launchtest",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/launchtest"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/brands",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/brands",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/brands",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/browsers",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/browsers",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/browsers/{idOs}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/browserversions",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/browserversions",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/browserversions/{idBrowser}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/locations",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/locations",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/locations",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/manageplatforms",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/manageplatforms",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/manageplatforms/{type}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/platforms/manageplatforms/{type}/{id}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/models",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/models",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/models/{idBrand}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/os",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/os",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/os/{idType}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/platforms/osversion",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/platforms/osversion",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/osversion/{idOs}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/status",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/types",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/platforms/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/plugins",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/plugins*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/plugins/{idProject}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/plugins*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/plugins/{idProject}/{plugin}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/plugins*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/plugins/{idProject}/{plugin}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/plugins*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/plugins/{idProject}/{step}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/plugins*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/profile",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/profile"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/profile",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/profile"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/profile/mfa/confirm",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/profile/mfa/enroll",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/profile/mfa/step-up",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/create",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/create"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/asset-versions/{assetVersion}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/integration-deliveries",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/integrations",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/integrations",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/parallel-runs",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/{idProject}/parallel-runs*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/parallel-runs",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/{idProject}/parallel-runs*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/matrix",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/{idProject}/parallel-runs*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/{idProject}/parallel-runs*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/{idProject}/parallel-runs*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/{idProject}/parallel-runs*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/{idProject}/parallel-runs*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/{idProject}/parallel-runs*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/{idProject}/parallel-runs*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/projects/{project}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/{project}"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{project}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/{project}"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT|PATCH",
+      "path": "/api/admin/projects/{project}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/{project}"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/projects/{project}/edit",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/projects/{project}/edit"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/result-exports",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/result-exports/{resultExport}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/result-exports/{resultExport}/download",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/roles",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/roles"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/service-accounts",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/service-accounts",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/service-accounts/{serviceAccount}/revoke",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/steps",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/steps*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/steps/{idProject}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/steps*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/steps/{idProject}/updateorder",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/steps*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/steps/{idProject}/{environment}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/steps*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/steps/{idProject}/{step}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/steps*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/steps/{idProject}/{step}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/steps*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/stepsperfomed/{idTestPerformed}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/steps*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/testcycles",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/testcycles*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/testcycles/{idProject}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/testcycles*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/testcycles/{idProject}/{testcycle}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/testcycles*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/testcycles/{idProject}/{testcycle}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/testcycles*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/testcyclesperfomed/{idTestCyclePerformed}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/testcycles*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/tests",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/tests*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/tests/{idProject}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/tests*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/tests/{idProject}/{test}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/tests*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/tests/{idProject}/{test}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/tests*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/admin/testsperfomed/{idTestPerformed}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/admin/tests*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/audit-events",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/clear",
+      "authentication_mode": "public",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/csrf-cookie",
+      "authentication_mode": "public",
+      "current_owner": "laravel-framework",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/agents/register",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/environment/{idEnvironment}",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-cli",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-cli/src/idelium/_internal/ideliumclib.py",
+            "idelium-cli/src/idelium/_internal/ideliumws.py"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/environment/*"
+          ]
+        },
+        {
+          "id": "idelium-docker-wiki",
+          "relationship": "indirect-through-cli",
+          "evidence": [
+            "idelium-docker.wiki/Quick-Start-Selenium.md",
+            "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+            "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/environment/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/environments/{idProject}",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-cli",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-cli/src/idelium/_internal/ideliumclib.py",
+            "idelium-cli/src/idelium/_internal/ideliumws.py"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/environments/*"
+          ]
+        },
+        {
+          "id": "idelium-docker-wiki",
+          "relationship": "indirect-through-cli",
+          "evidence": [
+            "idelium-docker.wiki/Quick-Start-Selenium.md",
+            "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+            "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/environments/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/plugin/{idPlugin}",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-cli",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-cli/src/idelium/_internal/ideliumclib.py",
+            "idelium-cli/src/idelium/_internal/ideliumws.py"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/plugin/*"
+          ]
+        },
+        {
+          "id": "idelium-docker-wiki",
+          "relationship": "indirect-through-cli",
+          "evidence": [
+            "idelium-docker.wiki/Quick-Start-Selenium.md",
+            "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+            "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/plugin/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/plugins/{idProject}",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-cli",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-cli/src/idelium/_internal/ideliumclib.py",
+            "idelium-cli/src/idelium/_internal/ideliumws.py"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/plugins/*"
+          ]
+        },
+        {
+          "id": "idelium-docker-wiki",
+          "relationship": "indirect-through-cli",
+          "evidence": [
+            "idelium-docker.wiki/Quick-Start-Selenium.md",
+            "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+            "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/plugins/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/matrix",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "PUT",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/step",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-cli",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-cli/src/idelium/_internal/ideliumclib.py",
+            "idelium-cli/src/idelium/_internal/ideliumws.py"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/step"
+          ]
+        },
+        {
+          "id": "idelium-docker-wiki",
+          "relationship": "indirect-through-cli",
+          "evidence": [
+            "idelium-docker.wiki/Quick-Start-Selenium.md",
+            "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+            "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/step"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/ideliumcl/step",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-cli",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-cli/src/idelium/_internal/ideliumclib.py",
+            "idelium-cli/src/idelium/_internal/ideliumws.py"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/step"
+          ]
+        },
+        {
+          "id": "idelium-docker-wiki",
+          "relationship": "indirect-through-cli",
+          "evidence": [
+            "idelium-docker.wiki/Quick-Start-Selenium.md",
+            "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+            "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/step"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/step/{idStep}",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-cli",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-cli/src/idelium/_internal/ideliumclib.py",
+            "idelium-cli/src/idelium/_internal/ideliumws.py"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/step/*"
+          ]
+        },
+        {
+          "id": "idelium-docker-wiki",
+          "relationship": "indirect-through-cli",
+          "evidence": [
+            "idelium-docker.wiki/Quick-Start-Selenium.md",
+            "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+            "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/step/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/test",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-cli",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-cli/src/idelium/_internal/ideliumclib.py",
+            "idelium-cli/src/idelium/_internal/ideliumws.py"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/test"
+          ]
+        },
+        {
+          "id": "idelium-docker-wiki",
+          "relationship": "indirect-through-cli",
+          "evidence": [
+            "idelium-docker.wiki/Quick-Start-Selenium.md",
+            "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+            "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/test"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/ideliumcl/test",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-cli",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-cli/src/idelium/_internal/ideliumclib.py",
+            "idelium-cli/src/idelium/_internal/ideliumws.py"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/test"
+          ]
+        },
+        {
+          "id": "idelium-docker-wiki",
+          "relationship": "indirect-through-cli",
+          "evidence": [
+            "idelium-docker.wiki/Quick-Start-Selenium.md",
+            "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+            "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/test"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/test/{idTest}",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-cli",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-cli/src/idelium/_internal/ideliumclib.py",
+            "idelium-cli/src/idelium/_internal/ideliumws.py"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/test/*"
+          ]
+        },
+        {
+          "id": "idelium-docker-wiki",
+          "relationship": "indirect-through-cli",
+          "evidence": [
+            "idelium-docker.wiki/Quick-Start-Selenium.md",
+            "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+            "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/test/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumcl/testcycle",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-cli",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-cli/src/idelium/_internal/ideliumclib.py",
+            "idelium-cli/src/idelium/_internal/ideliumws.py"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/testcycle"
+          ]
+        },
+        {
+          "id": "idelium-docker-wiki",
+          "relationship": "indirect-through-cli",
+          "evidence": [
+            "idelium-docker.wiki/Quick-Start-Selenium.md",
+            "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+            "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/testcycle"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/ideliumcl/testcycle",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-cli",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-cli/src/idelium/_internal/ideliumclib.py",
+            "idelium-cli/src/idelium/_internal/ideliumws.py"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/testcycle"
+          ]
+        },
+        {
+          "id": "idelium-docker-wiki",
+          "relationship": "indirect-through-cli",
+          "evidence": [
+            "idelium-docker.wiki/Quick-Start-Selenium.md",
+            "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+            "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/testcycle"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/testcycle/{idTestCycle}",
+      "authentication_mode": "api-key",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-cli",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-cli/src/idelium/_internal/ideliumclib.py",
+            "idelium-cli/src/idelium/_internal/ideliumws.py"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/testcycle/*"
+          ]
+        },
+        {
+          "id": "idelium-docker-wiki",
+          "relationship": "indirect-through-cli",
+          "evidence": [
+            "idelium-docker.wiki/Quick-Start-Selenium.md",
+            "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+            "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+          ],
+          "matched_patterns": [
+            "/api/ideliumcl/testcycle/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumrunner/claim",
+      "authentication_mode": "run-token",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-runner",
+          "relationship": "direct-contract",
+          "evidence": [
+            "idelium-api/docs/api/run-tokens.md",
+            "idelium-docker/compose.runner.yml"
+          ],
+          "matched_patterns": [
+            "/api/ideliumrunner/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/ideliumrunner/heartbeat",
+      "authentication_mode": "run-token",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-runner",
+          "relationship": "direct-contract",
+          "evidence": [
+            "idelium-api/docs/api/run-tokens.md",
+            "idelium-docker/compose.runner.yml"
+          ],
+          "matched_patterns": [
+            "/api/ideliumrunner/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/ideliumrunner/worker",
+      "authentication_mode": "run-token",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-runner",
+          "relationship": "direct-contract",
+          "evidence": [
+            "idelium-api/docs/api/run-tokens.md",
+            "idelium-docker/compose.runner.yml"
+          ],
+          "matched_patterns": [
+            "/api/ideliumrunner/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/login",
+      "authentication_mode": "browser-auth-bootstrap",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/login"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/logout",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/logout"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/me/capabilities",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/menu/header",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/menu/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/menu/header/{idCostumer}",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/menu/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/menu/sidebar",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/menu/*"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/oidc/token-exchange",
+      "authentication_mode": "workload-identity-exchange",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/sanctum/csrf-cookie",
+      "authentication_mode": "browser-auth-bootstrap",
+      "current_owner": "laravel-framework",
+      "consumers": [
+        {
+          "id": "idelium-web",
+          "relationship": "direct",
+          "evidence": [
+            "idelium-web/src/main.js",
+            "idelium-web/src/view",
+            "idelium-web/src/components"
+          ],
+          "matched_patterns": [
+            "/api/sanctum/csrf-cookie"
+          ]
+        },
+        {
+          "id": "idelium-docker",
+          "relationship": "direct-operational-probe",
+          "evidence": [
+            "idelium-docker/docker-compose.yml",
+            "idelium-docker/scripts/smoke-test.sh"
+          ],
+          "matched_patterns": [
+            "/api/sanctum/csrf-cookie"
+          ]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/sso/{identityProvider}/oidc/callback",
+      "authentication_mode": "sso-bootstrap-or-callback",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/sso/{identityProvider}/saml/callback",
+      "authentication_mode": "sso-bootstrap-or-callback",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/sso/{identityProvider}/start",
+      "authentication_mode": "sso-bootstrap-or-callback",
+      "current_owner": "laravel-application",
+      "consumers": []
+    },
+    {
+      "method": "GET|HEAD",
+      "path": "/api/user",
+      "authentication_mode": "browser-session",
+      "current_owner": "laravel-application",
+      "consumers": []
+    }
+  ],
+  "unresolved_references": [
+    {
+      "consumer": "idelium-web",
+      "path": "/api/admin/launch",
+      "reason": "Canonical launch endpoint referenced by the Web compatibility layer but not registered by Laravel."
+    },
+    {
+      "consumer": "idelium-web",
+      "path": "/api/admin/launch/preflight",
+      "reason": "Canonical preflight endpoint referenced by the Web compatibility layer but not registered by Laravel."
+    },
+    {
+      "consumer": "idelium-web",
+      "path": "/api/admin/launch/targets",
+      "reason": "Canonical launch-target endpoint referenced by the Web compatibility layer but not registered by Laravel."
+    },
+    {
+      "consumer": "idelium-docker-wiki",
+      "path": "/api/v1",
+      "reason": "Planned versioned API prefix documented by the roadmap; no current Laravel route is registered under this prefix."
+    }
+  ]
+}

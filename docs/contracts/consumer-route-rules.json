@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "sources": {
+    "idelium-web": "23a21a7ce469bc4e0e417be42b0cfe089768a3bd",
+    "idelium-cli": "34191d99c6f5c42118bf7622c4ec124251edeffa",
+    "idelium-runner": "idelium-docker@2b0f084d1cde906b36c2f6ce49dd90137edefa68",
+    "idelium-docker": "2b0f084d1cde906b36c2f6ce49dd90137edefa68",
+    "idelium-docker-wiki": "59b406379c09ddbb66c21263fd4b477311c2e20e"
+  },
+  "consumers": [
+    {
+      "id": "idelium-web",
+      "relationship": "direct",
+      "evidence": [
+        "idelium-web/src/main.js",
+        "idelium-web/src/view",
+        "idelium-web/src/components"
+      ],
+      "path_patterns": [
+        "/api/sanctum/csrf-cookie",
+        "/api/login",
+        "/api/logout",
+        "/api/menu/*",
+        "/api/admin/roles",
+        "/api/admin/profile",
+        "/api/admin/accounts*",
+        "/api/admin/costumers*",
+        "/api/admin/apikey*",
+        "/api/admin/projects",
+        "/api/admin/projects/create",
+        "/api/admin/projects/{project}",
+        "/api/admin/projects/{project}/edit",
+        "/api/admin/projects/{idProject}/parallel-runs*",
+        "/api/admin/environments*",
+        "/api/admin/plugins*",
+        "/api/admin/steps*",
+        "/api/admin/tests*",
+        "/api/admin/testcycles*",
+        "/api/admin/importtest",
+        "/api/admin/launchtest",
+        "/api/admin/platforms/*"
+      ]
+    },
+    {
+      "id": "idelium-cli",
+      "relationship": "direct",
+      "evidence": [
+        "idelium-cli/src/idelium/_internal/ideliumclib.py",
+        "idelium-cli/src/idelium/_internal/ideliumws.py"
+      ],
+      "path_patterns": [
+        "/api/ideliumcl/testcycle",
+        "/api/ideliumcl/testcycle/*",
+        "/api/ideliumcl/test",
+        "/api/ideliumcl/test/*",
+        "/api/ideliumcl/step",
+        "/api/ideliumcl/step/*",
+        "/api/ideliumcl/plugins/*",
+        "/api/ideliumcl/plugin/*",
+        "/api/ideliumcl/environments/*",
+        "/api/ideliumcl/environment/*"
+      ]
+    },
+    {
+      "id": "idelium-runner",
+      "relationship": "direct-contract",
+      "evidence": [
+        "idelium-api/docs/api/run-tokens.md",
+        "idelium-docker/compose.runner.yml"
+      ],
+      "path_patterns": [
+        "/api/ideliumrunner/*"
+      ]
+    },
+    {
+      "id": "idelium-docker",
+      "relationship": "direct-operational-probe",
+      "evidence": [
+        "idelium-docker/docker-compose.yml",
+        "idelium-docker/scripts/smoke-test.sh"
+      ],
+      "path_patterns": [
+        "/api/sanctum/csrf-cookie"
+      ]
+    },
+    {
+      "id": "idelium-docker-wiki",
+      "relationship": "indirect-through-cli",
+      "evidence": [
+        "idelium-docker.wiki/Quick-Start-Selenium.md",
+        "idelium-docker.wiki/Quick-Start-Test-API-Using-Postman.md",
+        "idelium-docker.wiki/Quick-Start-Idelium-JSON-Import.md"
+      ],
+      "path_patterns": [
+        "/api/ideliumcl/testcycle",
+        "/api/ideliumcl/testcycle/*",
+        "/api/ideliumcl/test",
+        "/api/ideliumcl/test/*",
+        "/api/ideliumcl/step",
+        "/api/ideliumcl/step/*",
+        "/api/ideliumcl/plugins/*",
+        "/api/ideliumcl/plugin/*",
+        "/api/ideliumcl/environments/*",
+        "/api/ideliumcl/environment/*"
+      ]
+    }
+  ],
+  "unresolved_references": [
+    {
+      "consumer": "idelium-web",
+      "path": "/api/admin/launch",
+      "reason": "Canonical launch endpoint referenced by the Web compatibility layer but not registered by Laravel."
+    },
+    {
+      "consumer": "idelium-web",
+      "path": "/api/admin/launch/preflight",
+      "reason": "Canonical preflight endpoint referenced by the Web compatibility layer but not registered by Laravel."
+    },
+    {
+      "consumer": "idelium-web",
+      "path": "/api/admin/launch/targets",
+      "reason": "Canonical launch-target endpoint referenced by the Web compatibility layer but not registered by Laravel."
+    },
+    {
+      "consumer": "idelium-docker-wiki",
+      "path": "/api/v1",
+      "reason": "Planned versioned API prefix documented by the roadmap; no current Laravel route is registered under this prefix."
+    }
+  ]
+}

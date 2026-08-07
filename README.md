@@ -29,6 +29,9 @@ The complete, reproducible Laravel route baseline is available in
 [docs/contracts/laravel-routes.md](docs/contracts/laravel-routes.md), with its
 machine-readable counterpart in
 [docs/contracts/laravel-routes.json](docs/contracts/laravel-routes.json).
+The [route consumer map](docs/contracts/consumer-route-map.md) records which
+Laravel routes are used by Idelium Web, CLI, runners, Docker operations, and
+the published wiki workflows, including unresolved consumer references.
 
 No Laravel business route is owned by Go yet. Route ownership will move only
 after its compatibility and tenant-isolation gates pass.
