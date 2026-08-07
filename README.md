@@ -73,6 +73,9 @@ Health and catalog error responses never include database connection strings or
 credentials.
 Health probe semantics, caching rules, and orchestrator guidance are documented
 in [docs/operations/health-contracts.md](docs/operations/health-contracts.md).
+The shared correlation, redacted logging, panic recovery, and security-header
+contract is documented in
+[docs/operations/http-safety-observability.md](docs/operations/http-safety-observability.md).
 
 ## Configuration
 

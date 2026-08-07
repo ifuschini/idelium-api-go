@@ -19,6 +19,8 @@ paths:
           headers:
             Cache-Control:
               $ref: "#/components/headers/HealthCacheControl"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationID"
           content:
             application/json:
               schema:
@@ -34,6 +36,8 @@ paths:
           headers:
             Cache-Control:
               $ref: "#/components/headers/HealthCacheControl"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationID"
           content:
             application/json:
               schema:
@@ -43,6 +47,8 @@ paths:
           headers:
             Cache-Control:
               $ref: "#/components/headers/HealthCacheControl"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationID"
           content:
             application/json:
               schema:
@@ -55,6 +61,9 @@ paths:
       responses:
         "200":
           description: Legacy-compatible platform type array.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationID"
           content:
             application/json:
               schema:
@@ -63,6 +72,9 @@ paths:
                   $ref: "#/components/schemas/PlatformCatalogItem"
         "500":
           description: The platform catalog is unavailable.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationID"
           content:
             application/json:
               schema:
@@ -75,6 +87,9 @@ paths:
       responses:
         "200":
           description: Legacy-compatible platform status array.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationID"
           content:
             application/json:
               schema:
@@ -83,12 +98,25 @@ paths:
                   $ref: "#/components/schemas/PlatformCatalogItem"
         "500":
           description: The platform catalog is unavailable.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationID"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 components:
   headers:
+    CorrelationID:
+      description: >-
+        Validated request correlation identifier. A caller-provided identifier
+        is preserved only when it contains 1-128 safe ASCII characters;
+        otherwise the API generates a replacement.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+        pattern: "^[A-Za-z0-9._:-]+$"
     HealthCacheControl:
       description: Health responses must not be served from a cache.
       schema:

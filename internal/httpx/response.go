@@ -3,8 +3,6 @@ package httpx
 import (
 	"encoding/json"
 	"net/http"
-
-	chimiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
 // ErrorResponse is the stable public error envelope.
@@ -32,7 +30,7 @@ func WriteError(writer http.ResponseWriter, request *http.Request, status int, c
 		Error: APIError{
 			Code:          code,
 			Message:       message,
-			CorrelationID: chimiddleware.GetReqID(request.Context()),
+			CorrelationID: GetCorrelationID(request.Context()),
 		},
 	})
 }

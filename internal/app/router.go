@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	chimiddleware "github.com/go-chi/chi/v5/middleware"
 
 	"github.com/idelium/idelium-api-go/internal/buildinfo"
 	"github.com/idelium/idelium-api-go/internal/health"
@@ -21,7 +20,7 @@ func NewRouter(
 	catalogRepository platforms.CatalogRepository,
 ) http.Handler {
 	router := chi.NewRouter()
-	router.Use(chimiddleware.RequestID)
+	router.Use(httpx.CorrelationID)
 	router.Use(httpx.SecureHeaders)
 	router.Use(httpx.AccessLogger(logger))
 	router.Use(httpx.Recoverer(logger))
