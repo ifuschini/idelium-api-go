@@ -64,6 +64,9 @@ documented in
 [docs/operations/repository-foundation.md](docs/operations/repository-foundation.md).
 The required, independently visible GitHub Actions checks are documented in
 [docs/operations/ci-gates.md](docs/operations/ci-gates.md).
+SBOM generation and fail-closed code and image vulnerability policies are
+documented in
+[docs/operations/supply-chain-gates.md](docs/operations/supply-chain-gates.md).
 
 ## Endpoints
 

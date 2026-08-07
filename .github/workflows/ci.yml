@@ -42,6 +42,9 @@ jobs:
       - name: Run contract tests
         run: make contract-test
 
+      - name: Scan Go dependencies and reachable code
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
+
       - name: Build binaries
         run: make build
 
@@ -97,3 +100,31 @@ jobs:
 
       - name: Verify non-root runtime user
         run: test "$(docker image inspect --format '{{.Config.User}}' idelium/api-go:ci)" = "65532:65532"
+
+      - name: Generate CycloneDX SBOM
+        run: >-
+          docker run --rm
+          --volume /var/run/docker.sock:/var/run/docker.sock
+          anchore/syft:v1.50.0@sha256:1288ea4c8b38767b4e620c1e312c8cb26b6e887a99b4f07ab6cd19fc6f225026
+          idelium/api-go:ci
+          --output cyclonedx-json
+          > sbom.cdx.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: idelium-api-go-sbom
+          path: sbom.cdx.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Scan runtime image vulnerabilities
+        run: >-
+          docker run --rm
+          --volume /var/run/docker.sock:/var/run/docker.sock
+          aquasec/trivy:0.73.0@sha256:7cced7cae583819fc7806d4cbc0dbbc7cad18b99f7d3e235192e6da8c091045c
+          image
+          --exit-code 1
+          --ignore-unfixed
+          --severity HIGH,CRITICAL
+          idelium/api-go:ci

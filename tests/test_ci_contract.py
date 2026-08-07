@@ -46,6 +46,21 @@ class CIContractTests(unittest.TestCase):
         self.assertIn("docker image inspect", self.workflow)
         self.assertIn('= "65532:65532"', self.workflow)
 
+    def test_supply_chain_gates_are_versioned_and_fail_closed(self) -> None:
+        self.assertIn("golang.org/x/vuln/cmd/govulncheck@v1.1.4", self.workflow)
+        self.assertRegex(
+            self.workflow,
+            r"anchore/syft:v1\.50\.0@sha256:[0-9a-f]{64}",
+        )
+        self.assertRegex(
+            self.workflow,
+            r"aquasec/trivy:0\.73\.0@sha256:[0-9a-f]{64}",
+        )
+        self.assertIn("--output cyclonedx-json", self.workflow)
+        self.assertIn("--exit-code 1", self.workflow)
+        self.assertIn("--severity HIGH,CRITICAL", self.workflow)
+        self.assertIn("if-no-files-found: error", self.workflow)
+
 
 if __name__ == "__main__":
     unittest.main()
