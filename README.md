@@ -5,7 +5,9 @@ Laravel API. It is being delivered incrementally so Idelium Web, Idelium CLI,
 Idelium runners, existing databases, and Docker deployments remain compatible
 throughout the migration.
 
-The migration strategy is documented in [MIGRATION_PLAN.md](MIGRATION_PLAN.md).
+The migration strategy is documented in [MIGRATION_PLAN.md](MIGRATION_PLAN.md)
+and translated into executable epics in
+[docs/migration/epics.md](docs/migration/epics.md).
 
 ## Current scope
 
