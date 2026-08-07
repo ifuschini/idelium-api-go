@@ -47,6 +47,7 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 | [#84](https://github.com/ifuschini/idelium-api-go/issues/84) | Completed the common HTTP safety and observability middleware contract. | Validated correlation propagation, redacted structured access logs, safe panic recovery, response security headers, OpenAPI response headers, and regression tests. |
 | [#85](https://github.com/ifuschini/idelium-api-go/issues/85) | Completed the isolated MySQL readiness and integration-test infrastructure. | Pinned ephemeral MariaDB, real readiness HTTP coverage, schema isolation assertion, redacted authentication failure test, and documented future migration and tenant-test gates. |
 | [#86](https://github.com/ifuschini/idelium-api-go/issues/86) | Locked the repository foundation and its engineering contract. | Automated checks preserve Apache 2.0 licensing, repository directives, README requirements, Make targets, and the pinned reproducible non-root Dockerfile. |
+| [#87](https://github.com/ifuschini/idelium-api-go/issues/87) | Split CI into bounded quality, MySQL integration, and container-image gates. | Pinned actions and runtimes, contract and race coverage, isolated MariaDB tests, non-root image inspection, and workflow regression tests. |
 
 
 ## Update policy

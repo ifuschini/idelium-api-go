@@ -62,6 +62,8 @@ allowed to run before a handler and ownership boundary are registered.
 The mandatory repository assets and the automated checks that protect them are
 documented in
 [docs/operations/repository-foundation.md](docs/operations/repository-foundation.md).
+The required, independently visible GitHub Actions checks are documented in
+[docs/operations/ci-gates.md](docs/operations/ci-gates.md).
 
 ## Endpoints
 
