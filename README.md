@@ -1,0 +1,88 @@
+# Idelium API Go
+
+`idelium-api-go` is the contract-compatible Go replacement for the Idelium
+Laravel API. It is being delivered incrementally so Idelium Web, Idelium CLI,
+Idelium runners, existing databases, and Docker deployments remain compatible
+throughout the migration.
+
+The migration strategy is documented in [MIGRATION_PLAN.md](MIGRATION_PLAN.md).
+
+## Current scope
+
+The repository currently provides the production foundation for the new API:
+
+- validated configuration with Docker secret-file support;
+- structured, redacted request logging;
+- correlation identifiers and a stable error envelope;
+- liveness and MySQL-backed readiness endpoints;
+- bounded HTTP and database timeouts;
+- graceful shutdown;
+- unit, race, and container build gates;
+- the initial OpenAPI contract and Laravel route inventory.
+
+No Laravel business route is owned by Go yet. Route ownership will move only
+after its compatibility and tenant-isolation gates pass.
+
+## Endpoints
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/health/live` | Process liveness and build identity. |
+| `GET` | `/health/ready` | Readiness including a bounded MySQL ping. |
+
+Health responses never include database connection strings or credentials.
+
+## Configuration
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `IDELIUM_HTTP_ADDRESS` | `:8080` | HTTP listen address. |
+| `IDELIUM_HTTP_READ_HEADER_TIMEOUT` | `5s` | Header read timeout. |
+| `IDELIUM_HTTP_READ_TIMEOUT` | `15s` | Request read timeout. |
+| `IDELIUM_HTTP_WRITE_TIMEOUT` | `30s` | Response write timeout. |
+| `IDELIUM_HTTP_IDLE_TIMEOUT` | `60s` | Keep-alive idle timeout. |
+| `IDELIUM_HTTP_SHUTDOWN_TIMEOUT` | `15s` | Graceful shutdown timeout. |
+| `IDELIUM_DB_HOST` / `DB_HOST` | `127.0.0.1` | MySQL host. |
+| `IDELIUM_DB_PORT` / `DB_PORT` | `3306` | MySQL port. |
+| `IDELIUM_DB_NAME` / `DB_DATABASE` | `ideliumdb` | MySQL database. |
+| `IDELIUM_DB_USER` / `DB_USERNAME` | `idelium` | MySQL user. |
+| `IDELIUM_DB_PASSWORD_FILE` / `DB_PASSWORD_FILE` | — | Preferred password secret file. |
+| `IDELIUM_DB_PASSWORD` / `DB_PASSWORD` | — | Password fallback for local development. |
+| `IDELIUM_DB_CONNECT_TIMEOUT` | `5s` | Connection timeout. |
+| `IDELIUM_DB_READ_TIMEOUT` | `10s` | Read timeout. |
+| `IDELIUM_DB_WRITE_TIMEOUT` | `10s` | Write timeout. |
+| `IDELIUM_DB_MAX_OPEN_CONNECTIONS` | `25` | Maximum open connections. |
+| `IDELIUM_DB_MAX_IDLE_CONNECTIONS` | `10` | Maximum idle connections. |
+| `IDELIUM_DB_CONNECTION_MAX_LIFETIME` | `5m` | Maximum connection lifetime. |
+
+Production deployments should provide the database password through a mounted
+secret file. Configuration errors stop startup with safe diagnostics.
+
+## Local verification
+
+Go is expected to be installed locally, or commands can be run through the
+pinned builder image in the Dockerfile.
+
+```sh
+make verify
+make integration-test
+docker build -t idelium/api-go:local .
+```
+
+Run the service with a reachable MySQL instance:
+
+```sh
+IDELIUM_DB_PASSWORD_FILE=/run/secrets/db_password \
+go run ./cmd/api
+```
+
+## Architecture
+
+The service is a modular monolith. HTTP handlers depend on application services,
+application services depend on tenant-scoped repository interfaces, and MySQL
+implementations remain inside persistence packages. Generated API and query code
+will be committed for reproducible reviews.
+
+## License
+
+Licensed under the Apache License 2.0. See [LICENSE](LICENSE).

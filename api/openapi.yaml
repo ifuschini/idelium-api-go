@@ -1,0 +1,90 @@
+openapi: 3.0.3
+info:
+  title: Idelium API Go
+  version: 0.1.0
+  description: >-
+    Contract for the incremental Go replacement of the Idelium API. Business
+    routes are added only after compatibility and tenant-isolation review.
+servers:
+  - url: /
+paths:
+  /health/live:
+    get:
+      operationId: getLiveness
+      summary: Report process liveness
+      tags: [Operations]
+      responses:
+        "200":
+          description: The API process is alive.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /health/ready:
+    get:
+      operationId: getReadiness
+      summary: Report service readiness
+      tags: [Operations]
+      responses:
+        "200":
+          description: Required dependencies are ready.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessResponse"
+        "503":
+          description: A required dependency is unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    BuildInfo:
+      type: object
+      required: [service, version, commit]
+      properties:
+        service:
+          type: string
+          example: idelium-api-go
+        version:
+          type: string
+        commit:
+          type: string
+    HealthResponse:
+      allOf:
+        - $ref: "#/components/schemas/BuildInfo"
+        - type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              enum: [ok]
+    ReadinessResponse:
+      allOf:
+        - $ref: "#/components/schemas/HealthResponse"
+        - type: object
+          required: [dependencies]
+          properties:
+            dependencies:
+              type: object
+              required: [database]
+              properties:
+                database:
+                  type: string
+                  enum: [ok]
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            correlationId:
+              type: string
+

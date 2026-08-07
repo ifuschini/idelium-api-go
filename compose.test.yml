@@ -1,0 +1,39 @@
+name: idelium-api-go-test
+
+services:
+  mysql:
+    image: mariadb:10.6.22@sha256:7589b386fa6686a5d5f131b504ed21c81e492c48b78c6c4be0d5be1066542559
+    environment:
+      MARIADB_DATABASE: idelium_test
+      MARIADB_USER: idelium_test
+      MARIADB_PASSWORD: integration-test-password
+      MARIADB_ROOT_PASSWORD: integration-root-password
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mariadb-admin ping --silent --host=127.0.0.1 --user=root --password=integration-root-password",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+    security_opt:
+      - no-new-privileges:true
+
+  test:
+    image: golang:1.26.5-bookworm@sha256:6c5605ab3a9a9fb3c4eafe5b3d63cdbf3881caf113262b67862547b54a9db599
+    working_dir: /src
+    command: ["go", "test", "-count=1", "./internal/persistence/mysql"]
+    environment:
+      IDELIUM_TEST_MYSQL_HOST: mysql
+      IDELIUM_TEST_MYSQL_PORT: "3306"
+      IDELIUM_TEST_MYSQL_DATABASE: idelium_test
+      IDELIUM_TEST_MYSQL_USER: idelium_test
+      IDELIUM_TEST_MYSQL_PASSWORD: integration-test-password
+    volumes:
+      - .:/src:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
