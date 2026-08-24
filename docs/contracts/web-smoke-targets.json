@@ -1,8 +1,23 @@
 {
   "consumer": "idelium-web",
-  "ownership_matrix_digest_sha256": "df3d9c69a2ba0406f0dd03e745b6e2b01a3789147b510e7ad74393ef8cc9ff9b",
+  "ownership_matrix_digest_sha256": "b82d0d05b03ced2f226da104f3074d68350e686210fbe90dfba64a2fec0f5a4c",
   "route_inventory_digest_sha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9",
   "routes": [
+    {
+      "aggregate": "platform-catalog",
+      "authentication_mode": "browser-session",
+      "execution_mode": "safe-read",
+      "method": "GET|HEAD",
+      "operation_kind": "read",
+      "owner": "go",
+      "path": "/api/admin/platforms/locations",
+      "requires_synthetic_session": true,
+      "route_id": "GET|HEAD /api/admin/platforms/locations",
+      "smoke_method": "GET",
+      "target_base_url_env": "IDELIUM_WEB_SMOKE_GO_BASE_URL",
+      "tenant_context": true,
+      "trust_path": "browser-session"
+    },
     {
       "aggregate": "platform-catalog",
       "authentication_mode": "browser-session",
@@ -418,21 +433,6 @@
       "path": "/api/admin/platforms/browserversions/{idBrowser}",
       "requires_synthetic_session": true,
       "route_id": "GET|HEAD /api/admin/platforms/browserversions/{idBrowser}",
-      "smoke_method": "GET",
-      "target_base_url_env": "IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL",
-      "tenant_context": true,
-      "trust_path": "browser-session"
-    },
-    {
-      "aggregate": "platform-catalog",
-      "authentication_mode": "browser-session",
-      "execution_mode": "safe-read",
-      "method": "GET|HEAD",
-      "operation_kind": "read",
-      "owner": "laravel",
-      "path": "/api/admin/platforms/locations",
-      "requires_synthetic_session": true,
-      "route_id": "GET|HEAD /api/admin/platforms/locations",
       "smoke_method": "GET",
       "target_base_url_env": "IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL",
       "tenant_context": true,
@@ -1376,8 +1376,8 @@
       "synthetic-mutation": 53
     },
     "owner_counts": {
-      "go": 2,
-      "laravel": 89
+      "go": 3,
+      "laravel": 88
     },
     "route_count": 91
   },

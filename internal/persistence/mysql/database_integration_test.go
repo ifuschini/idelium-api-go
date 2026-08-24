@@ -131,10 +131,13 @@ func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	for _, statement := range []string{
 		"DROP TABLE IF EXISTS types",
 		"DROP TABLE IF EXISTS statuses",
+		"DROP TABLE IF EXISTS locations",
 		"CREATE TABLE types (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL)",
 		"CREATE TABLE statuses (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL)",
+		"CREATE TABLE locations (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
 		"INSERT INTO types (id, name) VALUES (2, 'mobile'), (1, 'desktop')",
 		"INSERT INTO statuses (id, name) VALUES (2, 'busy'), (1, 'free')",
+		"INSERT INTO locations (id, name, created_at, updated_at) VALUES (2, 'us-east', NULL, NULL), (1, 'eu-west', NULL, NULL)",
 	} {
 		if _, err := database.ExecContext(ctx, statement); err != nil {
 			t.Fatalf("prepare catalog fixture %q: %v", statement, err)
@@ -158,5 +161,14 @@ func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	expectedStatuses := []platforms.CatalogItem{{ID: 1, Name: "free"}, {ID: 2, Name: "busy"}}
 	if !reflect.DeepEqual(statuses, expectedStatuses) {
 		t.Fatalf("unexpected statuses: %#v", statuses)
+	}
+
+	locations, err := repository.ListLocations(ctx, platforms.LocationQuery{})
+	if err != nil {
+		t.Fatalf("ListLocations() returned an error: %v", err)
+	}
+	expectedLocations := []platforms.LocationItem{{ID: 1, Name: "eu-west"}, {ID: 2, Name: "us-east"}}
+	if !reflect.DeepEqual(locations.Data, expectedLocations) {
+		t.Fatalf("unexpected locations: %#v", locations.Data)
 	}
 }

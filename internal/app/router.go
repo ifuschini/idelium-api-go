@@ -32,6 +32,7 @@ func NewRouter(
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)
 	router.Get("/admin/platforms/status", platformHandler.Statuses)
+	router.Get("/admin/platforms/locations", platformHandler.Locations)
 
 	router.NotFound(func(writer http.ResponseWriter, request *http.Request) {
 		httpx.WriteError(writer, request, http.StatusNotFound, "ROUTE_NOT_FOUND", "The requested route does not exist.")

@@ -74,6 +74,14 @@ class CompatibilityBacklogTest(unittest.TestCase):
             self.item("GET|HEAD", "/api/admin/platforms/status")["rollout_status"],
         )
         self.assertEqual(
+            "go-owned",
+            self.item("GET|HEAD", "/api/admin/platforms/locations")["rollout_status"],
+        )
+        self.assertEqual(
+            "laravel-owned",
+            self.item("POST", "/api/admin/platforms/locations")["rollout_status"],
+        )
+        self.assertEqual(
             "documented",
             self.item("GET|HEAD", "/api/admin/platforms/os/{idType}")["openapi_status"],
         )

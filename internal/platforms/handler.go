@@ -3,6 +3,8 @@ package platforms
 import (
 	"log/slog"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/idelium/idelium-api-go/internal/httpx"
 )
@@ -52,4 +54,92 @@ func (handler *Handler) Statuses(writer http.ResponseWriter, request *http.Reque
 	}
 
 	httpx.WriteJSON(writer, http.StatusOK, items)
+}
+
+// Locations returns the legacy platform location grid contract.
+func (handler *Handler) Locations(writer http.ResponseWriter, request *http.Request) {
+	query := parseLocationQuery(request)
+	page, err := handler.repository.ListLocations(request.Context(), query)
+	if err != nil {
+		handler.logger.ErrorContext(request.Context(), "list platform locations failed", "error", err)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"PLATFORM_CATALOG_UNAVAILABLE",
+			"The platform catalog could not be loaded.",
+		)
+		return
+	}
+
+	if !query.IsPaged() {
+		httpx.WriteJSON(writer, http.StatusOK, page.Data)
+		return
+	}
+
+	httpx.WriteJSON(writer, http.StatusOK, page)
+}
+
+func parseLocationQuery(request *http.Request) LocationQuery {
+	values := request.URL.Query()
+	sort := values.Get("sort")
+	if sort != "name" && sort != "created_at" && sort != "updated_at" {
+		sort = "id"
+	}
+
+	direction := strings.ToLower(values.Get("direction"))
+	if direction != "desc" {
+		direction = "asc"
+	}
+
+	_, hasPage := values["page"]
+	_, hasPageSize := values["pageSize"]
+	query := LocationQuery{
+		Paged:     hasPage || hasPageSize,
+		Search:    boundedString(values.Get("search"), 200),
+		Sort:      sort,
+		Direction: direction,
+		FilterIDs: parseIDFilter(values.Get("filter[id]")),
+	}
+	if hasPage {
+		query.Page = boundedInt(values.Get("page"), 1, 1, 1<<31-1)
+	}
+	if hasPageSize {
+		query.PageSize = boundedInt(values.Get("pageSize"), 1, 1, 100)
+	}
+	return query
+}
+
+func boundedInt(value string, fallback int, minimum int, maximum int) int {
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed < minimum {
+		return fallback
+	}
+	if parsed > maximum {
+		return maximum
+	}
+	return parsed
+}
+
+func boundedString(value string, maximum int) string {
+	value = strings.TrimSpace(value)
+	runes := []rune(value)
+	if len(runes) <= maximum {
+		return value
+	}
+	return string(runes[:maximum])
+}
+
+func parseIDFilter(value string) []int64 {
+	if value == "" {
+		return nil
+	}
+	ids := make([]int64, 0)
+	for _, part := range strings.Split(value, ",") {
+		parsed, err := strconv.ParseInt(strings.TrimSpace(part), 10, 64)
+		if err == nil && parsed > 0 {
+			ids = append(ids, parsed)
+		}
+	}
+	return ids
 }
