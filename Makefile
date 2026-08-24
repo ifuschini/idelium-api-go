@@ -1,12 +1,19 @@
 GO ?= go
 
-.PHONY: build contract-test format format-check integration-test test test-race vet verify
+.PHONY: build contract-test format format-check integration-test openapi-check test test-race vet verify
 
 build:
 	$(GO) build ./...
 
 contract-test:
 	python3 -m unittest discover -s tests -p 'test_*.py'
+
+openapi-check:
+	python3 scripts/sync_openapi_legacy_contracts.py \
+		--inventory docs/contracts/laravel-routes.json \
+		--consumer-map docs/contracts/consumer-route-map.json \
+		--openapi api/openapi.yaml \
+		--check
 
 format:
 	$(GO) fmt ./...
@@ -26,4 +33,4 @@ integration-test:
 vet:
 	$(GO) vet ./...
 
-verify: format-check vet test test-race contract-test build
+verify: format-check vet test test-race contract-test openapi-check build

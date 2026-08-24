@@ -37,7 +37,7 @@ def openapi_operations(source: str) -> set[tuple[str, str]]:
     operations: set[tuple[str, str]] = set()
     current_path: str | None = None
     for line in source.splitlines():
-        path_match = re.match(r"^  (/[^:]+):\s*$", line)
+        path_match = re.match(r"^  (/[^:]*):\s*$", line)
         if path_match:
             current_path = path_match.group(1)
             continue
@@ -231,9 +231,10 @@ def markdown(document: dict[str, Any]) -> str:
             "a sanitized Laravel fixture, a Laravel-Go differential test, applicable consumer",
             "smoke coverage, and explicit rollout/rollback evidence.",
             "",
-            "The two platform catalogue reads already present in the Go OpenAPI document are",
-            "marked documented. Their fixtures and differential tests intentionally remain",
-            "pending until the Wave 2 harness is available.",
+            "All production-visible Laravel routes are present in the Go OpenAPI document.",
+            "Compatibility placeholder operations preserve ownership and consumer metadata;",
+            "fixtures and differential tests intentionally remain pending until the Wave 2",
+            "harness is available.",
             "",
             "## Route backlog",
             "",

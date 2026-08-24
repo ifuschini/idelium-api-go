@@ -51,13 +51,18 @@ class CompatibilityBacklogTest(unittest.TestCase):
             len({item["id"] for item in self.backlog["items"]}),
         )
 
-    def test_marks_only_current_go_openapi_operations_as_documented(self):
+    def test_marks_every_production_visible_route_as_openapi_documented(self):
+        statuses = {item["openapi_status"] for item in self.backlog["items"]}
+        self.assertEqual({"documented"}, statuses)
+        self.assertEqual(168, len(self.backlog["items"]))
+
+    def test_current_go_openapi_operations_remain_documented(self):
         self.assertEqual(
             "documented",
             self.item("GET|HEAD", "/api/admin/platforms/types")["openapi_status"],
         )
         self.assertEqual(
-            "pending",
+            "documented",
             self.item("GET|HEAD", "/api/admin/platforms/os/{idType}")["openapi_status"],
         )
 
