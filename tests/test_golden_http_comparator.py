@@ -41,6 +41,7 @@ def fixture():
             },
             "body": [{"id": 1, "name": "active"}],
         },
+        "normalizations": [],
         "sideEffects": [],
     }
 
@@ -81,6 +82,47 @@ class GoldenHTTPComparatorTest(unittest.TestCase):
         self.assertIn("$.response.status", paths)
         self.assertIn("$.response.headers.content-type", paths)
         self.assertIn("$.response.body[0].name", paths)
+
+    def test_declared_nondeterministic_values_are_normalized_before_compare(self):
+        expected = fixture()
+        actual = fixture()
+        expected["response"]["body"][0] = {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "createdAt": "2026-01-01T00:00:00Z",
+            "correlationId": "correlation-laravel",
+        }
+        actual["response"]["body"][0] = {
+            "id": "987e6543-e21b-12d3-a456-426614174999",
+            "createdAt": "2026-08-24T12:30:00Z",
+            "correlationId": "correlation-go",
+        }
+        normalizations = [
+            {"path": "$.response.body[0].id", "rule": "Normalize generated UUID."},
+            {"path": "$.response.body[0].createdAt", "rule": "Normalize timestamp."},
+            {
+                "path": "$.response.body[0].correlationId",
+                "rule": "Normalize correlation identifier.",
+            },
+        ]
+        expected["normalizations"] = normalizations
+        actual["normalizations"] = normalizations
+
+        result = MODULE.compare(expected, actual)
+
+        self.assertTrue(result.passed)
+        self.assertEqual([], result.differences)
+
+    def test_missing_declared_normalization_path_fails_safely(self):
+        expected = fixture()
+        actual = fixture()
+        expected["normalizations"] = [
+            {"path": "$.response.body[0].missingId", "rule": "Normalize UUID."}
+        ]
+
+        result = MODULE.compare(expected, actual)
+
+        self.assertFalse(result.passed)
+        self.assertEqual("$.response.body[0].missingId", result.differences[0].path)
 
     def test_mutations_are_rejected_by_safe_read_comparator(self):
         expected = fixture()

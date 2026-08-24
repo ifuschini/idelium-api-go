@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -12,6 +14,12 @@ from typing import Any
 
 SAFE_READ_METHODS = {"GET", "HEAD"}
 COMPARABLE_HEADERS = {"cache-control", "content-type", "location"}
+NORMALIZATION_MARKERS = {
+    "correlation": "[NORMALIZED_CORRELATION_ID]",
+    "timestamp": "[NORMALIZED_TIMESTAMP]",
+    "uuid": "[NORMALIZED_UUID]",
+    "id": "[NORMALIZED_IDENTIFIER]",
+}
 
 
 @dataclass(frozen=True)
@@ -57,6 +65,87 @@ def comparable_headers(headers: dict[str, Any]) -> dict[str, str]:
         for key, value in normalized.items()
         if key in COMPARABLE_HEADERS
     }
+
+
+def normalization_marker(rule: str, path: str) -> str:
+    text = f"{rule} {path}".lower()
+    for keyword, marker in NORMALIZATION_MARKERS.items():
+        if keyword in text:
+            return marker
+    return "[NORMALIZED_VALUE]"
+
+
+def path_tokens(path: str) -> list[str | int]:
+    if not path.startswith("$."):
+        raise ValueError(f"Unsupported normalization path: {path}")
+    tokens: list[str | int] = []
+    for part in path[2:].split("."):
+        if not part:
+            raise ValueError(f"Unsupported normalization path: {path}")
+        match = re.match(r"^([^\[]+)((?:\[\d+\])*)$", part)
+        if not match:
+            raise ValueError(f"Unsupported normalization path: {path}")
+        tokens.append(match.group(1))
+        for index in re.findall(r"\[(\d+)\]", match.group(2)):
+            tokens.append(int(index))
+    return tokens
+
+
+def set_path_value(document: Any, path: str, value: Any) -> bool:
+    current = document
+    tokens = path_tokens(path)
+    for token in tokens[:-1]:
+        if isinstance(token, int):
+            if not isinstance(current, list) or token >= len(current):
+                return False
+            current = current[token]
+            continue
+        if not isinstance(current, dict) or token not in current:
+            return False
+        current = current[token]
+    final = tokens[-1]
+    if isinstance(final, int):
+        if not isinstance(current, list) or final >= len(current):
+            return False
+        current[final] = value
+        return True
+    if not isinstance(current, dict) or final not in current:
+        return False
+    current[final] = value
+    return True
+
+
+def collect_normalizations(*fixtures: dict[str, Any]) -> dict[str, str]:
+    normalizations: dict[str, str] = {}
+    for fixture in fixtures:
+        for entry in fixture.get("normalizations", []):
+            path = entry.get("path")
+            rule = entry.get("rule", "")
+            if isinstance(path, str) and path.startswith("$."):
+                normalizations[path] = normalization_marker(str(rule), path)
+    return normalizations
+
+
+def normalized_fixture(
+    fixture: dict[str, Any],
+    normalizations: dict[str, str],
+    differences: list[Difference],
+    label: str,
+) -> dict[str, Any]:
+    result = copy.deepcopy(fixture)
+    for path, marker in sorted(normalizations.items()):
+        try:
+            applied = set_path_value(result, path, marker)
+        except ValueError:
+            differences.append(
+                Difference(f"$.{label}.normalizations", "Normalization path is not supported.")
+            )
+            continue
+        if not applied:
+            differences.append(
+                Difference(path, "Normalization path is declared but not present in the fixture.")
+            )
+    return result
 
 
 def ensure_safe_read(fixture: dict[str, Any], label: str) -> list[Difference]:
@@ -109,6 +198,9 @@ def compare(expected: dict[str, Any], actual: dict[str, Any]) -> Comparison:
     differences: list[Difference] = []
     differences.extend(ensure_safe_read(expected, "expected"))
     differences.extend(ensure_safe_read(actual, "actual"))
+    normalizations = collect_normalizations(expected, actual)
+    expected = normalized_fixture(expected, normalizations, differences, "expected")
+    actual = normalized_fixture(actual, normalizations, differences, "actual")
 
     for field_name in ("method", "path", "trustPath", "tenantOwned"):
         expected_value = expected.get("route", {}).get(field_name)

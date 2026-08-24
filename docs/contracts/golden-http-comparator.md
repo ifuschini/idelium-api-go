@@ -13,6 +13,21 @@ The comparator checks:
   `Location`;
 - response body shape and values.
 
+Before comparing, the comparator applies declared `normalizations` from both
+fixtures. Supported normalization paths use the fixture JSON-path style already
+defined by the golden fixture policy, for example:
+
+- `$.response.body.createdAt` for timestamps;
+- `$.response.body.id` or nested array paths such as `$.response.body[0].id`
+  for generated identifiers or UUIDs;
+- `$.response.body.correlationId` or `$.request.headers.X-Correlation-ID` for
+  correlation identifiers.
+
+Each declared normalization is applied to both fixtures with a stable marker. If
+a declared path is missing from either fixture, the comparison fails with a
+path-only diagnostic so stale or overly broad normalization rules cannot hide
+real contract drift.
+
 The comparator rejects mutation fixtures and any fixture that declares side
 effects. Mutation and database comparison belongs to the later side-effect
 comparator ticket.
