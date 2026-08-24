@@ -2,6 +2,7 @@
   "schema_version": 1,
   "description": "Explicit route rollout states that differ from the Laravel-owned migration default.",
   "routes": {
+    "GET|HEAD /api/admin/platforms/status": "go-owned",
     "GET|HEAD /api/admin/platforms/types": "go-owned"
   }
 }
