@@ -10,7 +10,24 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 - Wave epics: 11
 - Domain tracks: 60
 - Implementation tickets: 107
+- GitHub milestones: Wave 0 through Wave 10, with all 178 migration issues assigned
 - Machine-readable mapping: [`github-issues.json`](github-issues.json)
+
+## GitHub milestones
+
+| Milestone | Assigned issues |
+| --- | ---: |
+| Wave 0 - Repository Foundation | 13 |
+| Wave 1 - Contracts and Safety Gates | 15 |
+| Wave 2 - Differential Test Harness | 16 |
+| Wave 3 - Low-Risk Stateless Reads | 18 |
+| Wave 4 - CLI Configuration Reads | 16 |
+| Wave 5 - CLI Result Writes | 16 |
+| Wave 6 - Admin Catalog Mutations | 18 |
+| Wave 7 - Execution Results and Artifacts | 16 |
+| Wave 8 - Runner and Parallel Execution | 15 |
+| Wave 9 - Identity, Customers, Projects | 18 |
+| Wave 10 - Cutover and Laravel Retirement | 17 |
 
 ## Current cursor
 
