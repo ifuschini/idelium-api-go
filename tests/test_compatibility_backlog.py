@@ -25,10 +25,14 @@ class CompatibilityBacklogTest(unittest.TestCase):
         operations = MODULE.openapi_operations(
             (ROOT / "api" / "openapi.yaml").read_text(encoding="utf-8")
         )
+        rollout_overrides = MODULE.load_rollout_overrides(
+            ROOT / "docs" / "contracts" / "route-rollout-overrides.json"
+        )
         self.backlog = MODULE.build_backlog(
             self.inventory,
             self.consumer_map,
             operations,
+            rollout_overrides,
         )
 
     def item(self, method, path):
@@ -62,9 +66,32 @@ class CompatibilityBacklogTest(unittest.TestCase):
             self.item("GET|HEAD", "/api/admin/platforms/types")["openapi_status"],
         )
         self.assertEqual(
+            "go-owned",
+            self.item("GET|HEAD", "/api/admin/platforms/types")["rollout_status"],
+        )
+        self.assertEqual(
             "documented",
             self.item("GET|HEAD", "/api/admin/platforms/os/{idType}")["openapi_status"],
         )
+
+    def test_rejects_unsupported_rollout_override_status(self):
+        with self.assertRaisesRegex(ValueError, "Unsupported rollout status"):
+            MODULE.load_rollout_overrides(
+                ROOT / "testdata" / "contracts" / "invalid-rollout-overrides.json"
+            )
+
+    def test_rejects_unknown_rollout_override_route(self):
+        with self.assertRaisesRegex(ValueError, "unknown route"):
+            MODULE.build_backlog(
+                self.inventory,
+                self.consumer_map,
+                MODULE.openapi_operations(
+                    (ROOT / "api" / "openapi.yaml").read_text(encoding="utf-8")
+                ),
+                MODULE.load_rollout_overrides(
+                    ROOT / "testdata" / "contracts" / "unknown-rollout-overrides.json"
+                ),
+            )
 
     def test_routes_are_assigned_to_expected_migration_waves(self):
         cases = [

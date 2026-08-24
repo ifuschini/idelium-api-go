@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "routes": {
+    "GET|HEAD /api/admin/platforms/types": "shadow"
+  }
+}

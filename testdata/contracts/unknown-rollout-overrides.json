@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "routes": {
+    "GET /api/admin/platforms/not-real": "go-owned"
+  }
+}

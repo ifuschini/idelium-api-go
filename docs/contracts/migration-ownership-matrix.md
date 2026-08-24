@@ -114,7 +114,7 @@ does not require database restoration or reverse data replication.
 | `PUT` | `/api/admin/platforms/osversion` | `platform-catalog` | mutation | laravel | yes | 6 |
 | `GET|HEAD` | `/api/admin/platforms/osversion/{idOs}` | `platform-catalog` | read | laravel | yes | 3 |
 | `GET|HEAD` | `/api/admin/platforms/status` | `platform-catalog` | read | laravel | yes | 3 |
-| `GET|HEAD` | `/api/admin/platforms/types` | `platform-catalog` | read | laravel | yes | 3 |
+| `GET|HEAD` | `/api/admin/platforms/types` | `platform-catalog` | read | go | yes | 3 |
 | `POST` | `/api/admin/plugins` | `plugins` | mutation | laravel | yes | 6 |
 | `GET|HEAD` | `/api/admin/plugins/{idProject}` | `plugins` | read | laravel | yes | 6 |
 | `DELETE` | `/api/admin/plugins/{idProject}/{plugin}` | `plugins` | mutation | laravel | yes | 6 |

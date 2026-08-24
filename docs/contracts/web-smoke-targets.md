@@ -19,13 +19,14 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | Metric | Value |
 | --- | --- |
 | Routes | 91 |
-| Owners | laravel: 91 |
+| Owners | go: 1, laravel: 90 |
 | Execution modes | safe-read: 38, synthetic-mutation: 53 |
 
 ## Routes
 
 | Method | Path | Owner | Target env | Mode | Tenant | Aggregate |
 | --- | --- | --- | --- | --- | --- | --- |
+| `GET` | `/api/admin/platforms/types` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `GET` | `/api/admin/accounts` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `accounts` |
 | `POST` | `/api/admin/accounts` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `accounts` |
 | `DELETE` | `/api/admin/accounts/{idUser}` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `accounts` |
@@ -69,7 +70,6 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | `PUT` | `/api/admin/platforms/osversion` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `platform-catalog` |
 | `GET` | `/api/admin/platforms/osversion/{idOs}` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `GET` | `/api/admin/platforms/status` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `platform-catalog` |
-| `GET` | `/api/admin/platforms/types` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `POST` | `/api/admin/plugins` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `plugins` |
 | `GET` | `/api/admin/plugins/{idProject}` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `plugins` |
 | `DELETE` | `/api/admin/plugins/{idProject}/{plugin}` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `plugins` |

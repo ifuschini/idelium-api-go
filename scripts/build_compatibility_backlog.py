@@ -21,6 +21,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--inventory", type=Path, required=True)
     parser.add_argument("--consumer-map", type=Path, required=True)
     parser.add_argument("--openapi", type=Path, required=True)
+    parser.add_argument(
+        "--rollout-overrides",
+        type=Path,
+        default=Path("docs/contracts/route-rollout-overrides.json"),
+    )
     parser.add_argument("--output-json", type=Path, required=True)
     parser.add_argument("--output-markdown", type=Path, required=True)
     return parser.parse_args()
@@ -31,6 +36,22 @@ def load_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"{path} must contain a JSON object.")
     return value
+
+
+def load_rollout_overrides(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {}
+    document = load_json(path)
+    overrides = document.get("routes", {})
+    if not isinstance(overrides, dict):
+        raise ValueError("Rollout overrides must contain a routes object.")
+    allowed = {"laravel-owned", "go-owned"}
+    result: dict[str, str] = {}
+    for route_id, rollout_status in overrides.items():
+        if rollout_status not in allowed:
+            raise ValueError(f"Unsupported rollout status for {route_id}.")
+        result[str(route_id)] = str(rollout_status)
+    return result
 
 
 def openapi_operations(source: str) -> set[tuple[str, str]]:
@@ -128,18 +149,29 @@ def build_backlog(
     inventory: dict[str, Any],
     consumer_map: dict[str, Any],
     operations: set[tuple[str, str]],
+    rollout_overrides: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     if inventory["route_digest_sha256"] != consumer_map["route_inventory_digest_sha256"]:
         raise ValueError("Consumer map does not match the Laravel route inventory.")
 
+    rollout_overrides = rollout_overrides or {}
     consumer_index = {
         (route["method"], route["path"]): [entry["id"] for entry in route["consumers"]]
         for route in consumer_map["routes"]
     }
+    known_route_ids = {
+        f"{route['method']} {route['path']}"
+        for route in inventory["routes"]
+        if route["authentication_mode"] != "development-only"
+    }
+    unknown_overrides = sorted(set(rollout_overrides) - known_route_ids)
+    if unknown_overrides:
+        raise ValueError(f"Rollout override references unknown route {unknown_overrides[0]}.")
     items = []
     exclusions = []
     for route in inventory["routes"]:
         identity = (route["method"], route["path"])
+        route_id = f"{route['method']} {route['path']}"
         if route["authentication_mode"] == "development-only":
             exclusions.append(
                 {
@@ -154,7 +186,7 @@ def build_backlog(
         documented = is_documented(route, operations)
         items.append(
             {
-                "id": f"{route['method']} {route['path']}",
+                "id": route_id,
                 "method": route["method"],
                 "path": route["path"],
                 "controller": route["controller"],
@@ -169,7 +201,7 @@ def build_backlog(
                 "fixture_status": "pending",
                 "differential_test_status": "pending",
                 "security_review_status": "pending",
-                "rollout_status": "laravel-owned",
+                "rollout_status": rollout_overrides.get(route_id, "laravel-owned"),
                 "required_contract_evidence": [
                     "request-and-validation",
                     "response-and-status-codes",
@@ -294,6 +326,7 @@ def main() -> int:
         load_json(args.inventory),
         load_json(args.consumer_map),
         openapi_operations(args.openapi.read_text(encoding="utf-8")),
+        load_rollout_overrides(args.rollout_overrides),
     )
     args.output_json.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
     args.output_markdown.write_text(markdown(document), encoding="utf-8")
