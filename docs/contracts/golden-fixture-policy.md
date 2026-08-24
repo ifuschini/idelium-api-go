@@ -72,12 +72,15 @@ in this format.
 2. Capture Laravel behavior at an immutable commit and record its route inventory
    digest. Never capture from a production tenant.
 3. Sanitize and normalize the record before it enters the repository.
-4. Run `python3 scripts/validate_golden_fixtures.py testdata/golden` and
+4. Use `python3 scripts/redact_golden_fixture.py --input <candidate> --output <sanitized>`
+   to remove sensitive headers, credential fields, session identifiers, and
+   token-like payload strings before review.
+5. Run `python3 scripts/validate_golden_fixtures.py testdata/golden` and
    `make verify`.
-5. Review fixture changes together with the contract decision that caused them.
+6. Review fixture changes together with the contract decision that caused them.
    Do not automatically accept new output merely to make a differential test
    pass.
-6. Version breaking fixture-format changes with a new `fixtureVersion`; retain a
+7. Version breaking fixture-format changes with a new `fixtureVersion`; retain a
    reader for the previous supported version until its migration is complete.
 
 Fixtures are immutable evidence for a specific source revision. Behavioral
