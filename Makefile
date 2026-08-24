@@ -1,6 +1,6 @@
 GO ?= go
 
-.PHONY: build contract-test format format-check integration-test openapi-check test test-race vet verify
+.PHONY: build contract-test format format-check integration-test openapi-check smoke-targets-check test test-race vet verify
 
 build:
 	$(GO) build ./...
@@ -18,6 +18,10 @@ openapi-check:
 		--openapi api/openapi.yaml \
 		--output internal/openapicontract/generated_routes.go \
 		--check
+
+smoke-targets-check:
+	python3 scripts/build_web_smoke_targets.py --check
+	python3 scripts/build_cli_smoke_targets.py --check
 
 format:
 	$(GO) fmt ./...
@@ -37,4 +41,4 @@ integration-test:
 vet:
 	$(GO) vet ./...
 
-verify: format-check vet test test-race contract-test openapi-check build
+verify: format-check vet test test-race contract-test openapi-check smoke-targets-check build

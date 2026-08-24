@@ -36,6 +36,7 @@ class RepositoryFoundationTests(unittest.TestCase):
             "contract-test:",
             "format-check:",
             "integration-test:",
+            "smoke-targets-check:",
             "test-race:",
             "vet:",
             "verify:",
@@ -43,7 +44,10 @@ class RepositoryFoundationTests(unittest.TestCase):
             self.assertIn(target, makefile)
         self.assertRegex(
             makefile,
-            re.compile(r"^verify:.*format-check.*vet.*test.*test-race.*contract-test.*build", re.MULTILINE),
+            re.compile(
+                r"^verify:.*format-check.*vet.*test.*test-race.*contract-test.*openapi-check.*smoke-targets-check.*build",
+                re.MULTILINE,
+            ),
         )
 
     def test_dockerfile_is_pinned_reproducible_and_non_root(self) -> None:
