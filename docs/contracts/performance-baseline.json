@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 1,
+  "routeInventoryDigestSha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9",
+  "measurementPolicy": {
+    "environment": "isolated non-production stack with synthetic tenants",
+    "clock": "monotonic client-side duration around the HTTP request",
+    "redaction": "No request or response payload values are written to the baseline report.",
+    "rollback": "Performance evidence changes no traffic ownership and rolls back by Git revert."
+  },
+  "cases": [
+    {
+      "scenario": "platform-status-read",
+      "class": "read",
+      "routeId": "GET|HEAD /api/admin/platforms/status",
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/status",
+      "trustPath": "browser-session",
+      "authenticationMode": "browser-session",
+      "tenantOwned": true,
+      "migrationWave": 3,
+      "consumers": [
+        "idelium-web"
+      ],
+      "payloadProfile": "small-catalog",
+      "baselineStatus": "capture-required",
+      "budgetMs": {
+        "p50": 75,
+        "p95": 200,
+        "p99": 400
+      },
+      "sampleSize": {
+        "minimumRequests": 100,
+        "warmupRequests": 10,
+        "runs": 3
+      },
+      "failurePolicy": "Fail migration gate when p95 exceeds budget by more than 20% or error rate is non-zero."
+    },
+    {
+      "scenario": "platform-type-read",
+      "class": "read",
+      "routeId": "GET|HEAD /api/admin/platforms/types",
+      "method": "GET|HEAD",
+      "path": "/api/admin/platforms/types",
+      "trustPath": "browser-session",
+      "authenticationMode": "browser-session",
+      "tenantOwned": true,
+      "migrationWave": 3,
+      "consumers": [
+        "idelium-web"
+      ],
+      "payloadProfile": "small-catalog",
+      "baselineStatus": "capture-required",
+      "budgetMs": {
+        "p50": 75,
+        "p95": 200,
+        "p99": 400
+      },
+      "sampleSize": {
+        "minimumRequests": 100,
+        "warmupRequests": 10,
+        "runs": 3
+      },
+      "failurePolicy": "Fail migration gate when p95 exceeds budget by more than 20% or error rate is non-zero."
+    },
+    {
+      "scenario": "cli-test-cycle-graph-read",
+      "class": "read",
+      "routeId": "GET|HEAD /api/ideliumcl/testcycle/{idTestCycle}",
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/testcycle/{idTestCycle}",
+      "trustPath": "api-key",
+      "authenticationMode": "api-key",
+      "tenantOwned": false,
+      "migrationWave": 4,
+      "consumers": [
+        "idelium-cli",
+        "idelium-docker-wiki"
+      ],
+      "payloadProfile": "medium-execution-graph",
+      "baselineStatus": "capture-required",
+      "budgetMs": {
+        "p50": 150,
+        "p95": 500,
+        "p99": 900
+      },
+      "sampleSize": {
+        "minimumRequests": 100,
+        "warmupRequests": 10,
+        "runs": 3
+      },
+      "failurePolicy": "Fail migration gate when p95 exceeds budget by more than 20% or error rate is non-zero."
+    },
+    {
+      "scenario": "cli-step-read",
+      "class": "read",
+      "routeId": "GET|HEAD /api/ideliumcl/step/{idStep}",
+      "method": "GET|HEAD",
+      "path": "/api/ideliumcl/step/{idStep}",
+      "trustPath": "api-key",
+      "authenticationMode": "api-key",
+      "tenantOwned": false,
+      "migrationWave": 4,
+      "consumers": [
+        "idelium-cli",
+        "idelium-docker-wiki"
+      ],
+      "payloadProfile": "dsl-or-json-step",
+      "baselineStatus": "capture-required",
+      "budgetMs": {
+        "p50": 125,
+        "p95": 400,
+        "p99": 800
+      },
+      "sampleSize": {
+        "minimumRequests": 100,
+        "warmupRequests": 10,
+        "runs": 3
+      },
+      "failurePolicy": "Fail migration gate when p95 exceeds budget by more than 20% or error rate is non-zero."
+    },
+    {
+      "scenario": "web-test-result-detail-read",
+      "class": "read",
+      "routeId": "GET|HEAD /api/admin/testsperfomed/{idTestPerformed}",
+      "method": "GET|HEAD",
+      "path": "/api/admin/testsperfomed/{idTestPerformed}",
+      "trustPath": "browser-session",
+      "authenticationMode": "browser-session",
+      "tenantOwned": true,
+      "migrationWave": 7,
+      "consumers": [
+        "idelium-web"
+      ],
+      "payloadProfile": "result-detail",
+      "baselineStatus": "capture-required",
+      "budgetMs": {
+        "p50": 175,
+        "p95": 650,
+        "p99": 1200
+      },
+      "sampleSize": {
+        "minimumRequests": 100,
+        "warmupRequests": 10,
+        "runs": 3
+      },
+      "failurePolicy": "Fail migration gate when p95 exceeds budget by more than 20% or error rate is non-zero."
+    },
+    {
+      "scenario": "web-test-create-write",
+      "class": "write",
+      "routeId": "POST /api/admin/tests",
+      "method": "POST",
+      "path": "/api/admin/tests",
+      "trustPath": "browser-session",
+      "authenticationMode": "browser-session",
+      "tenantOwned": true,
+      "migrationWave": 6,
+      "consumers": [
+        "idelium-web"
+      ],
+      "payloadProfile": "test-definition",
+      "baselineStatus": "capture-required",
+      "budgetMs": {
+        "p50": 225,
+        "p95": 900,
+        "p99": 1500
+      },
+      "sampleSize": {
+        "minimumRequests": 100,
+        "warmupRequests": 10,
+        "runs": 3
+      },
+      "failurePolicy": "Fail migration gate when p95 exceeds budget by more than 20% or error rate is non-zero."
+    },
+    {
+      "scenario": "cli-step-result-write",
+      "class": "write",
+      "routeId": "POST /api/ideliumcl/step",
+      "method": "POST",
+      "path": "/api/ideliumcl/step",
+      "trustPath": "api-key",
+      "authenticationMode": "api-key",
+      "tenantOwned": false,
+      "migrationWave": 5,
+      "consumers": [
+        "idelium-cli",
+        "idelium-docker-wiki"
+      ],
+      "payloadProfile": "step-result",
+      "baselineStatus": "capture-required",
+      "budgetMs": {
+        "p50": 200,
+        "p95": 800,
+        "p99": 1500
+      },
+      "sampleSize": {
+        "minimumRequests": 100,
+        "warmupRequests": 10,
+        "runs": 3
+      },
+      "failurePolicy": "Fail migration gate when p95 exceeds budget by more than 20% or error rate is non-zero."
+    },
+    {
+      "scenario": "web-launch-test-write",
+      "class": "write",
+      "routeId": "POST /api/admin/launchtest",
+      "method": "POST",
+      "path": "/api/admin/launchtest",
+      "trustPath": "browser-session",
+      "authenticationMode": "browser-session",
+      "tenantOwned": true,
+      "migrationWave": 8,
+      "consumers": [
+        "idelium-web"
+      ],
+      "payloadProfile": "launch-command",
+      "baselineStatus": "capture-required",
+      "budgetMs": {
+        "p50": 300,
+        "p95": 1200,
+        "p99": 2000
+      },
+      "sampleSize": {
+        "minimumRequests": 100,
+        "warmupRequests": 10,
+        "runs": 3
+      },
+      "failurePolicy": "Fail migration gate when p95 exceeds budget by more than 20% or error rate is non-zero."
+    }
+  ]
+}
