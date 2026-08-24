@@ -14,6 +14,10 @@ openapi-check:
 		--consumer-map docs/contracts/consumer-route-map.json \
 		--openapi api/openapi.yaml \
 		--check
+	python3 scripts/generate_openapi_server_contracts.py \
+		--openapi api/openapi.yaml \
+		--output internal/openapicontract/generated_routes.go \
+		--check
 
 format:
 	$(GO) fmt ./...

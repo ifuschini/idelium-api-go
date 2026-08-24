@@ -18,7 +18,7 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 | --- | --- | --- | --- |
 | Wave 0 | [#1](https://github.com/ifuschini/idelium-api-go/issues/1) | Complete | Tracks [#12](https://github.com/ifuschini/idelium-api-go/issues/12), [#13](https://github.com/ifuschini/idelium-api-go/issues/13), [#14](https://github.com/ifuschini/idelium-api-go/issues/14), and [#15](https://github.com/ifuschini/idelium-api-go/issues/15) completed |
 | Wave 1 | [#2](https://github.com/ifuschini/idelium-api-go/issues/2) | Complete | Tracks [#16](https://github.com/ifuschini/idelium-api-go/issues/16), [#17](https://github.com/ifuschini/idelium-api-go/issues/17), [#18](https://github.com/ifuschini/idelium-api-go/issues/18), [#19](https://github.com/ifuschini/idelium-api-go/issues/19), and [#20](https://github.com/ifuschini/idelium-api-go/issues/20) completed |
-| Wave 2 | [#3](https://github.com/ifuschini/idelium-api-go/issues/3) | In progress | Ticket [#89](https://github.com/ifuschini/idelium-api-go/issues/89) completed |
+| Wave 2 | [#3](https://github.com/ifuschini/idelium-api-go/issues/3) | In progress | Tickets [#89](https://github.com/ifuschini/idelium-api-go/issues/89) and [#90](https://github.com/ifuschini/idelium-api-go/issues/90) completed |
 | Wave 3 | [#4](https://github.com/ifuschini/idelium-api-go/issues/4) | In progress | `d4b7f22 feat: add read-only platform catalogs` |
 | Wave 4 | [#5](https://github.com/ifuschini/idelium-api-go/issues/5) | Planned | Backlog materialized |
 | Wave 5 | [#6](https://github.com/ifuschini/idelium-api-go/issues/6) | Planned | Backlog materialized |
@@ -50,6 +50,7 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 | [#87](https://github.com/ifuschini/idelium-api-go/issues/87) | Split CI into bounded quality, MySQL integration, and container-image gates. | Pinned actions and runtimes, contract and race coverage, isolated MariaDB tests, non-root image inspection, and workflow regression tests. |
 | [#88](https://github.com/ifuschini/idelium-api-go/issues/88) | Added auditable SBOM and fail-closed vulnerability scanning gates. | Pinned govulncheck, Syft CycloneDX artifact generation, Trivy fixed high/critical image policy, immutable tool references, and workflow regression tests. |
 | [#89](https://github.com/ifuschini/idelium-api-go/issues/89) | Expanded OpenAPI coverage to every production-visible Laravel route. | Generated compatibility contracts preserve Laravel route, controller, owner, trust path, authentication, tenant context, and consumer metadata; contract tests enforce 168/168 documented routes and synchronization with the committed Laravel inventory. |
+| [#90](https://github.com/ifuschini/idelium-api-go/issues/90) | Added generated Go server contracts and drift checks from OpenAPI. | Generated `ServerInterface` and operation metadata for 171 OpenAPI operations; `make openapi-check` and contract tests fail when generated Go contracts drift from `api/openapi.yaml`. |
 
 
 ## Update policy
