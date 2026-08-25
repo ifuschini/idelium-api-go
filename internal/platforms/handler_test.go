@@ -19,6 +19,7 @@ type catalogRepositoryStub struct {
 	locations LocationPage
 	brands    BrandPage
 	models    ModelPage
+	os        OperatingSystemPage
 	err       error
 }
 
@@ -40,6 +41,10 @@ func (stub catalogRepositoryStub) ListBrands(context.Context, BrandQuery) (Brand
 
 func (stub catalogRepositoryStub) ListModels(context.Context, ModelQuery) (ModelPage, error) {
 	return stub.models, stub.err
+}
+
+func (stub catalogRepositoryStub) ListOperatingSystems(context.Context, OperatingSystemQuery) (OperatingSystemPage, error) {
+	return stub.os, stub.err
 }
 
 func TestTypesReturnsLegacyArrayShape(t *testing.T) {
@@ -228,6 +233,79 @@ func TestModelsRejectsInvalidBrandIdentifier(t *testing.T) {
 	}
 	body := response.Body.String()
 	if !strings.Contains(body, "INVALID_PLATFORM_BRAND") {
+		t.Fatalf("stable validation code missing: %s", body)
+	}
+}
+
+func TestOperatingSystemsReturnsLegacyArrayWhenUnpaged(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{
+		os: OperatingSystemPage{
+			Data: []OperatingSystemItem{{ID: 1, Name: "linux", Type: 1}, {ID: 2, Name: "windows", Type: 1}},
+		},
+	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/os/1", nil)
+
+	handler.OperatingSystems(response, withPathParam(request, "idType", "1"))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	body := response.Body.String()
+	for _, expected := range []string{`"id":1`, `"name":"linux"`, `"type":1`, `"name":"windows"`} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("response missing %s: %s", expected, body)
+		}
+	}
+	if strings.Contains(body, `"meta"`) {
+		t.Fatalf("unpaged operating-system response should preserve the legacy array shape: %s", body)
+	}
+}
+
+func TestOperatingSystemsReturnsPagedGridWhenRequested(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{
+		os: OperatingSystemPage{
+			Data: []OperatingSystemItem{{ID: 2, Name: "windows", Type: 1}},
+			Meta: OperatingSystemPageMeta{
+				Page:        2,
+				PageSize:    1,
+				Total:       2,
+				LastPage:    2,
+				Sort:        "name",
+				Direction:   "desc",
+				Stale:       false,
+				Partial:     false,
+			},
+		},
+	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/os/1?page=2&pageSize=1&sort=name&direction=desc", nil)
+
+	handler.OperatingSystems(response, withPathParam(request, "idType", "1"))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	body := response.Body.String()
+	for _, expected := range []string{`"data"`, `"meta"`, `"page":2`, `"pageSize":1`, `"direction":"desc"`} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("response missing %s: %s", expected, body)
+		}
+	}
+}
+
+func TestOperatingSystemsRejectsInvalidTypeIdentifier(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/os/not-a-number", nil)
+
+	handler.OperatingSystems(response, withPathParam(request, "idType", "not-a-number"))
+
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", response.Code)
+	}
+	body := response.Body.String()
+	if !strings.Contains(body, "INVALID_PLATFORM_TYPE") {
 		t.Fatalf("stable validation code missing: %s", body)
 	}
 }

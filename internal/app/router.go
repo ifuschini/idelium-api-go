@@ -35,6 +35,7 @@ func NewRouter(
 	router.Get("/admin/platforms/locations", platformHandler.Locations)
 	router.Get("/admin/platforms/brands", platformHandler.Brands)
 	router.Get("/admin/platforms/models/{idBrand}", platformHandler.Models)
+	router.Get("/admin/platforms/os/{idType}", platformHandler.OperatingSystems)
 
 	router.NotFound(func(writer http.ResponseWriter, request *http.Request) {
 		httpx.WriteError(writer, request, http.StatusNotFound, "ROUTE_NOT_FOUND", "The requested route does not exist.")

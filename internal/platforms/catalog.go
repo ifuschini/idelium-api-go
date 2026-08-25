@@ -36,6 +36,15 @@ type ModelItem struct {
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 
+// OperatingSystemItem is a legacy operating-system catalog row.
+type OperatingSystemItem struct {
+	ID        int64      `json:"id"`
+	Name      string     `json:"name"`
+	Type      int64      `json:"type"`
+	CreatedAt *time.Time `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+}
+
 // LocationQuery contains the bounded legacy grid query options.
 type LocationQuery struct {
 	Page      int
@@ -85,6 +94,23 @@ func (query ModelQuery) IsPaged() bool {
 	return query.Paged
 }
 
+// OperatingSystemQuery contains the bounded legacy operating-system grid query options.
+type OperatingSystemQuery struct {
+	TypeID    int64
+	Page      int
+	PageSize  int
+	Paged     bool
+	Search    string
+	Sort      string
+	Direction string
+	FilterIDs []int64
+}
+
+// IsPaged reports whether the legacy endpoint should return data and meta.
+func (query OperatingSystemQuery) IsPaged() bool {
+	return query.Paged
+}
+
 // LocationPage is the paginated legacy grid response.
 type LocationPage struct {
 	Data []LocationItem    `json:"data"`
@@ -101,6 +127,12 @@ type BrandPage struct {
 type ModelPage struct {
 	Data []ModelItem    `json:"data"`
 	Meta ModelPageMeta `json:"meta"`
+}
+
+// OperatingSystemPage is the paginated legacy operating-system grid response.
+type OperatingSystemPage struct {
+	Data []OperatingSystemItem    `json:"data"`
+	Meta OperatingSystemPageMeta `json:"meta"`
 }
 
 // LocationPageMeta contains Laravel EnterpriseGridResponse-compatible metadata.
@@ -145,6 +177,20 @@ type ModelPageMeta struct {
 	Partial         bool   `json:"partial"`
 }
 
+// OperatingSystemPageMeta contains Laravel EnterpriseGridResponse-compatible metadata.
+type OperatingSystemPageMeta struct {
+	Page            int    `json:"page"`
+	PageSize        int    `json:"pageSize"`
+	Total           int64  `json:"total"`
+	LastPage        int    `json:"lastPage"`
+	HasNextPage     bool   `json:"hasNextPage"`
+	HasPreviousPage bool   `json:"hasPreviousPage"`
+	Sort            string `json:"sort"`
+	Direction       string `json:"direction"`
+	Stale           bool   `json:"stale"`
+	Partial         bool   `json:"partial"`
+}
+
 // CatalogRepository reads global platform reference data.
 type CatalogRepository interface {
 	ListTypes(ctx context.Context) ([]CatalogItem, error)
@@ -152,4 +198,5 @@ type CatalogRepository interface {
 	ListLocations(ctx context.Context, query LocationQuery) (LocationPage, error)
 	ListBrands(ctx context.Context, query BrandQuery) (BrandPage, error)
 	ListModels(ctx context.Context, query ModelQuery) (ModelPage, error)
+	ListOperatingSystems(ctx context.Context, query OperatingSystemQuery) (OperatingSystemPage, error)
 }

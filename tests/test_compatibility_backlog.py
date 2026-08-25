@@ -101,6 +101,14 @@ class CompatibilityBacklogTest(unittest.TestCase):
             "documented",
             self.item("GET|HEAD", "/api/admin/platforms/os/{idType}")["openapi_status"],
         )
+        self.assertEqual(
+            "go-owned",
+            self.item("GET|HEAD", "/api/admin/platforms/os/{idType}")["rollout_status"],
+        )
+        self.assertEqual(
+            "laravel-owned",
+            self.item("POST", "/api/admin/platforms/os")["rollout_status"],
+        )
 
     def test_rejects_unsupported_rollout_override_status(self):
         with self.assertRaisesRegex(ValueError, "Unsupported rollout status"):

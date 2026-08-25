@@ -45,6 +45,12 @@ func (fakeCatalogRepository) ListModels(context.Context, platforms.ModelQuery) (
 	}, nil
 }
 
+func (fakeCatalogRepository) ListOperatingSystems(context.Context, platforms.OperatingSystemQuery) (platforms.OperatingSystemPage, error) {
+	return platforms.OperatingSystemPage{
+		Data: []platforms.OperatingSystemItem{{ID: 1, Name: "linux", Type: 1}},
+	}, nil
+}
+
 func TestRouterReturnsStableNotFoundResponse(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
 	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
@@ -135,5 +141,20 @@ func TestRouterReturnsPlatformModels(t *testing.T) {
 	}
 	if !strings.Contains(response.Body.String(), `"model":"iPhone"`) {
 		t.Fatalf("platform model response missing: %s", response.Body.String())
+	}
+}
+
+func TestRouterReturnsPlatformOperatingSystems(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/os/1", nil))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	if !strings.Contains(response.Body.String(), `"name":"linux"`) {
+		t.Fatalf("platform operating-system response missing: %s", response.Body.String())
 	}
 }

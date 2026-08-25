@@ -293,6 +293,94 @@ func (repository *PlatformCatalogRepository) ListModels(ctx context.Context, que
 	return page, nil
 }
 
+// ListOperatingSystems returns operating systems for one platform type using the Laravel-compatible grid contract.
+func (repository *PlatformCatalogRepository) ListOperatingSystems(ctx context.Context, query platforms.OperatingSystemQuery) (platforms.OperatingSystemPage, error) {
+	sortColumns := map[string]string{
+		"id":         "id",
+		"name":       "name",
+		"created_at": "created_at",
+		"updated_at": "updated_at",
+	}
+	sortColumn, ok := sortColumns[query.Sort]
+	if !ok {
+		sortColumn = "id"
+		query.Sort = "id"
+	}
+	if query.Direction != "desc" {
+		query.Direction = "asc"
+	}
+
+	where, args := operatingSystemWhereClause(query)
+	total, err := repository.countRows(ctx, "os", where, args)
+	if err != nil {
+		return platforms.OperatingSystemPage{}, err
+	}
+
+	sqlQuery := "SELECT id, name, type, created_at, updated_at FROM os" + where + " ORDER BY " + sortColumn + " " + query.Direction
+	if query.IsPaged() {
+		pageSize := query.PageSize
+		if pageSize == 0 {
+			pageSize = 25
+		}
+		page := query.Page
+		if page == 0 {
+			page = 1
+		}
+		args = append(args, pageSize, (page-1)*pageSize)
+		sqlQuery += " LIMIT ? OFFSET ?"
+		query.Page = page
+		query.PageSize = pageSize
+	}
+
+	rows, err := repository.database.QueryContext(ctx, sqlQuery, args...)
+	if err != nil {
+		return platforms.OperatingSystemPage{}, fmt.Errorf("query platform operating systems: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]platforms.OperatingSystemItem, 0)
+	for rows.Next() {
+		var item platforms.OperatingSystemItem
+		var createdAt sql.NullTime
+		var updatedAt sql.NullTime
+		if err := rows.Scan(&item.ID, &item.Name, &item.Type, &createdAt, &updatedAt); err != nil {
+			return platforms.OperatingSystemPage{}, fmt.Errorf("scan platform operating-system row: %w", err)
+		}
+		if createdAt.Valid {
+			item.CreatedAt = &createdAt.Time
+		}
+		if updatedAt.Valid {
+			item.UpdatedAt = &updatedAt.Time
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return platforms.OperatingSystemPage{}, fmt.Errorf("read platform operating-system rows: %w", err)
+	}
+
+	page := platforms.OperatingSystemPage{Data: items}
+	if query.IsPaged() {
+		lastPage := int((total + int64(query.PageSize) - 1) / int64(query.PageSize))
+		if lastPage == 0 {
+			lastPage = 1
+		}
+		page.Meta = platforms.OperatingSystemPageMeta{
+			Page:            query.Page,
+			PageSize:        query.PageSize,
+			Total:           total,
+			LastPage:        lastPage,
+			HasNextPage:     query.Page < lastPage,
+			HasPreviousPage: query.Page > 1,
+			Sort:            query.Sort,
+			Direction:       query.Direction,
+			Stale:           false,
+			Partial:         false,
+		}
+	}
+
+	return page, nil
+}
+
 func (repository *PlatformCatalogRepository) listCatalogItems(ctx context.Context, query string) ([]platforms.CatalogItem, error) {
 	rows, err := repository.database.QueryContext(ctx, query)
 	if err != nil {
@@ -359,4 +447,13 @@ func modelWhereClause(query platforms.ModelQuery) (string, []any) {
 		return " WHERE " + brandClause, []any{query.IDBrand}
 	}
 	return where + " AND " + brandClause, append(args, query.IDBrand)
+}
+
+func operatingSystemWhereClause(query platforms.OperatingSystemQuery) (string, []any) {
+	where, args := gridWhereClause(query.Search, "name", query.FilterIDs)
+	typeClause := "type = ?"
+	if where == "" {
+		return " WHERE " + typeClause, []any{query.TypeID}
+	}
+	return where + " AND " + typeClause, append(args, query.TypeID)
 }
