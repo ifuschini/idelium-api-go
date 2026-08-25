@@ -1,9 +1,12 @@
 GO ?= go
 
-.PHONY: build contract-test format format-check integration-test openapi-check smoke-targets-check test test-race vet verify
+.PHONY: build cli-smoke contract-test format format-check integration-test openapi-check smoke-targets-check test test-race vet verify
 
 build:
 	$(GO) build ./...
+
+cli-smoke:
+	python3 scripts/run_cli_smoke.py --owner go --mode configuration-read
 
 contract-test:
 	python3 -m unittest discover -s tests -p 'test_*.py'

@@ -97,6 +97,9 @@ The Go-owned CLI plugin read paths are documented in
 [docs/operations/cli-plugin-reads.md](docs/operations/cli-plugin-reads.md).
 The Go-owned CLI environment read paths are documented in
 [docs/operations/cli-environment-reads.md](docs/operations/cli-environment-reads.md).
+The opt-in remote smoke runner for Go-owned CLI configuration reads is
+documented in
+[docs/operations/cli-remote-smoke-tests.md](docs/operations/cli-remote-smoke-tests.md).
 
 ## Configuration
 
