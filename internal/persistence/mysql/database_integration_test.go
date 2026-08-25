@@ -15,6 +15,7 @@ import (
 
 	"github.com/idelium/idelium-api-go/internal/auth"
 	"github.com/idelium/idelium-api-go/internal/buildinfo"
+	"github.com/idelium/idelium-api-go/internal/cliapi"
 	"github.com/idelium/idelium-api-go/internal/config"
 	"github.com/idelium/idelium-api-go/internal/health"
 	"github.com/idelium/idelium-api-go/internal/platforms"
@@ -305,5 +306,55 @@ func TestLegacyKeyRepositoryIntegration(t *testing.T) {
 	_, err = repository.AuthenticateLegacyCustomerKey(ctx, "missing-api-key", usedAt)
 	if !errors.Is(err, auth.ErrInvalidLegacyKey) {
 		t.Fatalf("expected missing key to be rejected safely, got %v", err)
+	}
+}
+
+func TestCLITestCycleRepositoryIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS test_cycles",
+		`CREATE TABLE test_cycles (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config JSON NOT NULL,
+			idProject INT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL
+		)`,
+		`INSERT INTO test_cycles
+			(id, name, description, config, idProject, created_at, updated_at, idCostumer)
+		 VALUES
+			(1, 'First cycle', 'Own cycle', JSON_ARRAY(), 10, NULL, NULL, 42),
+			(2, 'Second cycle', 'Foreign cycle', JSON_ARRAY(), 20, NULL, NULL, 99)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare CLI test-cycle fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewCLITestCycleRepository(database)
+	cycle, err := repository.GetTestCycle(ctx, 42, 1)
+	if err != nil {
+		t.Fatalf("GetTestCycle() returned an error: %v", err)
+	}
+	if cycle.ID != 1 || cycle.IDCostumer != 42 || cycle.IDProject != 10 || cycle.Config != "[]" {
+		t.Fatalf("unexpected test-cycle payload: %#v", cycle)
+	}
+
+	_, err = repository.GetTestCycle(ctx, 42, 2)
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant test cycle to be hidden, got %v", err)
+	}
+
+	_, err = repository.GetTestCycle(ctx, 42, 999)
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected missing test cycle to be hidden, got %v", err)
 	}
 }

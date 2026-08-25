@@ -211,7 +211,7 @@ does not require database restoration or reverse data replication.
 | `GET|HEAD` | `/api/ideliumcl/test/{idTest}` | `tests` | read | laravel | no | 4 |
 | `POST` | `/api/ideliumcl/testcycle` | `execution-results` | mutation | laravel | no | 5 |
 | `PUT` | `/api/ideliumcl/testcycle` | `execution-results` | mutation | laravel | no | 5 |
-| `GET|HEAD` | `/api/ideliumcl/testcycle/{idTestCycle}` | `test-cycles` | read | laravel | no | 4 |
+| `GET|HEAD` | `/api/ideliumcl/testcycle/{idTestCycle}` | `test-cycles` | read | go | no | 4 |
 | `POST` | `/api/ideliumrunner/claim` | `parallel-runs` | mutation | laravel | no | 8 |
 | `POST` | `/api/ideliumrunner/heartbeat` | `parallel-runs` | mutation | laravel | no | 8 |
 | `PUT` | `/api/ideliumrunner/worker` | `parallel-runs` | mutation | laravel | no | 8 |

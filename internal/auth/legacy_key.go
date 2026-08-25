@@ -121,3 +121,8 @@ func TenantFromContext(ctx context.Context) (TenantContext, bool) {
 	tenant, ok := ctx.Value(tenantContextKey{}).(TenantContext)
 	return tenant, ok
 }
+
+// ContextWithTenant attaches a tenant boundary for handlers and tests.
+func ContextWithTenant(ctx context.Context, tenant TenantContext) context.Context {
+	return context.WithValue(ctx, tenantContextKey{}, tenant)
+}

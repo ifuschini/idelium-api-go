@@ -10,6 +10,7 @@
     "GET|HEAD /api/admin/platforms/os/{idType}": "go-owned",
     "GET|HEAD /api/admin/platforms/osversion/{idOs}": "go-owned",
     "GET|HEAD /api/admin/platforms/status": "go-owned",
-    "GET|HEAD /api/admin/platforms/types": "go-owned"
+    "GET|HEAD /api/admin/platforms/types": "go-owned",
+    "GET|HEAD /api/ideliumcl/testcycle/{idTestCycle}": "go-owned"
   }
 }

@@ -22,6 +22,7 @@ type ServerInterface interface {
 	GetReadiness(http.ResponseWriter, *http.Request)
 	ListPlatformTypes(http.ResponseWriter, *http.Request)
 	ListPlatformStatuses(http.ResponseWriter, *http.Request)
+	GetCLITestCycle(http.ResponseWriter, *http.Request)
 	Get(http.ResponseWriter, *http.Request)
 	GetAdminAccounts(http.ResponseWriter, *http.Request)
 	PostAdminAccounts(http.ResponseWriter, *http.Request)
@@ -173,7 +174,6 @@ type ServerInterface interface {
 	GetIdeliumclTestIdTest(http.ResponseWriter, *http.Request)
 	PostIdeliumclTestcycle(http.ResponseWriter, *http.Request)
 	PutIdeliumclTestcycle(http.ResponseWriter, *http.Request)
-	GetIdeliumclTestcycleIdTestCycle(http.ResponseWriter, *http.Request)
 	PostIdeliumrunnerClaim(http.ResponseWriter, *http.Request)
 	PostIdeliumrunnerHeartbeat(http.ResponseWriter, *http.Request)
 	PutIdeliumrunnerWorker(http.ResponseWriter, *http.Request)
@@ -236,6 +236,17 @@ var Operations = []Operation{
 		TrustPath:          "",
 		TenantContext:      false,
 		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/ideliumcl/testcycle/{idTestCycle}",
+		OperationID:        "getCLITestCycle",
+		Tags:               []string{"CLI Configuration"},
+		LaravelRoute:       "/api/ideliumcl/testcycle/{idTestCycle}",
+		AuthenticationMode: "api-key",
+		TrustPath:          "api-key",
+		TenantContext:      true,
+		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
 	},
 	{
 		Method:             "GET",
@@ -1893,17 +1904,6 @@ var Operations = []Operation{
 		OperationID:        "putIdeliumclTestcycle",
 		Tags:               []string{"Laravel Compatibility"},
 		LaravelRoute:       "/api/ideliumcl/testcycle",
-		AuthenticationMode: "api-key",
-		TrustPath:          "api-key",
-		TenantContext:      false,
-		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
-	},
-	{
-		Method:             "GET",
-		Path:               "/ideliumcl/testcycle/{idTestCycle}",
-		OperationID:        "getIdeliumclTestcycleIdTestCycle",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/ideliumcl/testcycle/{idTestCycle}",
 		AuthenticationMode: "api-key",
 		TrustPath:          "api-key",
 		TenantContext:      false,

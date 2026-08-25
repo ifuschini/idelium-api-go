@@ -6,7 +6,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/idelium/idelium-api-go/internal/auth"
 	"github.com/idelium/idelium-api-go/internal/buildinfo"
+	"github.com/idelium/idelium-api-go/internal/cliapi"
 	"github.com/idelium/idelium-api-go/internal/health"
 	"github.com/idelium/idelium-api-go/internal/httpx"
 	"github.com/idelium/idelium-api-go/internal/platforms"
@@ -18,6 +20,8 @@ func NewRouter(
 	checker health.Checker,
 	info buildinfo.Info,
 	catalogRepository platforms.CatalogRepository,
+	legacyKeyRepository auth.LegacyKeyRepository,
+	testCycleRepository cliapi.TestCycleRepository,
 ) http.Handler {
 	router := chi.NewRouter()
 	router.Use(httpx.CorrelationID)
@@ -39,6 +43,13 @@ func NewRouter(
 	router.Get("/admin/platforms/osversion/{idOs}", platformHandler.OperatingSystemVersions)
 	router.Get("/admin/platforms/browsers/{idOs}", platformHandler.Browsers)
 	router.Get("/admin/platforms/browserversions/{idBrowser}", platformHandler.BrowserVersions)
+
+	cliHandler := cliapi.NewHandler(testCycleRepository, logger)
+	cliAuthenticator := auth.NewLegacyKeyAuthenticator(legacyKeyRepository, logger)
+	router.Group(func(router chi.Router) {
+		router.Use(cliAuthenticator.Middleware)
+		router.Get("/ideliumcl/testcycle/{idTestCycle}", cliHandler.TestCycle)
+	})
 
 	router.NotFound(func(writer http.ResponseWriter, request *http.Request) {
 		httpx.WriteError(writer, request, http.StatusNotFound, "ROUTE_NOT_FOUND", "The requested route does not exist.")

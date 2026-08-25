@@ -8,8 +8,11 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/idelium/idelium-api-go/internal/auth"
 	"github.com/idelium/idelium-api-go/internal/buildinfo"
+	"github.com/idelium/idelium-api-go/internal/cliapi"
 	"github.com/idelium/idelium-api-go/internal/platforms"
 )
 
@@ -69,9 +72,45 @@ func (fakeCatalogRepository) ListBrowserVersions(context.Context, platforms.Brow
 	}, nil
 }
 
+type fakeLegacyKeyRepository struct{}
+
+func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
+	if key != "valid-key" {
+		return auth.Customer{}, auth.ErrInvalidLegacyKey
+	}
+	return auth.Customer{ID: 42, Name: "demo"}, nil
+}
+
+type fakeTestCycleRepository struct{}
+
+func (fakeTestCycleRepository) GetTestCycle(ctx context.Context, customerID int64, testCycleID int64) (cliapi.TestCycle, error) {
+	if customerID != 42 || testCycleID != 7 {
+		return cliapi.TestCycle{}, cliapi.ErrNotFound
+	}
+	return cliapi.TestCycle{
+		ID:          7,
+		Name:        "nightly",
+		Description: "Nightly cycle",
+		Config:      "[]",
+		IDProject:   3,
+		IDCostumer:   42,
+	}, nil
+}
+
+func testRouter(logger *slog.Logger) http.Handler {
+	return NewRouter(
+		logger,
+		readyChecker{},
+		buildinfo.Current(),
+		fakeCatalogRepository{},
+		fakeLegacyKeyRepository{},
+		fakeTestCycleRepository{},
+	)
+}
+
 func TestRouterReturnsStableNotFoundResponse(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
-	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	router := testRouter(logger)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/missing", nil))
@@ -89,7 +128,7 @@ func TestRouterReturnsStableNotFoundResponse(t *testing.T) {
 
 func TestRouterRejectsUnsupportedMethod(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
-	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	router := testRouter(logger)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/health/live", nil))
@@ -104,7 +143,7 @@ func TestRouterRejectsUnsupportedMethod(t *testing.T) {
 
 func TestRouterReturnsPlatformTypes(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
-	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	router := testRouter(logger)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/types", nil))
@@ -119,7 +158,7 @@ func TestRouterReturnsPlatformTypes(t *testing.T) {
 
 func TestRouterReturnsPlatformLocations(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
-	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	router := testRouter(logger)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/locations", nil))
@@ -134,7 +173,7 @@ func TestRouterReturnsPlatformLocations(t *testing.T) {
 
 func TestRouterReturnsPlatformBrands(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
-	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	router := testRouter(logger)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/brands", nil))
@@ -149,7 +188,7 @@ func TestRouterReturnsPlatformBrands(t *testing.T) {
 
 func TestRouterReturnsPlatformModels(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
-	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	router := testRouter(logger)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/models/1", nil))
@@ -164,7 +203,7 @@ func TestRouterReturnsPlatformModels(t *testing.T) {
 
 func TestRouterReturnsPlatformOperatingSystems(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
-	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	router := testRouter(logger)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/os/1", nil))
@@ -179,7 +218,7 @@ func TestRouterReturnsPlatformOperatingSystems(t *testing.T) {
 
 func TestRouterReturnsPlatformOperatingSystemVersions(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
-	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	router := testRouter(logger)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/osversion/1", nil))
@@ -194,7 +233,7 @@ func TestRouterReturnsPlatformOperatingSystemVersions(t *testing.T) {
 
 func TestRouterReturnsPlatformBrowsers(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
-	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	router := testRouter(logger)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/browsers/1", nil))
@@ -209,7 +248,7 @@ func TestRouterReturnsPlatformBrowsers(t *testing.T) {
 
 func TestRouterReturnsPlatformBrowserVersions(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
-	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	router := testRouter(logger)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/browserversions/1", nil))
@@ -219,5 +258,55 @@ func TestRouterReturnsPlatformBrowserVersions(t *testing.T) {
 	}
 	if !strings.Contains(response.Body.String(), `"version":"124"`) {
 		t.Fatalf("platform browser-version response missing: %s", response.Body.String())
+	}
+}
+
+func TestRouterReturnsCLITestCycleWithLegacyKey(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/ideliumcl/testcycle/7", nil)
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"id":7`) ||
+		!strings.Contains(response.Body.String(), `"idCostumer":42`) {
+		t.Fatalf("CLI test-cycle response missing expected fields: %s", response.Body.String())
+	}
+}
+
+func TestRouterRejectsCLITestCycleWithoutLegacyKey(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/ideliumcl/testcycle/7", nil))
+
+	if response.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status 401, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"message":"Invalid key"}` {
+		t.Fatalf("unexpected body: %s", response.Body.String())
+	}
+}
+
+func TestRouterHidesForeignCLITestCycle(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/ideliumcl/testcycle/8", nil)
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"message":"Invalid id"}` {
+		t.Fatalf("unexpected body: %s", response.Body.String())
 	}
 }
