@@ -11,15 +11,31 @@ import (
 	"syscall"
 
 	"github.com/idelium/idelium-api-go/internal/buildinfo"
+	"github.com/idelium/idelium-api-go/internal/migrations"
 	"github.com/idelium/idelium-api-go/internal/process"
 )
 
 func main() {
 	showVersion := flag.Bool("version", false, "print safe build identity and exit")
+	showPlan := flag.Bool("plan", false, "print the reviewed migration baseline plan and exit")
 	flag.Parse()
 	if *showVersion {
 		if err := json.NewEncoder(os.Stdout).Encode(buildinfo.Current()); err != nil {
 			fmt.Fprintln(os.Stderr, "migrate could not encode build identity")
+			os.Exit(1)
+		}
+		return
+	}
+	if *showPlan {
+		plan, err := migrations.ReviewedBaselinePlan()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "migrate could not load the reviewed baseline plan")
+			os.Exit(1)
+		}
+		encoder := json.NewEncoder(os.Stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(plan); err != nil {
+			fmt.Fprintln(os.Stderr, "migrate could not encode the reviewed baseline plan")
 			os.Exit(1)
 		}
 		return

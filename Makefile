@@ -1,6 +1,14 @@
 GO ?= go
 
-.PHONY: build cli-smoke contract-test format format-check integration-test openapi-check smoke-targets-check test test-race vet verify
+.PHONY: baseline-migration-check build cli-smoke contract-test format format-check integration-test openapi-check smoke-targets-check test test-race vet verify
+
+baseline-migration-check:
+	python3 scripts/build_go_baseline_migration.py \
+		--source-dir ../idelium-api/database/migrations \
+		--output-json docs/contracts/go-baseline-migration.json \
+		--output-markdown docs/contracts/go-baseline-migration.md \
+		--output-embedded-json internal/migrations/baseline_manifest.json \
+		--check
 
 build:
 	$(GO) build ./...
@@ -44,4 +52,4 @@ integration-test:
 vet:
 	$(GO) vet ./...
 
-verify: format-check vet test test-race contract-test openapi-check smoke-targets-check build
+verify: format-check vet test test-race contract-test baseline-migration-check openapi-check smoke-targets-check build
