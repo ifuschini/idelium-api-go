@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "description": "Offline shadow-read comparison plan for Wave 3 safe platform catalog reads.",
+  "comparison_mode": "offline-golden-fixture",
+  "comparator": "scripts/compare_golden_http.py",
+  "gateway_contract": "docs/contracts/gateway-route-ownership.json",
+  "routes": [
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/brands",
+      "method": "GET",
+      "expected_fixture": "testdata/golden/platform-brands.fixture.json",
+      "actual_fixture": "testdata/golden/platform-brands-go.fixture.json"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/browsers/{idOs}",
+      "method": "GET",
+      "expected_fixture": "testdata/golden/platform-browsers.fixture.json",
+      "actual_fixture": "testdata/golden/platform-browsers-go.fixture.json"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/browserversions/{idBrowser}",
+      "method": "GET",
+      "expected_fixture": "testdata/golden/platform-browser-versions.fixture.json",
+      "actual_fixture": "testdata/golden/platform-browser-versions-go.fixture.json"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/locations",
+      "method": "GET",
+      "expected_fixture": "testdata/golden/platform-locations.fixture.json",
+      "actual_fixture": "testdata/golden/platform-locations-go.fixture.json"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/models/{idBrand}",
+      "method": "GET",
+      "expected_fixture": "testdata/golden/platform-models.fixture.json",
+      "actual_fixture": "testdata/golden/platform-models-go.fixture.json"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/os/{idType}",
+      "method": "GET",
+      "expected_fixture": "testdata/golden/platform-operating-systems.fixture.json",
+      "actual_fixture": "testdata/golden/platform-operating-systems-go.fixture.json"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/osversion/{idOs}",
+      "method": "GET",
+      "expected_fixture": "testdata/golden/platform-operating-system-versions.fixture.json",
+      "actual_fixture": "testdata/golden/platform-operating-system-versions-go.fixture.json"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/status",
+      "method": "GET",
+      "expected_fixture": "testdata/golden/platform-status.fixture.json",
+      "actual_fixture": "testdata/golden/platform-status-go.fixture.json"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/types",
+      "method": "GET",
+      "expected_fixture": "testdata/golden/platform-types.fixture.json",
+      "actual_fixture": "testdata/golden/platform-types-go.fixture.json"
+    }
+  ],
+  "failure_policy": {
+    "allow_shadow_mismatch": false,
+    "diagnostics": "path-only",
+    "safe_to_route_on_failure": false
+  }
+}
