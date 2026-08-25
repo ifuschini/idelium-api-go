@@ -15,7 +15,7 @@ type Step struct {
 	Order       int64      `json:"order"`
 	CreatedAt   *time.Time `json:"created_at"`
 	UpdatedAt   *time.Time `json:"updated_at"`
-	IDCostumer   int64      `json:"idCostumer"`
+	IDCostumer  int64      `json:"idCostumer"`
 }
 
 // StepRepository reads tenant-scoped CLI step configuration.

@@ -20,7 +20,7 @@ type TestCycle struct {
 	IDProject   int64      `json:"idProject"`
 	CreatedAt   *time.Time `json:"created_at"`
 	UpdatedAt   *time.Time `json:"updated_at"`
-	IDCostumer   int64      `json:"idCostumer"`
+	IDCostumer  int64      `json:"idCostumer"`
 }
 
 // TestCycleRepository reads tenant-scoped CLI test-cycle configuration.

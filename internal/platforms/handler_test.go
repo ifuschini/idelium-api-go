@@ -14,16 +14,16 @@ import (
 )
 
 type catalogRepositoryStub struct {
-	types     []CatalogItem
-	statuses  []CatalogItem
-	locations LocationPage
-	brands    BrandPage
-	models    ModelPage
-	os        OperatingSystemPage
-	osVersion OperatingSystemVersionPage
-	browsers  BrowserPage
+	types           []CatalogItem
+	statuses        []CatalogItem
+	locations       LocationPage
+	brands          BrandPage
+	models          ModelPage
+	os              OperatingSystemPage
+	osVersion       OperatingSystemVersionPage
+	browsers        BrowserPage
 	browserVersions BrowserVersionPage
-	err       error
+	err             error
 }
 
 func (stub catalogRepositoryStub) ListTypes(context.Context) ([]CatalogItem, error) {
@@ -130,14 +130,14 @@ func TestLocationsReturnsPagedGridWhenRequested(t *testing.T) {
 		locations: LocationPage{
 			Data: []LocationItem{{ID: 2, Name: "us-east"}},
 			Meta: LocationPageMeta{
-				Page:        2,
-				PageSize:    1,
-				Total:       2,
-				LastPage:    2,
-				Sort:        "name",
-				Direction:   "desc",
-				Stale:       false,
-				Partial:     false,
+				Page:      2,
+				PageSize:  1,
+				Total:     2,
+				LastPage:  2,
+				Sort:      "name",
+				Direction: "desc",
+				Stale:     false,
+				Partial:   false,
 			},
 		},
 	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
@@ -185,14 +185,14 @@ func TestBrandsReturnsPagedGridWhenRequested(t *testing.T) {
 		brands: BrandPage{
 			Data: []BrandItem{{ID: 2, Brand: "Samsung"}},
 			Meta: BrandPageMeta{
-				Page:        2,
-				PageSize:    1,
-				Total:       2,
-				LastPage:    2,
-				Sort:        "brand",
-				Direction:   "desc",
-				Stale:       false,
-				Partial:     false,
+				Page:      2,
+				PageSize:  1,
+				Total:     2,
+				LastPage:  2,
+				Sort:      "brand",
+				Direction: "desc",
+				Stale:     false,
+				Partial:   false,
 			},
 		},
 	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
@@ -282,14 +282,14 @@ func TestOperatingSystemsReturnsPagedGridWhenRequested(t *testing.T) {
 		os: OperatingSystemPage{
 			Data: []OperatingSystemItem{{ID: 2, Name: "windows", Type: 1}},
 			Meta: OperatingSystemPageMeta{
-				Page:        2,
-				PageSize:    1,
-				Total:       2,
-				LastPage:    2,
-				Sort:        "name",
-				Direction:   "desc",
-				Stale:       false,
-				Partial:     false,
+				Page:      2,
+				PageSize:  1,
+				Total:     2,
+				LastPage:  2,
+				Sort:      "name",
+				Direction: "desc",
+				Stale:     false,
+				Partial:   false,
 			},
 		},
 	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
@@ -355,14 +355,14 @@ func TestOperatingSystemVersionsReturnsPagedGridWhenRequested(t *testing.T) {
 		osVersion: OperatingSystemVersionPage{
 			Data: []OperatingSystemVersionItem{{ID: 2, Version: "15", IDOs: 1}},
 			Meta: OperatingSystemVersionPageMeta{
-				Page:        2,
-				PageSize:    1,
-				Total:       2,
-				LastPage:    2,
-				Sort:        "version",
-				Direction:   "desc",
-				Stale:       false,
-				Partial:     false,
+				Page:      2,
+				PageSize:  1,
+				Total:     2,
+				LastPage:  2,
+				Sort:      "version",
+				Direction: "desc",
+				Stale:     false,
+				Partial:   false,
 			},
 		},
 	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
@@ -428,14 +428,14 @@ func TestBrowsersReturnsPagedGridWhenRequested(t *testing.T) {
 		browsers: BrowserPage{
 			Data: []BrowserItem{{ID: 2, Name: "firefox", IDOs: 1}},
 			Meta: BrowserPageMeta{
-				Page:        2,
-				PageSize:    1,
-				Total:       2,
-				LastPage:    2,
-				Sort:        "name",
-				Direction:   "desc",
-				Stale:       false,
-				Partial:     false,
+				Page:      2,
+				PageSize:  1,
+				Total:     2,
+				LastPage:  2,
+				Sort:      "name",
+				Direction: "desc",
+				Stale:     false,
+				Partial:   false,
 			},
 		},
 	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
@@ -501,14 +501,14 @@ func TestBrowserVersionsReturnsPagedGridWhenRequested(t *testing.T) {
 		browserVersions: BrowserVersionPage{
 			Data: []BrowserVersionItem{{ID: 2, Version: "125", IDBrowser: 1}},
 			Meta: BrowserVersionPageMeta{
-				Page:        2,
-				PageSize:    1,
-				Total:       2,
-				LastPage:    2,
-				Sort:        "version",
-				Direction:   "desc",
-				Stale:       false,
-				Partial:     false,
+				Page:      2,
+				PageSize:  1,
+				Total:     2,
+				LastPage:  2,
+				Sort:      "version",
+				Direction: "desc",
+				Stale:     false,
+				Partial:   false,
 			},
 		},
 	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))

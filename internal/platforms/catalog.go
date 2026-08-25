@@ -191,43 +191,43 @@ func (query BrowserVersionQuery) IsPaged() bool {
 
 // LocationPage is the paginated legacy grid response.
 type LocationPage struct {
-	Data []LocationItem    `json:"data"`
+	Data []LocationItem   `json:"data"`
 	Meta LocationPageMeta `json:"meta"`
 }
 
 // BrandPage is the paginated legacy brand grid response.
 type BrandPage struct {
-	Data []BrandItem    `json:"data"`
+	Data []BrandItem   `json:"data"`
 	Meta BrandPageMeta `json:"meta"`
 }
 
 // ModelPage is the paginated legacy model grid response.
 type ModelPage struct {
-	Data []ModelItem    `json:"data"`
+	Data []ModelItem   `json:"data"`
 	Meta ModelPageMeta `json:"meta"`
 }
 
 // OperatingSystemPage is the paginated legacy operating-system grid response.
 type OperatingSystemPage struct {
-	Data []OperatingSystemItem    `json:"data"`
+	Data []OperatingSystemItem   `json:"data"`
 	Meta OperatingSystemPageMeta `json:"meta"`
 }
 
 // OperatingSystemVersionPage is the paginated legacy OS-version grid response.
 type OperatingSystemVersionPage struct {
-	Data []OperatingSystemVersionItem    `json:"data"`
+	Data []OperatingSystemVersionItem   `json:"data"`
 	Meta OperatingSystemVersionPageMeta `json:"meta"`
 }
 
 // BrowserPage is the paginated legacy browser grid response.
 type BrowserPage struct {
-	Data []BrowserItem    `json:"data"`
+	Data []BrowserItem   `json:"data"`
 	Meta BrowserPageMeta `json:"meta"`
 }
 
 // BrowserVersionPage is the paginated legacy browser-version grid response.
 type BrowserVersionPage struct {
-	Data []BrowserVersionItem    `json:"data"`
+	Data []BrowserVersionItem   `json:"data"`
 	Meta BrowserVersionPageMeta `json:"meta"`
 }
 

@@ -93,7 +93,7 @@ func (fakeTestCycleRepository) GetTestCycle(ctx context.Context, customerID int6
 		Description: "Nightly cycle",
 		Config:      "[]",
 		IDProject:   3,
-		IDCostumer:   42,
+		IDCostumer:  42,
 	}, nil
 }
 
@@ -109,7 +109,7 @@ func (fakeTestRepository) GetTest(ctx context.Context, customerID int64, testID 
 		Description: "Browser coverage",
 		Config:      "[]",
 		IDProject:   3,
-		IDCostumer:   42,
+		IDCostumer:  42,
 	}, nil
 }
 
@@ -126,7 +126,7 @@ func (fakeStepRepository) GetStep(ctx context.Context, customerID int64, stepID 
 		Config:      "[]",
 		IDProject:   3,
 		Order:       2,
-		IDCostumer:   42,
+		IDCostumer:  42,
 	}, nil
 }
 

@@ -14,7 +14,7 @@ type Test struct {
 	IDProject   int64      `json:"idProject"`
 	CreatedAt   *time.Time `json:"created_at"`
 	UpdatedAt   *time.Time `json:"updated_at"`
-	IDCostumer   int64      `json:"idCostumer"`
+	IDCostumer  int64      `json:"idCostumer"`
 }
 
 // TestRepository reads tenant-scoped CLI test configuration.

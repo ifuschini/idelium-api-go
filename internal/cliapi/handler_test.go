@@ -71,7 +71,7 @@ func TestHandlerReturnsTenantScopedTestCycle(t *testing.T) {
 			Description: "Nightly cycle",
 			Config:      "[]",
 			IDProject:   3,
-			IDCostumer:   42,
+			IDCostumer:  42,
 		},
 	}
 	handler := NewHandler(repository, &fakeTestRepository{}, &fakeStepRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
@@ -139,7 +139,7 @@ func TestHandlerReturnsTenantScopedTest(t *testing.T) {
 			Description: "Browser coverage",
 			Config:      "[]",
 			IDProject:   3,
-			IDCostumer:   42,
+			IDCostumer:  42,
 		},
 	}
 	handler := NewHandler(&fakeTestCycleRepository{}, repository, &fakeStepRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
@@ -208,7 +208,7 @@ func TestHandlerReturnsTenantScopedStep(t *testing.T) {
 			Config:      "[]",
 			IDProject:   3,
 			Order:       2,
-			IDCostumer:   42,
+			IDCostumer:  42,
 		},
 	}
 	handler := NewHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, repository, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
