@@ -90,6 +90,33 @@ func (repository *fakePluginRepository) GetPlugin(ctx context.Context, customerI
 	return repository.plugin, nil
 }
 
+type fakeEnvironmentRepository struct {
+	customerID    int64
+	projectID     int64
+	environmentID int64
+	environments  []Environment
+	environment   Environment
+	err           error
+}
+
+func (repository *fakeEnvironmentRepository) ListEnvironments(ctx context.Context, customerID int64, projectID int64) ([]Environment, error) {
+	repository.customerID = customerID
+	repository.projectID = projectID
+	if repository.err != nil {
+		return nil, repository.err
+	}
+	return repository.environments, nil
+}
+
+func (repository *fakeEnvironmentRepository) GetEnvironment(ctx context.Context, customerID int64, environmentID int64) (Environment, error) {
+	repository.customerID = customerID
+	repository.environmentID = environmentID
+	if repository.err != nil {
+		return Environment{}, repository.err
+	}
+	return repository.environment, nil
+}
+
 func TestHandlerReturnsTenantScopedTestCycle(t *testing.T) {
 	repository := &fakeTestCycleRepository{
 		testCycle: TestCycle{
@@ -396,6 +423,113 @@ func TestHandlerRedactsPluginRepositoryFailures(t *testing.T) {
 	}
 }
 
+func TestHandlerReturnsTenantScopedEnvironmentList(t *testing.T) {
+	repository := &fakeEnvironmentRepository{
+		environments: []Environment{{
+			ID:          16,
+			Code:        "demo",
+			Description: "Demo environment",
+			Config:      "{}",
+			IDProject:   3,
+			IDCostumer:  42,
+		}},
+	}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.environments = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantParam("/ideliumcl/environments/3", "idProject", "3", 42)
+
+	handler.Environments(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"id":16`) ||
+		!strings.Contains(response.Body.String(), `"code":"demo"`) ||
+		!strings.Contains(response.Body.String(), `"idCostumer":42`) {
+		t.Fatalf("environment-list response missing expected fields: %s", response.Body.String())
+	}
+	if repository.customerID != 42 || repository.projectID != 3 {
+		t.Fatalf("repository was not called with tenant-scoped identifiers: %#v", repository)
+	}
+}
+
+func TestHandlerReturnsEmptyEnvironmentList(t *testing.T) {
+	repository := &fakeEnvironmentRepository{environments: []Environment{}}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.environments = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantParam("/ideliumcl/environments/3", "idProject", "3", 42)
+
+	handler.Environments(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `[]` {
+		t.Fatalf("expected empty list body, got %s", response.Body.String())
+	}
+}
+
+func TestHandlerReturnsTenantScopedEnvironment(t *testing.T) {
+	repository := &fakeEnvironmentRepository{
+		environment: Environment{
+			ID:          16,
+			Code:        "demo",
+			Description: "Demo environment",
+			Config:      "{}",
+			IDProject:   3,
+			IDCostumer:  42,
+		},
+	}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.environments = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantParam("/ideliumcl/environment/16", "idEnvironment", "16", 42)
+
+	handler.Environment(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"id":16`) ||
+		!strings.Contains(response.Body.String(), `"code":"demo"`) ||
+		!strings.Contains(response.Body.String(), `"idCostumer":42`) {
+		t.Fatalf("environment response missing expected fields: %s", response.Body.String())
+	}
+	if repository.customerID != 42 || repository.environmentID != 16 {
+		t.Fatalf("repository was not called with tenant-scoped identifiers: %#v", repository)
+	}
+}
+
+func TestHandlerReturnsInvalidIDForCrossTenantOrMissingEnvironment(t *testing.T) {
+	repository := &fakeEnvironmentRepository{err: ErrNotFound}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.environments = repository
+	response := httptest.NewRecorder()
+
+	handler.Environment(response, requestWithTenantParam("/ideliumcl/environment/17", "idEnvironment", "17", 42))
+
+	assertInvalidID(t, response)
+}
+
+func TestHandlerRedactsEnvironmentRepositoryFailures(t *testing.T) {
+	logBuffer := &bytes.Buffer{}
+	repository := &fakeEnvironmentRepository{err: errors.New("database failed near secret-value")}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, logBuffer)
+	handler.environments = repository
+	response := httptest.NewRecorder()
+
+	handler.Environments(response, requestWithTenantParam("/ideliumcl/environments/3", "idProject", "3", 42))
+
+	if response.Code != http.StatusInternalServerError {
+		t.Fatalf("expected status 500, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.Contains(logBuffer.String(), "secret-value") {
+		t.Fatalf("repository error leaked into logs: %s", logBuffer.String())
+	}
+}
+
 func testHandler(
 	testCycles TestCycleRepository,
 	tests TestRepository,
@@ -403,7 +537,7 @@ func testHandler(
 	plugins PluginRepository,
 	logBuffer *bytes.Buffer,
 ) *Handler {
-	return NewHandler(testCycles, tests, steps, plugins, slog.New(slog.NewTextHandler(logBuffer, nil)))
+	return NewHandler(testCycles, tests, steps, plugins, &fakeEnvironmentRepository{}, slog.New(slog.NewTextHandler(logBuffer, nil)))
 }
 
 func requestWithTenant(target string, pathID string, customerID int64) *http.Request {

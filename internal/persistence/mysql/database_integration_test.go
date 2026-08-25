@@ -526,3 +526,70 @@ func TestCLIPluginRepositoryIntegration(t *testing.T) {
 		t.Fatalf("expected missing plugin to be hidden, got %v", err)
 	}
 }
+
+func TestCLIEnvironmentRepositoryIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS environments",
+		`CREATE TABLE environments (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			code VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config JSON NOT NULL,
+			idProject INT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL
+		)`,
+		`INSERT INTO environments
+			(id, code, description, config, idProject, created_at, updated_at, idCostumer)
+		 VALUES
+			(1, 'demo', 'Own environment', JSON_OBJECT(), 10, NULL, NULL, 42),
+			(2, 'foreign', 'Foreign environment', JSON_OBJECT(), 10, NULL, NULL, 99),
+			(3, 'other', 'Other project', JSON_OBJECT(), 20, NULL, NULL, 42)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare CLI environment fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewCLIEnvironmentRepository(database)
+	environments, err := repository.ListEnvironments(ctx, 42, 10)
+	if err != nil {
+		t.Fatalf("ListEnvironments() returned an error: %v", err)
+	}
+	if len(environments) != 1 || environments[0].ID != 1 || environments[0].IDCostumer != 42 || environments[0].IDProject != 10 || environments[0].Config != "{}" {
+		t.Fatalf("unexpected environment-list payload: %#v", environments)
+	}
+
+	emptyEnvironments, err := repository.ListEnvironments(ctx, 42, 999)
+	if err != nil {
+		t.Fatalf("ListEnvironments() for empty project returned an error: %v", err)
+	}
+	if len(emptyEnvironments) != 0 {
+		t.Fatalf("expected an empty environment list, got %#v", emptyEnvironments)
+	}
+
+	environment, err := repository.GetEnvironment(ctx, 42, 1)
+	if err != nil {
+		t.Fatalf("GetEnvironment() returned an error: %v", err)
+	}
+	if environment.ID != 1 || environment.IDCostumer != 42 || environment.IDProject != 10 || environment.Config != "{}" {
+		t.Fatalf("unexpected environment payload: %#v", environment)
+	}
+
+	_, err = repository.GetEnvironment(ctx, 42, 2)
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant environment to be hidden, got %v", err)
+	}
+
+	_, err = repository.GetEnvironment(ctx, 42, 999)
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected missing environment to be hidden, got %v", err)
+	}
+}

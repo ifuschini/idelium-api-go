@@ -1,8 +1,38 @@
 {
   "consumer": "idelium-cli",
-  "ownership_matrix_digest_sha256": "bd6dcb6db05fa80241886ce785c847db0792f71e4eb8f7919fb7344f0dbcf555",
+  "ownership_matrix_digest_sha256": "a0b9b5404deeb35db58211a71992081fe8986eec9be6109091c5e5b3c886f1a2",
   "route_inventory_digest_sha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9",
   "routes": [
+    {
+      "aggregate": "environments",
+      "authentication_mode": "api-key",
+      "execution_mode": "configuration-read",
+      "method": "GET|HEAD",
+      "operation_kind": "read",
+      "owner": "go",
+      "path": "/api/ideliumcl/environment/{idEnvironment}",
+      "requires_runtime_credential": true,
+      "route_id": "GET|HEAD /api/ideliumcl/environment/{idEnvironment}",
+      "smoke_method": "GET",
+      "target_base_url_env": "IDELIUM_CLI_SMOKE_GO_BASE_URL",
+      "tenant_context": false,
+      "trust_path": "api-key"
+    },
+    {
+      "aggregate": "environments",
+      "authentication_mode": "api-key",
+      "execution_mode": "configuration-read",
+      "method": "GET|HEAD",
+      "operation_kind": "read",
+      "owner": "go",
+      "path": "/api/ideliumcl/environments/{idProject}",
+      "requires_runtime_credential": true,
+      "route_id": "GET|HEAD /api/ideliumcl/environments/{idProject}",
+      "smoke_method": "GET",
+      "target_base_url_env": "IDELIUM_CLI_SMOKE_GO_BASE_URL",
+      "tenant_context": false,
+      "trust_path": "api-key"
+    },
     {
       "aggregate": "plugins",
       "authentication_mode": "api-key",
@@ -75,36 +105,6 @@
       "route_id": "GET|HEAD /api/ideliumcl/testcycle/{idTestCycle}",
       "smoke_method": "GET",
       "target_base_url_env": "IDELIUM_CLI_SMOKE_GO_BASE_URL",
-      "tenant_context": false,
-      "trust_path": "api-key"
-    },
-    {
-      "aggregate": "environments",
-      "authentication_mode": "api-key",
-      "execution_mode": "configuration-read",
-      "method": "GET|HEAD",
-      "operation_kind": "read",
-      "owner": "laravel",
-      "path": "/api/ideliumcl/environment/{idEnvironment}",
-      "requires_runtime_credential": true,
-      "route_id": "GET|HEAD /api/ideliumcl/environment/{idEnvironment}",
-      "smoke_method": "GET",
-      "target_base_url_env": "IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL",
-      "tenant_context": false,
-      "trust_path": "api-key"
-    },
-    {
-      "aggregate": "environments",
-      "authentication_mode": "api-key",
-      "execution_mode": "configuration-read",
-      "method": "GET|HEAD",
-      "operation_kind": "read",
-      "owner": "laravel",
-      "path": "/api/ideliumcl/environments/{idProject}",
-      "requires_runtime_credential": true,
-      "route_id": "GET|HEAD /api/ideliumcl/environments/{idProject}",
-      "smoke_method": "GET",
-      "target_base_url_env": "IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL",
       "tenant_context": false,
       "trust_path": "api-key"
     },
@@ -206,8 +206,8 @@
       "result-reporting-write": 6
     },
     "owner_counts": {
-      "go": 5,
-      "laravel": 8
+      "go": 7,
+      "laravel": 6
     },
     "route_count": 13
   },

@@ -11,6 +11,8 @@
     "GET|HEAD /api/admin/platforms/osversion/{idOs}": "go-owned",
     "GET|HEAD /api/admin/platforms/status": "go-owned",
     "GET|HEAD /api/admin/platforms/types": "go-owned",
+    "GET|HEAD /api/ideliumcl/environment/{idEnvironment}": "go-owned",
+    "GET|HEAD /api/ideliumcl/environments/{idProject}": "go-owned",
     "GET|HEAD /api/ideliumcl/plugin/{idPlugin}": "go-owned",
     "GET|HEAD /api/ideliumcl/plugins/{idProject}": "go-owned",
     "GET|HEAD /api/ideliumcl/step/{idStep}": "go-owned",

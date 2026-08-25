@@ -160,6 +160,36 @@ func (fakePluginRepository) GetPlugin(ctx context.Context, customerID int64, plu
 	}, nil
 }
 
+type fakeEnvironmentRepository struct{}
+
+func (fakeEnvironmentRepository) ListEnvironments(ctx context.Context, customerID int64, projectID int64) ([]cliapi.Environment, error) {
+	if customerID != 42 || projectID != 3 {
+		return []cliapi.Environment{}, nil
+	}
+	return []cliapi.Environment{{
+		ID:          16,
+		Code:        "demo",
+		Description: "Demo environment",
+		Config:      "{}",
+		IDProject:   3,
+		IDCostumer:  42,
+	}}, nil
+}
+
+func (fakeEnvironmentRepository) GetEnvironment(ctx context.Context, customerID int64, environmentID int64) (cliapi.Environment, error) {
+	if customerID != 42 || environmentID != 16 {
+		return cliapi.Environment{}, cliapi.ErrNotFound
+	}
+	return cliapi.Environment{
+		ID:          16,
+		Code:        "demo",
+		Description: "Demo environment",
+		Config:      "{}",
+		IDProject:   3,
+		IDCostumer:  42,
+	}, nil
+}
+
 func testRouter(logger *slog.Logger) http.Handler {
 	return NewRouter(
 		logger,
@@ -171,6 +201,7 @@ func testRouter(logger *slog.Logger) http.Handler {
 		fakeTestRepository{},
 		fakeStepRepository{},
 		fakePluginRepository{},
+		fakeEnvironmentRepository{},
 	)
 }
 
@@ -492,6 +523,61 @@ func TestRouterHidesForeignCLIPlugin(t *testing.T) {
 	router := testRouter(logger)
 	response := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/ideliumcl/plugin/15", nil)
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"message":"Invalid id"}` {
+		t.Fatalf("unexpected body: %s", response.Body.String())
+	}
+}
+
+func TestRouterReturnsCLIEnvironmentsWithLegacyKey(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/ideliumcl/environments/3", nil)
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"id":16`) ||
+		!strings.Contains(response.Body.String(), `"code":"demo"`) ||
+		!strings.Contains(response.Body.String(), `"idCostumer":42`) {
+		t.Fatalf("CLI environment-list response missing expected fields: %s", response.Body.String())
+	}
+}
+
+func TestRouterReturnsCLIEnvironmentWithLegacyKey(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/ideliumcl/environment/16", nil)
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"id":16`) ||
+		!strings.Contains(response.Body.String(), `"code":"demo"`) ||
+		!strings.Contains(response.Body.String(), `"idCostumer":42`) {
+		t.Fatalf("CLI environment response missing expected fields: %s", response.Body.String())
+	}
+}
+
+func TestRouterHidesForeignCLIEnvironment(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/ideliumcl/environment/17", nil)
 	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
 
 	router.ServeHTTP(response, request)

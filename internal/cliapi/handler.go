@@ -15,19 +15,20 @@ import (
 
 // Handler exposes Idelium CLI configuration read endpoints.
 type Handler struct {
-	testCycles TestCycleRepository
-	tests      TestRepository
-	steps      StepRepository
-	plugins    PluginRepository
-	logger     *slog.Logger
+	testCycles   TestCycleRepository
+	tests        TestRepository
+	steps        StepRepository
+	plugins      PluginRepository
+	environments EnvironmentRepository
+	logger       *slog.Logger
 }
 
 // NewHandler creates a CLI API handler.
-func NewHandler(testCycles TestCycleRepository, tests TestRepository, steps StepRepository, plugins PluginRepository, logger *slog.Logger) *Handler {
+func NewHandler(testCycles TestCycleRepository, tests TestRepository, steps StepRepository, plugins PluginRepository, environments EnvironmentRepository, logger *slog.Logger) *Handler {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &Handler{testCycles: testCycles, tests: tests, steps: steps, plugins: plugins, logger: logger}
+	return &Handler{testCycles: testCycles, tests: tests, steps: steps, plugins: plugins, environments: environments, logger: logger}
 }
 
 // TestCycle returns one tenant-owned test cycle using the Laravel CLI contract.
@@ -279,6 +280,104 @@ func (handler *Handler) Plugin(writer http.ResponseWriter, request *http.Request
 	}
 
 	httpx.WriteJSON(writer, http.StatusOK, plugin)
+}
+
+// Environments returns tenant-owned environments for a project using the Laravel CLI contract.
+func (handler *Handler) Environments(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		handler.logger.ErrorContext(
+			request.Context(),
+			"CLI tenant context missing",
+			"correlation_id", httpx.GetCorrelationID(request.Context()),
+			"path", request.URL.Path,
+		)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"CLI_TENANT_CONTEXT_MISSING",
+			"The CLI tenant context could not be resolved.",
+		)
+		return
+	}
+
+	projectID, ok := parseLegacyID(chi.URLParam(request, "idProject"))
+	if !ok {
+		writeInvalidID(writer)
+		return
+	}
+
+	environments, err := handler.environments.ListEnvironments(request.Context(), tenant.CustomerID, projectID)
+	if err != nil {
+		handler.logger.ErrorContext(
+			request.Context(),
+			"CLI environment-list read failed",
+			"correlation_id", httpx.GetCorrelationID(request.Context()),
+			"path", request.URL.Path,
+		)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"CLI_CONFIGURATION_UNAVAILABLE",
+			"The CLI configuration could not be loaded.",
+		)
+		return
+	}
+
+	httpx.WriteJSON(writer, http.StatusOK, environments)
+}
+
+// Environment returns one tenant-owned environment using the Laravel CLI contract.
+func (handler *Handler) Environment(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		handler.logger.ErrorContext(
+			request.Context(),
+			"CLI tenant context missing",
+			"correlation_id", httpx.GetCorrelationID(request.Context()),
+			"path", request.URL.Path,
+		)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"CLI_TENANT_CONTEXT_MISSING",
+			"The CLI tenant context could not be resolved.",
+		)
+		return
+	}
+
+	environmentID, ok := parseLegacyID(chi.URLParam(request, "idEnvironment"))
+	if !ok {
+		writeInvalidID(writer)
+		return
+	}
+
+	environment, err := handler.environments.GetEnvironment(request.Context(), tenant.CustomerID, environmentID)
+	if errors.Is(err, ErrNotFound) {
+		writeInvalidID(writer)
+		return
+	}
+	if err != nil {
+		handler.logger.ErrorContext(
+			request.Context(),
+			"CLI environment read failed",
+			"correlation_id", httpx.GetCorrelationID(request.Context()),
+			"path", request.URL.Path,
+		)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"CLI_CONFIGURATION_UNAVAILABLE",
+			"The CLI configuration could not be loaded.",
+		)
+		return
+	}
+
+	httpx.WriteJSON(writer, http.StatusOK, environment)
 }
 
 func parseLegacyID(value string) (int64, bool) {

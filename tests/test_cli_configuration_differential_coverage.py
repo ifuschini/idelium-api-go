@@ -17,6 +17,14 @@ GOLDEN_DIR = ROOT / "testdata" / "golden"
 ROLLOUT_PATH = ROOT / "docs" / "contracts" / "route-rollout-overrides.json"
 
 CLI_CONFIGURATION_FIXTURE_PAIRS = {
+    "GET|HEAD /api/ideliumcl/environment/{idEnvironment}": (
+        "cli-environment.fixture.json",
+        "cli-environment-go.fixture.json",
+    ),
+    "GET|HEAD /api/ideliumcl/environments/{idProject}": (
+        "cli-environments.fixture.json",
+        "cli-environments-go.fixture.json",
+    ),
     "GET|HEAD /api/ideliumcl/plugin/{idPlugin}": (
         "cli-plugin.fixture.json",
         "cli-plugin-go.fixture.json",

@@ -1,0 +1,81 @@
+{
+  "fixtureVersion": "1.0",
+  "id": "cli-environment-go-authorized",
+  "description": "Synthetic authorized Go response for a CLI environment read.",
+  "source": {
+    "runtime": "go",
+    "repository": "idelium/idelium-api-go",
+    "revision": "0000000000000000000000000000000000000000",
+    "capturedAt": "2026-01-01T00:00:00Z",
+    "routeInventoryDigestSha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9"
+  },
+  "route": {
+    "method": "GET",
+    "path": "/api/ideliumcl/environment/{idEnvironment}",
+    "trustPath": "api-key",
+    "tenantOwned": true
+  },
+  "context": {
+    "tenant": {
+      "id": "fixture-tenant-alpha",
+      "synthetic": true
+    },
+    "actor": {
+      "id": "fixture-cli-customer",
+      "synthetic": true
+    }
+  },
+  "request": {
+    "headers": {
+      "Accept": "application/json",
+      "X-Correlation-ID": "fixture-correlation-cli-environment"
+    },
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "id": 16,
+      "code": "demo",
+      "description": "Demo environment",
+      "config": "{}",
+      "idProject": 3,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z",
+      "idCostumer": 42
+    }
+  },
+  "normalizations": [
+    {
+      "path": "$.request.headers.X-Correlation-ID",
+      "rule": "Replace the generated correlation identifier with a stable fixture value."
+    },
+    {
+      "path": "$.source.capturedAt",
+      "rule": "Use a fixed UTC timestamp."
+    },
+    {
+      "path": "$.source.revision",
+      "rule": "Use a zero revision until the route has a captured Go owner commit."
+    },
+    {
+      "path": "$.response.body.created_at",
+      "rule": "Normalize the persisted creation timestamp."
+    },
+    {
+      "path": "$.response.body.updated_at",
+      "rule": "Normalize the persisted update timestamp."
+    }
+  ],
+  "redactions": [
+    {
+      "path": "$.request.headers.Idelium-Key",
+      "rule": "Remove the legacy customer API key before the fixture is persisted."
+    }
+  ],
+  "sideEffects": []
+}
