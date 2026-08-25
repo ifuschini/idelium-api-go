@@ -89,6 +89,8 @@ The legacy CLI customer API-key authentication boundary is documented in
 [docs/operations/legacy-cli-api-key-authentication.md](docs/operations/legacy-cli-api-key-authentication.md).
 The first Go-owned CLI configuration graph read is documented in
 [docs/operations/cli-test-cycle-reads.md](docs/operations/cli-test-cycle-reads.md).
+The Go-owned CLI test read path is documented in
+[docs/operations/cli-test-reads.md](docs/operations/cli-test-reads.md).
 
 ## Configuration
 

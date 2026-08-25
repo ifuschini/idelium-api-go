@@ -17,6 +17,10 @@ GOLDEN_DIR = ROOT / "testdata" / "golden"
 ROLLOUT_PATH = ROOT / "docs" / "contracts" / "route-rollout-overrides.json"
 
 CLI_CONFIGURATION_FIXTURE_PAIRS = {
+    "GET|HEAD /api/ideliumcl/test/{idTest}": (
+        "cli-test.fixture.json",
+        "cli-test-go.fixture.json",
+    ),
     "GET|HEAD /api/ideliumcl/testcycle/{idTestCycle}": (
         "cli-test-cycle.fixture.json",
         "cli-test-cycle-go.fixture.json",
@@ -33,7 +37,7 @@ class CLIConfigurationDifferentialCoverageTest(unittest.TestCase):
         go_owned_cli_routes = {
             route
             for route, owner in rollout["routes"].items()
-            if owner == "go-owned" and "/api/ideliumcl/testcycle/" in route
+            if owner == "go-owned" and route in CLI_CONFIGURATION_FIXTURE_PAIRS
         }
 
         self.assertEqual(set(CLI_CONFIGURATION_FIXTURE_PAIRS), go_owned_cli_routes)

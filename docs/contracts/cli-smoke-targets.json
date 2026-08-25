@@ -1,8 +1,23 @@
 {
   "consumer": "idelium-cli",
-  "ownership_matrix_digest_sha256": "5504ec9664f2d13698c97ecd7938ba3c954590918acbf7a48e70db36964ed195",
+  "ownership_matrix_digest_sha256": "76a45f173c3c4d17f1747c5662255eabc563491ab0dcccbf1ac3a9301beaa1c2",
   "route_inventory_digest_sha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9",
   "routes": [
+    {
+      "aggregate": "tests",
+      "authentication_mode": "api-key",
+      "execution_mode": "configuration-read",
+      "method": "GET|HEAD",
+      "operation_kind": "read",
+      "owner": "go",
+      "path": "/api/ideliumcl/test/{idTest}",
+      "requires_runtime_credential": true,
+      "route_id": "GET|HEAD /api/ideliumcl/test/{idTest}",
+      "smoke_method": "GET",
+      "target_base_url_env": "IDELIUM_CLI_SMOKE_GO_BASE_URL",
+      "tenant_context": false,
+      "trust_path": "api-key"
+    },
     {
       "aggregate": "test-cycles",
       "authentication_mode": "api-key",
@@ -154,21 +169,6 @@
       "trust_path": "api-key"
     },
     {
-      "aggregate": "tests",
-      "authentication_mode": "api-key",
-      "execution_mode": "configuration-read",
-      "method": "GET|HEAD",
-      "operation_kind": "read",
-      "owner": "laravel",
-      "path": "/api/ideliumcl/test/{idTest}",
-      "requires_runtime_credential": true,
-      "route_id": "GET|HEAD /api/ideliumcl/test/{idTest}",
-      "smoke_method": "GET",
-      "target_base_url_env": "IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL",
-      "tenant_context": false,
-      "trust_path": "api-key"
-    },
-    {
       "aggregate": "execution-results",
       "authentication_mode": "api-key",
       "execution_mode": "result-reporting-write",
@@ -206,8 +206,8 @@
       "result-reporting-write": 6
     },
     "owner_counts": {
-      "go": 1,
-      "laravel": 12
+      "go": 2,
+      "laravel": 11
     },
     "route_count": 13
   },

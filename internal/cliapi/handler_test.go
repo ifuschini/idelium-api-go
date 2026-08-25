@@ -31,6 +31,22 @@ func (repository *fakeTestCycleRepository) GetTestCycle(ctx context.Context, cus
 	return repository.testCycle, nil
 }
 
+type fakeTestRepository struct {
+	customerID int64
+	testID     int64
+	test       Test
+	err        error
+}
+
+func (repository *fakeTestRepository) GetTest(ctx context.Context, customerID int64, testID int64) (Test, error) {
+	repository.customerID = customerID
+	repository.testID = testID
+	if repository.err != nil {
+		return Test{}, repository.err
+	}
+	return repository.test, nil
+}
+
 func TestHandlerReturnsTenantScopedTestCycle(t *testing.T) {
 	repository := &fakeTestCycleRepository{
 		testCycle: TestCycle{
@@ -42,7 +58,7 @@ func TestHandlerReturnsTenantScopedTestCycle(t *testing.T) {
 			IDCostumer:   42,
 		},
 	}
-	handler := NewHandler(repository, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	handler := NewHandler(repository, &fakeTestRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
 	response := httptest.NewRecorder()
 	request := requestWithTenant("/ideliumcl/testcycle/7", "7", 42)
 
@@ -62,7 +78,7 @@ func TestHandlerReturnsTenantScopedTestCycle(t *testing.T) {
 
 func TestHandlerReturnsInvalidIDForMalformedIdentifier(t *testing.T) {
 	repository := &fakeTestCycleRepository{}
-	handler := NewHandler(repository, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	handler := NewHandler(repository, &fakeTestRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
 	response := httptest.NewRecorder()
 
 	handler.TestCycle(response, requestWithTenant("/ideliumcl/testcycle/not-number", "not-number", 42))
@@ -75,7 +91,7 @@ func TestHandlerReturnsInvalidIDForMalformedIdentifier(t *testing.T) {
 
 func TestHandlerReturnsInvalidIDForCrossTenantOrMissingCycle(t *testing.T) {
 	repository := &fakeTestCycleRepository{err: ErrNotFound}
-	handler := NewHandler(repository, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	handler := NewHandler(repository, &fakeTestRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
 	response := httptest.NewRecorder()
 
 	handler.TestCycle(response, requestWithTenant("/ideliumcl/testcycle/8", "8", 42))
@@ -86,7 +102,7 @@ func TestHandlerReturnsInvalidIDForCrossTenantOrMissingCycle(t *testing.T) {
 func TestHandlerRedactsRepositoryFailures(t *testing.T) {
 	logBuffer := &bytes.Buffer{}
 	repository := &fakeTestCycleRepository{err: errors.New("database failed near secret-value")}
-	handler := NewHandler(repository, slog.New(slog.NewTextHandler(logBuffer, nil)))
+	handler := NewHandler(repository, &fakeTestRepository{}, slog.New(slog.NewTextHandler(logBuffer, nil)))
 	response := httptest.NewRecorder()
 
 	handler.TestCycle(response, requestWithTenant("/ideliumcl/testcycle/8", "8", 42))
@@ -99,9 +115,81 @@ func TestHandlerRedactsRepositoryFailures(t *testing.T) {
 	}
 }
 
+func TestHandlerReturnsTenantScopedTest(t *testing.T) {
+	repository := &fakeTestRepository{
+		test: Test{
+			ID:          9,
+			Name:        "browser test",
+			Description: "Browser coverage",
+			Config:      "[]",
+			IDProject:   3,
+			IDCostumer:   42,
+		},
+	}
+	handler := NewHandler(&fakeTestCycleRepository{}, repository, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := requestWithTenantParam("/ideliumcl/test/9", "idTest", "9", 42)
+
+	handler.Test(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"id":9`) ||
+		!strings.Contains(response.Body.String(), `"idCostumer":42`) {
+		t.Fatalf("test response missing expected fields: %s", response.Body.String())
+	}
+	if repository.customerID != 42 || repository.testID != 9 {
+		t.Fatalf("repository was not called with tenant-scoped identifiers: %#v", repository)
+	}
+}
+
+func TestHandlerReturnsInvalidIDForMalformedTestIdentifier(t *testing.T) {
+	repository := &fakeTestRepository{}
+	handler := NewHandler(&fakeTestCycleRepository{}, repository, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+
+	handler.Test(response, requestWithTenantParam("/ideliumcl/test/not-number", "idTest", "not-number", 42))
+
+	assertInvalidID(t, response)
+	if repository.testID != 0 {
+		t.Fatalf("repository should not be called for malformed identifiers: %#v", repository)
+	}
+}
+
+func TestHandlerReturnsInvalidIDForCrossTenantOrMissingTest(t *testing.T) {
+	repository := &fakeTestRepository{err: ErrNotFound}
+	handler := NewHandler(&fakeTestCycleRepository{}, repository, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+
+	handler.Test(response, requestWithTenantParam("/ideliumcl/test/10", "idTest", "10", 42))
+
+	assertInvalidID(t, response)
+}
+
+func TestHandlerRedactsTestRepositoryFailures(t *testing.T) {
+	logBuffer := &bytes.Buffer{}
+	repository := &fakeTestRepository{err: errors.New("database failed near secret-value")}
+	handler := NewHandler(&fakeTestCycleRepository{}, repository, slog.New(slog.NewTextHandler(logBuffer, nil)))
+	response := httptest.NewRecorder()
+
+	handler.Test(response, requestWithTenantParam("/ideliumcl/test/10", "idTest", "10", 42))
+
+	if response.Code != http.StatusInternalServerError {
+		t.Fatalf("expected status 500, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.Contains(logBuffer.String(), "secret-value") {
+		t.Fatalf("repository error leaked into logs: %s", logBuffer.String())
+	}
+}
+
 func requestWithTenant(target string, pathID string, customerID int64) *http.Request {
+	return requestWithTenantParam(target, "idTestCycle", pathID, customerID)
+}
+
+func requestWithTenantParam(target string, pathParam string, pathID string, customerID int64) *http.Request {
 	routerContext := chi.NewRouteContext()
-	routerContext.URLParams.Add("idTestCycle", pathID)
+	routerContext.URLParams.Add(pathParam, pathID)
 	request := httptest.NewRequest(http.MethodGet, target, nil)
 	ctx := context.WithValue(request.Context(), chi.RouteCtxKey, routerContext)
 	ctx = auth.ContextWithTenant(ctx, auth.TenantContext{CustomerID: customerID})

@@ -15,8 +15,8 @@
     "route_count": 168,
     "mutation_route_count": 98,
     "route_owner_counts": {
-      "go": 10,
-      "laravel": 158
+      "go": 11,
+      "laravel": 157
     }
   },
   "aggregates": [
@@ -1917,8 +1917,8 @@
       "path": "/api/ideliumcl/test/{idTest}",
       "aggregate": "tests",
       "operation_kind": "read",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 4
     },

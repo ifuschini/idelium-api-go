@@ -16,15 +16,16 @@ import (
 // Handler exposes Idelium CLI configuration read endpoints.
 type Handler struct {
 	testCycles TestCycleRepository
+	tests      TestRepository
 	logger     *slog.Logger
 }
 
 // NewHandler creates a CLI API handler.
-func NewHandler(testCycles TestCycleRepository, logger *slog.Logger) *Handler {
+func NewHandler(testCycles TestCycleRepository, tests TestRepository, logger *slog.Logger) *Handler {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &Handler{testCycles: testCycles, logger: logger}
+	return &Handler{testCycles: testCycles, tests: tests, logger: logger}
 }
 
 // TestCycle returns one tenant-owned test cycle using the Laravel CLI contract.
@@ -76,6 +77,57 @@ func (handler *Handler) TestCycle(writer http.ResponseWriter, request *http.Requ
 	}
 
 	httpx.WriteJSON(writer, http.StatusOK, testCycle)
+}
+
+// Test returns one tenant-owned test using the Laravel CLI contract.
+func (handler *Handler) Test(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		handler.logger.ErrorContext(
+			request.Context(),
+			"CLI tenant context missing",
+			"correlation_id", httpx.GetCorrelationID(request.Context()),
+			"path", request.URL.Path,
+		)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"CLI_TENANT_CONTEXT_MISSING",
+			"The CLI tenant context could not be resolved.",
+		)
+		return
+	}
+
+	testID, ok := parseLegacyID(chi.URLParam(request, "idTest"))
+	if !ok {
+		writeInvalidID(writer)
+		return
+	}
+
+	test, err := handler.tests.GetTest(request.Context(), tenant.CustomerID, testID)
+	if errors.Is(err, ErrNotFound) {
+		writeInvalidID(writer)
+		return
+	}
+	if err != nil {
+		handler.logger.ErrorContext(
+			request.Context(),
+			"CLI test read failed",
+			"correlation_id", httpx.GetCorrelationID(request.Context()),
+			"path", request.URL.Path,
+		)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"CLI_CONFIGURATION_UNAVAILABLE",
+			"The CLI configuration could not be loaded.",
+		)
+		return
+	}
+
+	httpx.WriteJSON(writer, http.StatusOK, test)
 }
 
 func parseLegacyID(value string) (int64, bool) {

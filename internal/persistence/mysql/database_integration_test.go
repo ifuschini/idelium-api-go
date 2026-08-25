@@ -358,3 +358,53 @@ func TestCLITestCycleRepositoryIntegration(t *testing.T) {
 		t.Fatalf("expected missing test cycle to be hidden, got %v", err)
 	}
 }
+
+func TestCLITestRepositoryIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS tests",
+		`CREATE TABLE tests (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config JSON NOT NULL,
+			idProject INT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL
+		)`,
+		`INSERT INTO tests
+			(id, name, description, config, idProject, created_at, updated_at, idCostumer)
+		 VALUES
+			(1, 'First test', 'Own test', JSON_ARRAY(), 10, NULL, NULL, 42),
+			(2, 'Second test', 'Foreign test', JSON_ARRAY(), 20, NULL, NULL, 99)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare CLI test fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewCLITestRepository(database)
+	test, err := repository.GetTest(ctx, 42, 1)
+	if err != nil {
+		t.Fatalf("GetTest() returned an error: %v", err)
+	}
+	if test.ID != 1 || test.IDCostumer != 42 || test.IDProject != 10 || test.Config != "[]" {
+		t.Fatalf("unexpected test payload: %#v", test)
+	}
+
+	_, err = repository.GetTest(ctx, 42, 2)
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant test to be hidden, got %v", err)
+	}
+
+	_, err = repository.GetTest(ctx, 42, 999)
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected missing test to be hidden, got %v", err)
+	}
+}
