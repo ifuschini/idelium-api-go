@@ -20,6 +20,7 @@ type catalogRepositoryStub struct {
 	brands    BrandPage
 	models    ModelPage
 	os        OperatingSystemPage
+	osVersion OperatingSystemVersionPage
 	err       error
 }
 
@@ -45,6 +46,10 @@ func (stub catalogRepositoryStub) ListModels(context.Context, ModelQuery) (Model
 
 func (stub catalogRepositoryStub) ListOperatingSystems(context.Context, OperatingSystemQuery) (OperatingSystemPage, error) {
 	return stub.os, stub.err
+}
+
+func (stub catalogRepositoryStub) ListOperatingSystemVersions(context.Context, OperatingSystemVersionQuery) (OperatingSystemVersionPage, error) {
+	return stub.osVersion, stub.err
 }
 
 func TestTypesReturnsLegacyArrayShape(t *testing.T) {
@@ -306,6 +311,79 @@ func TestOperatingSystemsRejectsInvalidTypeIdentifier(t *testing.T) {
 	}
 	body := response.Body.String()
 	if !strings.Contains(body, "INVALID_PLATFORM_TYPE") {
+		t.Fatalf("stable validation code missing: %s", body)
+	}
+}
+
+func TestOperatingSystemVersionsReturnsLegacyArrayWhenUnpaged(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{
+		osVersion: OperatingSystemVersionPage{
+			Data: []OperatingSystemVersionItem{{ID: 1, Version: "14", IDOs: 1}, {ID: 2, Version: "15", IDOs: 1}},
+		},
+	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/osversion/1", nil)
+
+	handler.OperatingSystemVersions(response, withPathParam(request, "idOs", "1"))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	body := response.Body.String()
+	for _, expected := range []string{`"id":1`, `"version":"14"`, `"idOs":1`, `"version":"15"`} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("response missing %s: %s", expected, body)
+		}
+	}
+	if strings.Contains(body, `"meta"`) {
+		t.Fatalf("unpaged OS-version response should preserve the legacy array shape: %s", body)
+	}
+}
+
+func TestOperatingSystemVersionsReturnsPagedGridWhenRequested(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{
+		osVersion: OperatingSystemVersionPage{
+			Data: []OperatingSystemVersionItem{{ID: 2, Version: "15", IDOs: 1}},
+			Meta: OperatingSystemVersionPageMeta{
+				Page:        2,
+				PageSize:    1,
+				Total:       2,
+				LastPage:    2,
+				Sort:        "version",
+				Direction:   "desc",
+				Stale:       false,
+				Partial:     false,
+			},
+		},
+	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/osversion/1?page=2&pageSize=1&sort=version&direction=desc", nil)
+
+	handler.OperatingSystemVersions(response, withPathParam(request, "idOs", "1"))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	body := response.Body.String()
+	for _, expected := range []string{`"data"`, `"meta"`, `"page":2`, `"pageSize":1`, `"direction":"desc"`} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("response missing %s: %s", expected, body)
+		}
+	}
+}
+
+func TestOperatingSystemVersionsRejectsInvalidOSIdentifier(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/osversion/not-a-number", nil)
+
+	handler.OperatingSystemVersions(response, withPathParam(request, "idOs", "not-a-number"))
+
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", response.Code)
+	}
+	body := response.Body.String()
+	if !strings.Contains(body, "INVALID_OPERATING_SYSTEM") {
 		t.Fatalf("stable validation code missing: %s", body)
 	}
 }

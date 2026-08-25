@@ -1,6 +1,6 @@
 {
   "consumer": "idelium-web",
-  "ownership_matrix_digest_sha256": "7fd895cd597b3e59492ee95c2f4780fb7030bb7972187fa5044ff1eedb5cb4d0",
+  "ownership_matrix_digest_sha256": "3f3a12a45de962c6010ffabb6815450015c446af61b210ffe1eff30f0bf270ab",
   "route_inventory_digest_sha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9",
   "routes": [
     {
@@ -58,6 +58,21 @@
       "path": "/api/admin/platforms/os/{idType}",
       "requires_synthetic_session": true,
       "route_id": "GET|HEAD /api/admin/platforms/os/{idType}",
+      "smoke_method": "GET",
+      "target_base_url_env": "IDELIUM_WEB_SMOKE_GO_BASE_URL",
+      "tenant_context": true,
+      "trust_path": "browser-session"
+    },
+    {
+      "aggregate": "platform-catalog",
+      "authentication_mode": "browser-session",
+      "execution_mode": "safe-read",
+      "method": "GET|HEAD",
+      "operation_kind": "read",
+      "owner": "go",
+      "path": "/api/admin/platforms/osversion/{idOs}",
+      "requires_synthetic_session": true,
+      "route_id": "GET|HEAD /api/admin/platforms/osversion/{idOs}",
       "smoke_method": "GET",
       "target_base_url_env": "IDELIUM_WEB_SMOKE_GO_BASE_URL",
       "tenant_context": true,
@@ -644,21 +659,6 @@
       "requires_synthetic_session": true,
       "route_id": "PUT /api/admin/platforms/osversion",
       "smoke_method": "PUT",
-      "target_base_url_env": "IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL",
-      "tenant_context": true,
-      "trust_path": "browser-session"
-    },
-    {
-      "aggregate": "platform-catalog",
-      "authentication_mode": "browser-session",
-      "execution_mode": "safe-read",
-      "method": "GET|HEAD",
-      "operation_kind": "read",
-      "owner": "laravel",
-      "path": "/api/admin/platforms/osversion/{idOs}",
-      "requires_synthetic_session": true,
-      "route_id": "GET|HEAD /api/admin/platforms/osversion/{idOs}",
-      "smoke_method": "GET",
       "target_base_url_env": "IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL",
       "tenant_context": true,
       "trust_path": "browser-session"
@@ -1376,8 +1376,8 @@
       "synthetic-mutation": 53
     },
     "owner_counts": {
-      "go": 6,
-      "laravel": 85
+      "go": 7,
+      "laravel": 84
     },
     "route_count": 91
   },

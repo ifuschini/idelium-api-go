@@ -180,6 +180,43 @@ func (handler *Handler) OperatingSystems(writer http.ResponseWriter, request *ht
 	httpx.WriteJSON(writer, http.StatusOK, page)
 }
 
+// OperatingSystemVersions returns the legacy OS-version grid contract scoped to an operating system.
+func (handler *Handler) OperatingSystemVersions(writer http.ResponseWriter, request *http.Request) {
+	idOs, err := parsePositivePathID(chi.URLParam(request, "idOs"))
+	if err != nil {
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusBadRequest,
+			"INVALID_OPERATING_SYSTEM",
+			"The operating-system identifier must be a positive integer.",
+		)
+		return
+	}
+
+	query := parseOperatingSystemVersionQuery(request)
+	query.IDOs = idOs
+	page, err := handler.repository.ListOperatingSystemVersions(request.Context(), query)
+	if err != nil {
+		handler.logger.ErrorContext(request.Context(), "list platform operating-system versions failed", "error", err)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"PLATFORM_CATALOG_UNAVAILABLE",
+			"The platform catalog could not be loaded.",
+		)
+		return
+	}
+
+	if !query.IsPaged() {
+		httpx.WriteJSON(writer, http.StatusOK, page.Data)
+		return
+	}
+
+	httpx.WriteJSON(writer, http.StatusOK, page)
+}
+
 func parseLocationQuery(request *http.Request) LocationQuery {
 	values := request.URL.Query()
 	sort := values.Get("sort")
@@ -225,6 +262,36 @@ func parseOperatingSystemQuery(request *http.Request) OperatingSystemQuery {
 	_, hasPage := values["page"]
 	_, hasPageSize := values["pageSize"]
 	query := OperatingSystemQuery{
+		Paged:     hasPage || hasPageSize,
+		Search:    boundedString(values.Get("search"), 200),
+		Sort:      sort,
+		Direction: direction,
+		FilterIDs: parseIDFilter(values.Get("filter[id]")),
+	}
+	if hasPage {
+		query.Page = boundedInt(values.Get("page"), 1, 1, 1<<31-1)
+	}
+	if hasPageSize {
+		query.PageSize = boundedInt(values.Get("pageSize"), 1, 1, 100)
+	}
+	return query
+}
+
+func parseOperatingSystemVersionQuery(request *http.Request) OperatingSystemVersionQuery {
+	values := request.URL.Query()
+	sort := values.Get("sort")
+	if sort != "id" && sort != "version" && sort != "created_at" && sort != "updated_at" {
+		sort = "version"
+	}
+
+	direction := strings.ToLower(values.Get("direction"))
+	if direction != "desc" {
+		direction = "asc"
+	}
+
+	_, hasPage := values["page"]
+	_, hasPageSize := values["pageSize"]
+	query := OperatingSystemVersionQuery{
 		Paged:     hasPage || hasPageSize,
 		Search:    boundedString(values.Get("search"), 200),
 		Sort:      sort,

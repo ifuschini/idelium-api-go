@@ -135,18 +135,21 @@ func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 		"DROP TABLE IF EXISTS brand_devices",
 		"DROP TABLE IF EXISTS model_devices",
 		"DROP TABLE IF EXISTS os",
+		"DROP TABLE IF EXISTS version_os",
 		"CREATE TABLE types (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL)",
 		"CREATE TABLE statuses (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL)",
 		"CREATE TABLE locations (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
 		"CREATE TABLE brand_devices (id BIGINT PRIMARY KEY AUTO_INCREMENT, brand VARCHAR(255) NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
 		"CREATE TABLE model_devices (id BIGINT PRIMARY KEY AUTO_INCREMENT, model VARCHAR(255) NOT NULL, idBrand INT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
 		"CREATE TABLE os (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL, type INT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
+		"CREATE TABLE version_os (id BIGINT PRIMARY KEY AUTO_INCREMENT, version VARCHAR(255) NOT NULL, idOs INT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
 		"INSERT INTO types (id, name) VALUES (2, 'mobile'), (1, 'desktop')",
 		"INSERT INTO statuses (id, name) VALUES (2, 'busy'), (1, 'free')",
 		"INSERT INTO locations (id, name, created_at, updated_at) VALUES (2, 'us-east', NULL, NULL), (1, 'eu-west', NULL, NULL)",
 		"INSERT INTO brand_devices (id, brand, created_at, updated_at) VALUES (2, 'Samsung', NULL, NULL), (1, 'Apple', NULL, NULL)",
 		"INSERT INTO model_devices (id, model, idBrand, created_at, updated_at) VALUES (3, 'Galaxy', 2, NULL, NULL), (2, 'iPad', 1, NULL, NULL), (1, 'iPhone', 1, NULL, NULL)",
 		"INSERT INTO os (id, name, type, created_at, updated_at) VALUES (3, 'android', 2, NULL, NULL), (2, 'windows', 1, NULL, NULL), (1, 'linux', 1, NULL, NULL)",
+		"INSERT INTO version_os (id, version, idOs, created_at, updated_at) VALUES (3, '13', 2, NULL, NULL), (2, '15', 1, NULL, NULL), (1, '14', 1, NULL, NULL)",
 	} {
 		if _, err := database.ExecContext(ctx, statement); err != nil {
 			t.Fatalf("prepare catalog fixture %q: %v", statement, err)
@@ -206,5 +209,14 @@ func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	expectedOperatingSystems := []platforms.OperatingSystemItem{{ID: 1, Name: "linux", Type: 1}, {ID: 2, Name: "windows", Type: 1}}
 	if !reflect.DeepEqual(operatingSystems.Data, expectedOperatingSystems) {
 		t.Fatalf("unexpected operating systems: %#v", operatingSystems.Data)
+	}
+
+	operatingSystemVersions, err := repository.ListOperatingSystemVersions(ctx, platforms.OperatingSystemVersionQuery{IDOs: 1})
+	if err != nil {
+		t.Fatalf("ListOperatingSystemVersions() returned an error: %v", err)
+	}
+	expectedOperatingSystemVersions := []platforms.OperatingSystemVersionItem{{ID: 1, Version: "14", IDOs: 1}, {ID: 2, Version: "15", IDOs: 1}}
+	if !reflect.DeepEqual(operatingSystemVersions.Data, expectedOperatingSystemVersions) {
+		t.Fatalf("unexpected operating-system versions: %#v", operatingSystemVersions.Data)
 	}
 }

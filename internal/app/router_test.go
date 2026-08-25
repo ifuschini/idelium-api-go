@@ -51,6 +51,12 @@ func (fakeCatalogRepository) ListOperatingSystems(context.Context, platforms.Ope
 	}, nil
 }
 
+func (fakeCatalogRepository) ListOperatingSystemVersions(context.Context, platforms.OperatingSystemVersionQuery) (platforms.OperatingSystemVersionPage, error) {
+	return platforms.OperatingSystemVersionPage{
+		Data: []platforms.OperatingSystemVersionItem{{ID: 1, Version: "14", IDOs: 1}},
+	}, nil
+}
+
 func TestRouterReturnsStableNotFoundResponse(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
 	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
@@ -156,5 +162,20 @@ func TestRouterReturnsPlatformOperatingSystems(t *testing.T) {
 	}
 	if !strings.Contains(response.Body.String(), `"name":"linux"`) {
 		t.Fatalf("platform operating-system response missing: %s", response.Body.String())
+	}
+}
+
+func TestRouterReturnsPlatformOperatingSystemVersions(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/osversion/1", nil))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	if !strings.Contains(response.Body.String(), `"version":"14"`) {
+		t.Fatalf("platform operating-system version response missing: %s", response.Body.String())
 	}
 }

@@ -112,7 +112,7 @@ does not require database restoration or reverse data replication.
 | `GET|HEAD` | `/api/admin/platforms/os/{idType}` | `platform-catalog` | read | go | yes | 3 |
 | `POST` | `/api/admin/platforms/osversion` | `platform-catalog` | mutation | laravel | yes | 6 |
 | `PUT` | `/api/admin/platforms/osversion` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `GET|HEAD` | `/api/admin/platforms/osversion/{idOs}` | `platform-catalog` | read | laravel | yes | 3 |
+| `GET|HEAD` | `/api/admin/platforms/osversion/{idOs}` | `platform-catalog` | read | go | yes | 3 |
 | `GET|HEAD` | `/api/admin/platforms/status` | `platform-catalog` | read | go | yes | 3 |
 | `GET|HEAD` | `/api/admin/platforms/types` | `platform-catalog` | read | go | yes | 3 |
 | `POST` | `/api/admin/plugins` | `plugins` | mutation | laravel | yes | 6 |
