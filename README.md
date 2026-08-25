@@ -105,6 +105,8 @@ documented in
 [docs/operations/cli-graph-equivalence.md](docs/operations/cli-graph-equivalence.md).
 CLI missing-reference and tenant-scoped `404` diagnostics are documented in
 [docs/operations/cli-missing-reference-diagnostics.md](docs/operations/cli-missing-reference-diagnostics.md).
+Cross-tenant denial coverage for the CLI configuration graph is documented in
+[docs/operations/cli-cross-tenant-denial.md](docs/operations/cli-cross-tenant-denial.md).
 
 ## Configuration
 
