@@ -4,6 +4,7 @@
   "routes": {
     "GET|HEAD /api/admin/platforms/brands": "go-owned",
     "GET|HEAD /api/admin/platforms/locations": "go-owned",
+    "GET|HEAD /api/admin/platforms/models/{idBrand}": "go-owned",
     "GET|HEAD /api/admin/platforms/status": "go-owned",
     "GET|HEAD /api/admin/platforms/types": "go-owned"
   }

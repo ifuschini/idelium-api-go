@@ -205,6 +205,94 @@ func (repository *PlatformCatalogRepository) ListBrands(ctx context.Context, que
 	return page, nil
 }
 
+// ListModels returns device models for one brand using the Laravel-compatible grid contract.
+func (repository *PlatformCatalogRepository) ListModels(ctx context.Context, query platforms.ModelQuery) (platforms.ModelPage, error) {
+	sortColumns := map[string]string{
+		"id":         "id",
+		"model":      "model",
+		"created_at": "created_at",
+		"updated_at": "updated_at",
+	}
+	sortColumn, ok := sortColumns[query.Sort]
+	if !ok {
+		sortColumn = "model"
+		query.Sort = "model"
+	}
+	if query.Direction != "desc" {
+		query.Direction = "asc"
+	}
+
+	where, args := modelWhereClause(query)
+	total, err := repository.countRows(ctx, "model_devices", where, args)
+	if err != nil {
+		return platforms.ModelPage{}, err
+	}
+
+	sqlQuery := "SELECT id, model, idBrand, created_at, updated_at FROM model_devices" + where + " ORDER BY " + sortColumn + " " + query.Direction
+	if query.IsPaged() {
+		pageSize := query.PageSize
+		if pageSize == 0 {
+			pageSize = 25
+		}
+		page := query.Page
+		if page == 0 {
+			page = 1
+		}
+		args = append(args, pageSize, (page-1)*pageSize)
+		sqlQuery += " LIMIT ? OFFSET ?"
+		query.Page = page
+		query.PageSize = pageSize
+	}
+
+	rows, err := repository.database.QueryContext(ctx, sqlQuery, args...)
+	if err != nil {
+		return platforms.ModelPage{}, fmt.Errorf("query platform models: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]platforms.ModelItem, 0)
+	for rows.Next() {
+		var item platforms.ModelItem
+		var createdAt sql.NullTime
+		var updatedAt sql.NullTime
+		if err := rows.Scan(&item.ID, &item.Model, &item.IDBrand, &createdAt, &updatedAt); err != nil {
+			return platforms.ModelPage{}, fmt.Errorf("scan platform model row: %w", err)
+		}
+		if createdAt.Valid {
+			item.CreatedAt = &createdAt.Time
+		}
+		if updatedAt.Valid {
+			item.UpdatedAt = &updatedAt.Time
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return platforms.ModelPage{}, fmt.Errorf("read platform model rows: %w", err)
+	}
+
+	page := platforms.ModelPage{Data: items}
+	if query.IsPaged() {
+		lastPage := int((total + int64(query.PageSize) - 1) / int64(query.PageSize))
+		if lastPage == 0 {
+			lastPage = 1
+		}
+		page.Meta = platforms.ModelPageMeta{
+			Page:            query.Page,
+			PageSize:        query.PageSize,
+			Total:           total,
+			LastPage:        lastPage,
+			HasNextPage:     query.Page < lastPage,
+			HasPreviousPage: query.Page > 1,
+			Sort:            query.Sort,
+			Direction:       query.Direction,
+			Stale:           false,
+			Partial:         false,
+		}
+	}
+
+	return page, nil
+}
+
 func (repository *PlatformCatalogRepository) listCatalogItems(ctx context.Context, query string) ([]platforms.CatalogItem, error) {
 	rows, err := repository.database.QueryContext(ctx, query)
 	if err != nil {
@@ -262,4 +350,13 @@ func gridWhereClause(search string, searchColumn string, filterIDs []int64) (str
 		return "", args
 	}
 	return " WHERE " + strings.Join(clauses, " AND "), args
+}
+
+func modelWhereClause(query platforms.ModelQuery) (string, []any) {
+	where, args := gridWhereClause(query.Search, "model", query.FilterIDs)
+	brandClause := "idBrand = ?"
+	if where == "" {
+		return " WHERE " + brandClause, []any{query.IDBrand}
+	}
+	return where + " AND " + brandClause, append(args, query.IDBrand)
 }

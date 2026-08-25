@@ -39,6 +39,12 @@ func (fakeCatalogRepository) ListBrands(context.Context, platforms.BrandQuery) (
 	}, nil
 }
 
+func (fakeCatalogRepository) ListModels(context.Context, platforms.ModelQuery) (platforms.ModelPage, error) {
+	return platforms.ModelPage{
+		Data: []platforms.ModelItem{{ID: 1, Model: "iPhone", IDBrand: 1}},
+	}, nil
+}
+
 func TestRouterReturnsStableNotFoundResponse(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
 	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
@@ -114,5 +120,20 @@ func TestRouterReturnsPlatformBrands(t *testing.T) {
 	}
 	if !strings.Contains(response.Body.String(), `"brand":"Apple"`) {
 		t.Fatalf("platform brand response missing: %s", response.Body.String())
+	}
+}
+
+func TestRouterReturnsPlatformModels(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/models/1", nil))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	if !strings.Contains(response.Body.String(), `"model":"iPhone"`) {
+		t.Fatalf("platform model response missing: %s", response.Body.String())
 	}
 }

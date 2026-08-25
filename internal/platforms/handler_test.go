@@ -9,6 +9,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type catalogRepositoryStub struct {
@@ -16,6 +18,7 @@ type catalogRepositoryStub struct {
 	statuses  []CatalogItem
 	locations LocationPage
 	brands    BrandPage
+	models    ModelPage
 	err       error
 }
 
@@ -33,6 +36,10 @@ func (stub catalogRepositoryStub) ListLocations(context.Context, LocationQuery) 
 
 func (stub catalogRepositoryStub) ListBrands(context.Context, BrandQuery) (BrandPage, error) {
 	return stub.brands, stub.err
+}
+
+func (stub catalogRepositoryStub) ListModels(context.Context, ModelQuery) (ModelPage, error) {
+	return stub.models, stub.err
 }
 
 func TestTypesReturnsLegacyArrayShape(t *testing.T) {
@@ -182,4 +189,51 @@ func TestBrandsReturnsPagedGridWhenRequested(t *testing.T) {
 			t.Fatalf("response missing %s: %s", expected, body)
 		}
 	}
+}
+
+func TestModelsReturnsLegacyArrayWhenUnpaged(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{
+		models: ModelPage{
+			Data: []ModelItem{{ID: 1, Model: "iPhone", IDBrand: 7}, {ID: 2, Model: "iPad", IDBrand: 7}},
+		},
+	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/models/7", nil)
+
+	handler.Models(response, withPathParam(request, "idBrand", "7"))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	body := response.Body.String()
+	for _, expected := range []string{`"id":1`, `"model":"iPhone"`, `"idBrand":7`, `"model":"iPad"`} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("response missing %s: %s", expected, body)
+		}
+	}
+	if strings.Contains(body, `"meta"`) {
+		t.Fatalf("unpaged model response should preserve the legacy array shape: %s", body)
+	}
+}
+
+func TestModelsRejectsInvalidBrandIdentifier(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/models/not-a-number", nil)
+
+	handler.Models(response, withPathParam(request, "idBrand", "not-a-number"))
+
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", response.Code)
+	}
+	body := response.Body.String()
+	if !strings.Contains(body, "INVALID_PLATFORM_BRAND") {
+		t.Fatalf("stable validation code missing: %s", body)
+	}
+}
+
+func withPathParam(request *http.Request, name string, value string) *http.Request {
+	routeContext := chi.NewRouteContext()
+	routeContext.URLParams.Add(name, value)
+	return request.WithContext(context.WithValue(request.Context(), chi.RouteCtxKey, routeContext))
 }

@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/idelium/idelium-api-go/internal/httpx"
 )
 
@@ -104,6 +106,43 @@ func (handler *Handler) Brands(writer http.ResponseWriter, request *http.Request
 	httpx.WriteJSON(writer, http.StatusOK, page)
 }
 
+// Models returns the legacy platform model grid contract scoped to a brand.
+func (handler *Handler) Models(writer http.ResponseWriter, request *http.Request) {
+	idBrand, err := parsePositivePathID(chi.URLParam(request, "idBrand"))
+	if err != nil {
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusBadRequest,
+			"INVALID_PLATFORM_BRAND",
+			"The platform brand identifier must be a positive integer.",
+		)
+		return
+	}
+
+	query := parseModelQuery(request)
+	query.IDBrand = idBrand
+	page, err := handler.repository.ListModels(request.Context(), query)
+	if err != nil {
+		handler.logger.ErrorContext(request.Context(), "list platform models failed", "error", err)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"PLATFORM_CATALOG_UNAVAILABLE",
+			"The platform catalog could not be loaded.",
+		)
+		return
+	}
+
+	if !query.IsPaged() {
+		httpx.WriteJSON(writer, http.StatusOK, page.Data)
+		return
+	}
+
+	httpx.WriteJSON(writer, http.StatusOK, page)
+}
+
 func parseLocationQuery(request *http.Request) LocationQuery {
 	values := request.URL.Query()
 	sort := values.Get("sort")
@@ -162,6 +201,44 @@ func parseBrandQuery(request *http.Request) BrandQuery {
 		query.PageSize = boundedInt(values.Get("pageSize"), 1, 1, 100)
 	}
 	return query
+}
+
+func parseModelQuery(request *http.Request) ModelQuery {
+	values := request.URL.Query()
+	sort := values.Get("sort")
+	if sort != "model" && sort != "created_at" && sort != "updated_at" {
+		sort = "model"
+	}
+
+	direction := strings.ToLower(values.Get("direction"))
+	if direction != "desc" {
+		direction = "asc"
+	}
+
+	_, hasPage := values["page"]
+	_, hasPageSize := values["pageSize"]
+	query := ModelQuery{
+		Paged:     hasPage || hasPageSize,
+		Search:    boundedString(values.Get("search"), 200),
+		Sort:      sort,
+		Direction: direction,
+		FilterIDs: parseIDFilter(values.Get("filter[id]")),
+	}
+	if hasPage {
+		query.Page = boundedInt(values.Get("page"), 1, 1, 1<<31-1)
+	}
+	if hasPageSize {
+		query.PageSize = boundedInt(values.Get("pageSize"), 1, 1, 100)
+	}
+	return query
+}
+
+func parsePositivePathID(value string) (int64, error) {
+	parsed, err := strconv.ParseInt(value, 10, 64)
+	if err != nil || parsed <= 0 {
+		return 0, strconv.ErrSyntax
+	}
+	return parsed, nil
 }
 
 func boundedInt(value string, fallback int, minimum int, maximum int) int {
