@@ -190,8 +190,8 @@ does not require database restoration or reverse data replication.
 | `POST` | `/api/ideliumcl/agents/register` | `agent-registry` | mutation | laravel | no | 8 |
 | `GET|HEAD` | `/api/ideliumcl/environment/{idEnvironment}` | `environments` | read | laravel | no | 4 |
 | `GET|HEAD` | `/api/ideliumcl/environments/{idProject}` | `environments` | read | laravel | no | 4 |
-| `GET|HEAD` | `/api/ideliumcl/plugin/{idPlugin}` | `plugins` | read | laravel | no | 4 |
-| `GET|HEAD` | `/api/ideliumcl/plugins/{idProject}` | `plugins` | read | laravel | no | 4 |
+| `GET|HEAD` | `/api/ideliumcl/plugin/{idPlugin}` | `plugins` | read | go | no | 4 |
+| `GET|HEAD` | `/api/ideliumcl/plugins/{idProject}` | `plugins` | read | go | no | 4 |
 | `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `parallel-runs` | read | laravel | no | 8 |
 | `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `parallel-runs` | mutation | laravel | no | 8 |
 | `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/matrix` | `parallel-runs` | mutation | laravel | no | 8 |

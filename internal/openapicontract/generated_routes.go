@@ -25,6 +25,8 @@ type ServerInterface interface {
 	GetCLITestCycle(http.ResponseWriter, *http.Request)
 	GetCLITest(http.ResponseWriter, *http.Request)
 	GetCLIStep(http.ResponseWriter, *http.Request)
+	ListCLIPlugins(http.ResponseWriter, *http.Request)
+	GetCLIPlugin(http.ResponseWriter, *http.Request)
 	Get(http.ResponseWriter, *http.Request)
 	GetAdminAccounts(http.ResponseWriter, *http.Request)
 	PostAdminAccounts(http.ResponseWriter, *http.Request)
@@ -155,8 +157,6 @@ type ServerInterface interface {
 	PostIdeliumclAgentsRegister(http.ResponseWriter, *http.Request)
 	GetIdeliumclEnvironmentIdEnvironment(http.ResponseWriter, *http.Request)
 	GetIdeliumclEnvironmentsIdProject(http.ResponseWriter, *http.Request)
-	GetIdeliumclPluginIdPlugin(http.ResponseWriter, *http.Request)
-	GetIdeliumclPluginsIdProject(http.ResponseWriter, *http.Request)
 	GetIdeliumclProjectsIdProjectParallelRuns(http.ResponseWriter, *http.Request)
 	PostIdeliumclProjectsIdProjectParallelRuns(http.ResponseWriter, *http.Request)
 	PostIdeliumclProjectsIdProjectParallelRunsMatrix(http.ResponseWriter, *http.Request)
@@ -265,6 +265,28 @@ var Operations = []Operation{
 		OperationID:        "getCLIStep",
 		Tags:               []string{"CLI Configuration"},
 		LaravelRoute:       "/api/ideliumcl/step/{idStep}",
+		AuthenticationMode: "api-key",
+		TrustPath:          "api-key",
+		TenantContext:      true,
+		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
+	},
+	{
+		Method:             "GET",
+		Path:               "/ideliumcl/plugins/{idProject}",
+		OperationID:        "listCLIPlugins",
+		Tags:               []string{"CLI Configuration"},
+		LaravelRoute:       "/api/ideliumcl/plugins/{idProject}",
+		AuthenticationMode: "api-key",
+		TrustPath:          "api-key",
+		TenantContext:      true,
+		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
+	},
+	{
+		Method:             "GET",
+		Path:               "/ideliumcl/plugin/{idPlugin}",
+		OperationID:        "getCLIPlugin",
+		Tags:               []string{"CLI Configuration"},
+		LaravelRoute:       "/api/ideliumcl/plugin/{idPlugin}",
 		AuthenticationMode: "api-key",
 		TrustPath:          "api-key",
 		TenantContext:      true,
@@ -1695,28 +1717,6 @@ var Operations = []Operation{
 		OperationID:        "getIdeliumclEnvironmentsIdProject",
 		Tags:               []string{"Laravel Compatibility"},
 		LaravelRoute:       "/api/ideliumcl/environments/{idProject}",
-		AuthenticationMode: "api-key",
-		TrustPath:          "api-key",
-		TenantContext:      false,
-		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
-	},
-	{
-		Method:             "GET",
-		Path:               "/ideliumcl/plugin/{idPlugin}",
-		OperationID:        "getIdeliumclPluginIdPlugin",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/ideliumcl/plugin/{idPlugin}",
-		AuthenticationMode: "api-key",
-		TrustPath:          "api-key",
-		TenantContext:      false,
-		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
-	},
-	{
-		Method:             "GET",
-		Path:               "/ideliumcl/plugins/{idProject}",
-		OperationID:        "getIdeliumclPluginsIdProject",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/ideliumcl/plugins/{idProject}",
 		AuthenticationMode: "api-key",
 		TrustPath:          "api-key",
 		TenantContext:      false,

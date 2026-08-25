@@ -24,6 +24,7 @@ func NewRouter(
 	testCycleRepository cliapi.TestCycleRepository,
 	testRepository cliapi.TestRepository,
 	stepRepository cliapi.StepRepository,
+	pluginRepository cliapi.PluginRepository,
 ) http.Handler {
 	router := chi.NewRouter()
 	router.Use(httpx.CorrelationID)
@@ -46,13 +47,15 @@ func NewRouter(
 	router.Get("/admin/platforms/browsers/{idOs}", platformHandler.Browsers)
 	router.Get("/admin/platforms/browserversions/{idBrowser}", platformHandler.BrowserVersions)
 
-	cliHandler := cliapi.NewHandler(testCycleRepository, testRepository, stepRepository, logger)
+	cliHandler := cliapi.NewHandler(testCycleRepository, testRepository, stepRepository, pluginRepository, logger)
 	cliAuthenticator := auth.NewLegacyKeyAuthenticator(legacyKeyRepository, logger)
 	router.Group(func(router chi.Router) {
 		router.Use(cliAuthenticator.Middleware)
 		router.Get("/ideliumcl/testcycle/{idTestCycle}", cliHandler.TestCycle)
 		router.Get("/ideliumcl/test/{idTest}", cliHandler.Test)
 		router.Get("/ideliumcl/step/{idStep}", cliHandler.Step)
+		router.Get("/ideliumcl/plugins/{idProject}", cliHandler.Plugins)
+		router.Get("/ideliumcl/plugin/{idPlugin}", cliHandler.Plugin)
 	})
 
 	router.NotFound(func(writer http.ResponseWriter, request *http.Request) {

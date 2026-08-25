@@ -19,20 +19,20 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | Metric | Value |
 | --- | --- |
 | Routes | 13 |
-| Owners | go: 3, laravel: 10 |
+| Owners | go: 5, laravel: 8 |
 | Execution modes | configuration-read: 7, result-reporting-write: 6 |
 
 ## Routes
 
 | Method | Path | Owner | Target env | Mode | Tenant | Aggregate |
 | --- | --- | --- | --- | --- | --- | --- |
+| `GET` | `/api/ideliumcl/plugin/{idPlugin}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `plugins` |
+| `GET` | `/api/ideliumcl/plugins/{idProject}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `plugins` |
 | `GET` | `/api/ideliumcl/step/{idStep}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `steps` |
 | `GET` | `/api/ideliumcl/test/{idTest}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `tests` |
 | `GET` | `/api/ideliumcl/testcycle/{idTestCycle}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `test-cycles` |
 | `GET` | `/api/ideliumcl/environment/{idEnvironment}` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `configuration-read` | no | `environments` |
 | `GET` | `/api/ideliumcl/environments/{idProject}` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `configuration-read` | no | `environments` |
-| `GET` | `/api/ideliumcl/plugin/{idPlugin}` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `configuration-read` | no | `plugins` |
-| `GET` | `/api/ideliumcl/plugins/{idProject}` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `configuration-read` | no | `plugins` |
 | `POST` | `/api/ideliumcl/step` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
 | `PUT` | `/api/ideliumcl/step` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
 | `POST` | `/api/ideliumcl/test` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |

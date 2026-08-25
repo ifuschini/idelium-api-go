@@ -18,15 +18,16 @@ type Handler struct {
 	testCycles TestCycleRepository
 	tests      TestRepository
 	steps      StepRepository
+	plugins    PluginRepository
 	logger     *slog.Logger
 }
 
 // NewHandler creates a CLI API handler.
-func NewHandler(testCycles TestCycleRepository, tests TestRepository, steps StepRepository, logger *slog.Logger) *Handler {
+func NewHandler(testCycles TestCycleRepository, tests TestRepository, steps StepRepository, plugins PluginRepository, logger *slog.Logger) *Handler {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &Handler{testCycles: testCycles, tests: tests, steps: steps, logger: logger}
+	return &Handler{testCycles: testCycles, tests: tests, steps: steps, plugins: plugins, logger: logger}
 }
 
 // TestCycle returns one tenant-owned test cycle using the Laravel CLI contract.
@@ -180,6 +181,104 @@ func (handler *Handler) Step(writer http.ResponseWriter, request *http.Request) 
 	}
 
 	httpx.WriteJSON(writer, http.StatusOK, step)
+}
+
+// Plugins returns tenant-owned plugins for a project using the Laravel CLI contract.
+func (handler *Handler) Plugins(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		handler.logger.ErrorContext(
+			request.Context(),
+			"CLI tenant context missing",
+			"correlation_id", httpx.GetCorrelationID(request.Context()),
+			"path", request.URL.Path,
+		)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"CLI_TENANT_CONTEXT_MISSING",
+			"The CLI tenant context could not be resolved.",
+		)
+		return
+	}
+
+	projectID, ok := parseLegacyID(chi.URLParam(request, "idProject"))
+	if !ok {
+		writeInvalidID(writer)
+		return
+	}
+
+	plugins, err := handler.plugins.ListPlugins(request.Context(), tenant.CustomerID, projectID)
+	if err != nil {
+		handler.logger.ErrorContext(
+			request.Context(),
+			"CLI plugin-list read failed",
+			"correlation_id", httpx.GetCorrelationID(request.Context()),
+			"path", request.URL.Path,
+		)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"CLI_CONFIGURATION_UNAVAILABLE",
+			"The CLI configuration could not be loaded.",
+		)
+		return
+	}
+
+	httpx.WriteJSON(writer, http.StatusOK, plugins)
+}
+
+// Plugin returns one tenant-owned plugin using the Laravel CLI contract.
+func (handler *Handler) Plugin(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		handler.logger.ErrorContext(
+			request.Context(),
+			"CLI tenant context missing",
+			"correlation_id", httpx.GetCorrelationID(request.Context()),
+			"path", request.URL.Path,
+		)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"CLI_TENANT_CONTEXT_MISSING",
+			"The CLI tenant context could not be resolved.",
+		)
+		return
+	}
+
+	pluginID, ok := parseLegacyID(chi.URLParam(request, "idPlugin"))
+	if !ok {
+		writeInvalidID(writer)
+		return
+	}
+
+	plugin, err := handler.plugins.GetPlugin(request.Context(), tenant.CustomerID, pluginID)
+	if errors.Is(err, ErrNotFound) {
+		writeInvalidID(writer)
+		return
+	}
+	if err != nil {
+		handler.logger.ErrorContext(
+			request.Context(),
+			"CLI plugin read failed",
+			"correlation_id", httpx.GetCorrelationID(request.Context()),
+			"path", request.URL.Path,
+		)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"CLI_CONFIGURATION_UNAVAILABLE",
+			"The CLI configuration could not be loaded.",
+		)
+		return
+	}
+
+	httpx.WriteJSON(writer, http.StatusOK, plugin)
 }
 
 func parseLegacyID(value string) (int64, bool) {

@@ -459,3 +459,70 @@ func TestCLIStepRepositoryIntegration(t *testing.T) {
 		t.Fatalf("expected missing step to be hidden, got %v", err)
 	}
 }
+
+func TestCLIPluginRepositoryIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS plugins",
+		`CREATE TABLE plugins (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			code JSON NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			idProject INT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL
+		)`,
+		`INSERT INTO plugins
+			(id, name, code, description, idProject, created_at, updated_at, idCostumer)
+		 VALUES
+			(1, 'First plugin', JSON_OBJECT(), 'Own plugin', 10, NULL, NULL, 42),
+			(2, 'Second plugin', JSON_OBJECT(), 'Foreign plugin', 10, NULL, NULL, 99),
+			(3, 'Third plugin', JSON_OBJECT(), 'Other project', 20, NULL, NULL, 42)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare CLI plugin fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewCLIPluginRepository(database)
+	plugins, err := repository.ListPlugins(ctx, 42, 10)
+	if err != nil {
+		t.Fatalf("ListPlugins() returned an error: %v", err)
+	}
+	if len(plugins) != 1 || plugins[0].ID != 1 || plugins[0].IDCostumer != 42 || plugins[0].IDProject != 10 || plugins[0].Code != "{}" {
+		t.Fatalf("unexpected plugin-list payload: %#v", plugins)
+	}
+
+	emptyPlugins, err := repository.ListPlugins(ctx, 42, 999)
+	if err != nil {
+		t.Fatalf("ListPlugins() for empty project returned an error: %v", err)
+	}
+	if len(emptyPlugins) != 0 {
+		t.Fatalf("expected an empty plugin list, got %#v", emptyPlugins)
+	}
+
+	plugin, err := repository.GetPlugin(ctx, 42, 1)
+	if err != nil {
+		t.Fatalf("GetPlugin() returned an error: %v", err)
+	}
+	if plugin.ID != 1 || plugin.IDCostumer != 42 || plugin.IDProject != 10 || plugin.Code != "{}" {
+		t.Fatalf("unexpected plugin payload: %#v", plugin)
+	}
+
+	_, err = repository.GetPlugin(ctx, 42, 2)
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant plugin to be hidden, got %v", err)
+	}
+
+	_, err = repository.GetPlugin(ctx, 42, 999)
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected missing plugin to be hidden, got %v", err)
+	}
+}

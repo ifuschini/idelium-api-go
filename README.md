@@ -93,6 +93,8 @@ The Go-owned CLI test read path is documented in
 [docs/operations/cli-test-reads.md](docs/operations/cli-test-reads.md).
 The Go-owned CLI step read path is documented in
 [docs/operations/cli-step-reads.md](docs/operations/cli-step-reads.md).
+The Go-owned CLI plugin read paths are documented in
+[docs/operations/cli-plugin-reads.md](docs/operations/cli-plugin-reads.md).
 
 ## Configuration
 

@@ -130,6 +130,36 @@ func (fakeStepRepository) GetStep(ctx context.Context, customerID int64, stepID 
 	}, nil
 }
 
+type fakePluginRepository struct{}
+
+func (fakePluginRepository) ListPlugins(ctx context.Context, customerID int64, projectID int64) ([]cliapi.Plugin, error) {
+	if customerID != 42 || projectID != 3 {
+		return []cliapi.Plugin{}, nil
+	}
+	return []cliapi.Plugin{{
+		ID:          14,
+		Name:        "python wrapper",
+		Code:        "{}",
+		Description: "Plugin manifest",
+		IDProject:   3,
+		IDCostumer:  42,
+	}}, nil
+}
+
+func (fakePluginRepository) GetPlugin(ctx context.Context, customerID int64, pluginID int64) (cliapi.Plugin, error) {
+	if customerID != 42 || pluginID != 14 {
+		return cliapi.Plugin{}, cliapi.ErrNotFound
+	}
+	return cliapi.Plugin{
+		ID:          14,
+		Name:        "python wrapper",
+		Code:        "{}",
+		Description: "Plugin manifest",
+		IDProject:   3,
+		IDCostumer:  42,
+	}, nil
+}
+
 func testRouter(logger *slog.Logger) http.Handler {
 	return NewRouter(
 		logger,
@@ -140,6 +170,7 @@ func testRouter(logger *slog.Logger) http.Handler {
 		fakeTestCycleRepository{},
 		fakeTestRepository{},
 		fakeStepRepository{},
+		fakePluginRepository{},
 	)
 }
 
@@ -408,6 +439,59 @@ func TestRouterHidesForeignCLIStep(t *testing.T) {
 	router := testRouter(logger)
 	response := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/ideliumcl/step/13", nil)
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"message":"Invalid id"}` {
+		t.Fatalf("unexpected body: %s", response.Body.String())
+	}
+}
+
+func TestRouterReturnsCLIPluginsWithLegacyKey(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/ideliumcl/plugins/3", nil)
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"id":14`) ||
+		!strings.Contains(response.Body.String(), `"idCostumer":42`) {
+		t.Fatalf("CLI plugin-list response missing expected fields: %s", response.Body.String())
+	}
+}
+
+func TestRouterReturnsCLIPluginWithLegacyKey(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/ideliumcl/plugin/14", nil)
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"id":14`) ||
+		!strings.Contains(response.Body.String(), `"idCostumer":42`) {
+		t.Fatalf("CLI plugin response missing expected fields: %s", response.Body.String())
+	}
+}
+
+func TestRouterHidesForeignCLIPlugin(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/ideliumcl/plugin/15", nil)
 	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
 
 	router.ServeHTTP(response, request)
