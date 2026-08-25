@@ -1,0 +1,76 @@
+# Platform brand read migration
+
+Wave 3 moves the read-only device brand catalog endpoint from Laravel to the Go
+API while keeping brand mutations on Laravel for Wave 6.
+
+## Owned route
+
+| Method | Public path | Go handler | Rollout status |
+| --- | --- | --- | --- |
+| `GET` | `/api/admin/platforms/brands` | `platforms.Handler.Brands` | `go-owned` |
+
+`POST` and `PUT` on `/api/admin/platforms/brands` remain `laravel-owned`
+because they mutate the catalog and require the Wave 6 mutation contract.
+
+## Data access contract
+
+The Go route preserves Laravel's `EnterpriseGridResponse` behavior:
+
+- without `page` or `pageSize`, the response is the legacy array of brand rows;
+- with `page` or `pageSize`, the response is `{ "data": [...], "meta": {...} }`;
+- each row exposes `id`, `brand`, `created_at`, and `updated_at`;
+- `sort` is allowlisted to `id`, `brand`, `created_at`, and `updated_at`;
+- `direction` is bounded to `asc` or `desc`;
+- `pageSize` is bounded to the Laravel-compatible `1..100` range;
+- `search` is trimmed and limited to 200 characters before applying `LIKE`;
+- `filter[id]` accepts positive numeric identifiers only.
+
+The repository reads the existing Laravel-compatible table:
+
+```sql
+SELECT id, brand, created_at, updated_at
+FROM brand_devices
+WHERE ...
+ORDER BY <allowlisted-column> <allowlisted-direction>
+```
+
+Only allowlisted column names and directions are interpolated into SQL. Runtime
+values are passed as bound parameters.
+
+## Tenant isolation note
+
+Device brands are global platform catalog metadata. The route remains
+browser-session protected and keeps existing tenant-context metadata, but the
+rows are not tenant-owned resources. Tenant ownership is enforced when a brand is
+used by project-scoped platform targets or execution records.
+
+## Contract and smoke evidence
+
+Ownership is declared in
+[`docs/contracts/route-rollout-overrides.json`](../contracts/route-rollout-overrides.json).
+The generated compatibility backlog, ownership matrix, and Web smoke target plan
+route the safe `GET` to `IDELIUM_WEB_SMOKE_GO_BASE_URL`, while `POST` and `PUT`
+continue to target Laravel.
+
+Required verification:
+
+```sh
+make openapi-check
+make smoke-targets-check
+python3 -m unittest discover -s tests -p 'test_*.py'
+```
+
+`make verify` remains the complete local gate when Go is installed.
+
+## Rollback
+
+Rollback is route-level:
+
+1. Change `GET|HEAD /api/admin/platforms/brands` in
+   `docs/contracts/route-rollout-overrides.json` from `go-owned` back to
+   `laravel-owned`, or remove the override.
+2. Regenerate the compatibility backlog, ownership matrix, and smoke targets.
+3. Route `GET /api/admin/platforms/brands` back to Laravel at the gateway.
+
+No database migration is required because the Go route reads the existing
+Laravel-compatible `brand_devices` table.

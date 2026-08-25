@@ -15,6 +15,7 @@ type catalogRepositoryStub struct {
 	types     []CatalogItem
 	statuses  []CatalogItem
 	locations LocationPage
+	brands    BrandPage
 	err       error
 }
 
@@ -28,6 +29,10 @@ func (stub catalogRepositoryStub) ListStatuses(context.Context) ([]CatalogItem, 
 
 func (stub catalogRepositoryStub) ListLocations(context.Context, LocationQuery) (LocationPage, error) {
 	return stub.locations, stub.err
+}
+
+func (stub catalogRepositoryStub) ListBrands(context.Context, BrandQuery) (BrandPage, error) {
+	return stub.brands, stub.err
 }
 
 func TestTypesReturnsLegacyArrayShape(t *testing.T) {
@@ -112,6 +117,61 @@ func TestLocationsReturnsPagedGridWhenRequested(t *testing.T) {
 	response := httptest.NewRecorder()
 
 	handler.Locations(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/locations?page=2&pageSize=1&sort=name&direction=desc", nil))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	body := response.Body.String()
+	for _, expected := range []string{`"data"`, `"meta"`, `"page":2`, `"pageSize":1`, `"direction":"desc"`} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("response missing %s: %s", expected, body)
+		}
+	}
+}
+
+func TestBrandsReturnsLegacyArrayWhenUnpaged(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{
+		brands: BrandPage{
+			Data: []BrandItem{{ID: 1, Brand: "Apple"}, {ID: 2, Brand: "Samsung"}},
+		},
+	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+
+	handler.Brands(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/brands", nil))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	body := response.Body.String()
+	for _, expected := range []string{`"id":1`, `"brand":"Apple"`, `"id":2`, `"brand":"Samsung"`} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("response missing %s: %s", expected, body)
+		}
+	}
+	if strings.Contains(body, `"meta"`) {
+		t.Fatalf("unpaged brand response should preserve the legacy array shape: %s", body)
+	}
+}
+
+func TestBrandsReturnsPagedGridWhenRequested(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{
+		brands: BrandPage{
+			Data: []BrandItem{{ID: 2, Brand: "Samsung"}},
+			Meta: BrandPageMeta{
+				Page:        2,
+				PageSize:    1,
+				Total:       2,
+				LastPage:    2,
+				Sort:        "brand",
+				Direction:   "desc",
+				Stale:       false,
+				Partial:     false,
+			},
+		},
+	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+
+	handler.Brands(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/brands?page=2&pageSize=1&sort=brand&direction=desc", nil))
 
 	if response.Code != http.StatusOK {
 		t.Fatalf("expected status 200, got %d", response.Code)

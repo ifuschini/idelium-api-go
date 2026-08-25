@@ -117,6 +117,94 @@ func (repository *PlatformCatalogRepository) ListLocations(ctx context.Context, 
 	return page, nil
 }
 
+// ListBrands returns device brands using the Laravel-compatible grid contract.
+func (repository *PlatformCatalogRepository) ListBrands(ctx context.Context, query platforms.BrandQuery) (platforms.BrandPage, error) {
+	sortColumns := map[string]string{
+		"id":         "id",
+		"brand":      "brand",
+		"created_at": "created_at",
+		"updated_at": "updated_at",
+	}
+	sortColumn, ok := sortColumns[query.Sort]
+	if !ok {
+		sortColumn = "id"
+		query.Sort = "id"
+	}
+	if query.Direction != "desc" {
+		query.Direction = "asc"
+	}
+
+	where, args := gridWhereClause(query.Search, "brand", query.FilterIDs)
+	total, err := repository.countRows(ctx, "brand_devices", where, args)
+	if err != nil {
+		return platforms.BrandPage{}, err
+	}
+
+	sqlQuery := "SELECT id, brand, created_at, updated_at FROM brand_devices" + where + " ORDER BY " + sortColumn + " " + query.Direction
+	if query.IsPaged() {
+		pageSize := query.PageSize
+		if pageSize == 0 {
+			pageSize = 25
+		}
+		page := query.Page
+		if page == 0 {
+			page = 1
+		}
+		args = append(args, pageSize, (page-1)*pageSize)
+		sqlQuery += " LIMIT ? OFFSET ?"
+		query.Page = page
+		query.PageSize = pageSize
+	}
+
+	rows, err := repository.database.QueryContext(ctx, sqlQuery, args...)
+	if err != nil {
+		return platforms.BrandPage{}, fmt.Errorf("query platform brands: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]platforms.BrandItem, 0)
+	for rows.Next() {
+		var item platforms.BrandItem
+		var createdAt sql.NullTime
+		var updatedAt sql.NullTime
+		if err := rows.Scan(&item.ID, &item.Brand, &createdAt, &updatedAt); err != nil {
+			return platforms.BrandPage{}, fmt.Errorf("scan platform brand row: %w", err)
+		}
+		if createdAt.Valid {
+			item.CreatedAt = &createdAt.Time
+		}
+		if updatedAt.Valid {
+			item.UpdatedAt = &updatedAt.Time
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return platforms.BrandPage{}, fmt.Errorf("read platform brand rows: %w", err)
+	}
+
+	page := platforms.BrandPage{Data: items}
+	if query.IsPaged() {
+		lastPage := int((total + int64(query.PageSize) - 1) / int64(query.PageSize))
+		if lastPage == 0 {
+			lastPage = 1
+		}
+		page.Meta = platforms.BrandPageMeta{
+			Page:            query.Page,
+			PageSize:        query.PageSize,
+			Total:           total,
+			LastPage:        lastPage,
+			HasNextPage:     query.Page < lastPage,
+			HasPreviousPage: query.Page > 1,
+			Sort:            query.Sort,
+			Direction:       query.Direction,
+			Stale:           false,
+			Partial:         false,
+		}
+	}
+
+	return page, nil
+}
+
 func (repository *PlatformCatalogRepository) listCatalogItems(ctx context.Context, query string) ([]platforms.CatalogItem, error) {
 	rows, err := repository.database.QueryContext(ctx, query)
 	if err != nil {
@@ -140,23 +228,31 @@ func (repository *PlatformCatalogRepository) listCatalogItems(ctx context.Contex
 }
 
 func (repository *PlatformCatalogRepository) countLocations(ctx context.Context, where string, args []any) (int64, error) {
+	return repository.countRows(ctx, "locations", where, args)
+}
+
+func (repository *PlatformCatalogRepository) countRows(ctx context.Context, table string, where string, args []any) (int64, error) {
 	var total int64
-	if err := repository.database.QueryRowContext(ctx, "SELECT COUNT(*) FROM locations"+where, args...).Scan(&total); err != nil {
-		return 0, fmt.Errorf("count platform locations: %w", err)
+	if err := repository.database.QueryRowContext(ctx, "SELECT COUNT(*) FROM "+table+where, args...).Scan(&total); err != nil {
+		return 0, fmt.Errorf("count platform catalog rows: %w", err)
 	}
 	return total, nil
 }
 
 func locationWhereClause(query platforms.LocationQuery) (string, []any) {
+	return gridWhereClause(query.Search, "name", query.FilterIDs)
+}
+
+func gridWhereClause(search string, searchColumn string, filterIDs []int64) (string, []any) {
 	clauses := make([]string, 0)
 	args := make([]any, 0)
-	if query.Search != "" {
-		clauses = append(clauses, "name LIKE ?")
-		args = append(args, "%"+query.Search+"%")
+	if search != "" {
+		clauses = append(clauses, searchColumn+" LIKE ?")
+		args = append(args, "%"+search+"%")
 	}
-	if len(query.FilterIDs) > 0 {
-		placeholders := make([]string, len(query.FilterIDs))
-		for index, id := range query.FilterIDs {
+	if len(filterIDs) > 0 {
+		placeholders := make([]string, len(filterIDs))
+		for index, id := range filterIDs {
 			placeholders[index] = "?"
 			args = append(args, id)
 		}

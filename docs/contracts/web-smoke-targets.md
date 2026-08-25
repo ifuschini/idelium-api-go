@@ -19,13 +19,14 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | Metric | Value |
 | --- | --- |
 | Routes | 91 |
-| Owners | go: 3, laravel: 88 |
+| Owners | go: 4, laravel: 87 |
 | Execution modes | safe-read: 38, synthetic-mutation: 53 |
 
 ## Routes
 
 | Method | Path | Owner | Target env | Mode | Tenant | Aggregate |
 | --- | --- | --- | --- | --- | --- | --- |
+| `GET` | `/api/admin/platforms/brands` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `GET` | `/api/admin/platforms/locations` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `GET` | `/api/admin/platforms/status` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `GET` | `/api/admin/platforms/types` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
@@ -46,7 +47,6 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | `PUT` | `/api/admin/environments/{idProject}/{environment}` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `environments` |
 | `POST` | `/api/admin/importtest` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `tests` |
 | `POST` | `/api/admin/launchtest` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `test-launches` |
-| `GET` | `/api/admin/platforms/brands` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `POST` | `/api/admin/platforms/brands` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `platform-catalog` |
 | `PUT` | `/api/admin/platforms/brands` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `platform-catalog` |
 | `POST` | `/api/admin/platforms/browsers` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `platform-catalog` |

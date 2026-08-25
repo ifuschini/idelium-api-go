@@ -88,7 +88,7 @@ does not require database restoration or reverse data replication.
 | `POST` | `/api/admin/identity/providers/{identityProvider}/scim/users` | `enterprise-identity` | mutation | laravel | yes | 9 |
 | `POST` | `/api/admin/importtest` | `tests` | mutation | laravel | yes | 6 |
 | `POST` | `/api/admin/launchtest` | `test-launches` | mutation | laravel | yes | 8 |
-| `GET|HEAD` | `/api/admin/platforms/brands` | `platform-catalog` | read | laravel | yes | 3 |
+| `GET|HEAD` | `/api/admin/platforms/brands` | `platform-catalog` | read | go | yes | 3 |
 | `POST` | `/api/admin/platforms/brands` | `platform-catalog` | mutation | laravel | yes | 6 |
 | `PUT` | `/api/admin/platforms/brands` | `platform-catalog` | mutation | laravel | yes | 6 |
 | `POST` | `/api/admin/platforms/browsers` | `platform-catalog` | mutation | laravel | yes | 6 |
