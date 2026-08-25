@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -23,6 +24,8 @@ type catalogRepositoryStub struct {
 	osVersion       OperatingSystemVersionPage
 	browsers        BrowserPage
 	browserVersions BrowserVersionPage
+	managed         ManagedPlatformPage
+	launchTargets   []LaunchTargetItem
 	err             error
 }
 
@@ -60,6 +63,14 @@ func (stub catalogRepositoryStub) ListBrowsers(context.Context, BrowserQuery) (B
 
 func (stub catalogRepositoryStub) ListBrowserVersions(context.Context, BrowserVersionQuery) (BrowserVersionPage, error) {
 	return stub.browserVersions, stub.err
+}
+
+func (stub catalogRepositoryStub) ListManagedPlatforms(context.Context, ManagedPlatformQuery) (ManagedPlatformPage, error) {
+	return stub.managed, stub.err
+}
+
+func (stub catalogRepositoryStub) ListLaunchTargets(context.Context, int64) ([]LaunchTargetItem, error) {
+	return stub.launchTargets, stub.err
 }
 
 func TestTypesReturnsLegacyArrayShape(t *testing.T) {
@@ -541,6 +552,139 @@ func TestBrowserVersionsRejectsInvalidBrowserIdentifier(t *testing.T) {
 	body := response.Body.String()
 	if !strings.Contains(body, "INVALID_BROWSER") {
 		t.Fatalf("stable validation code missing: %s", body)
+	}
+}
+
+func TestManagedPlatformsReturnsPagedGridWhenRequested(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{
+		managed: ManagedPlatformPage{
+			Data: []ManagedPlatformItem{{
+				ID:                 4,
+				Type:               1,
+				Hostname:           "https://node.example:4444",
+				Location:           2,
+				OS:                 3,
+				OSVersion:          4,
+				Brand:              5,
+				Browser:            6,
+				BrandDescription:   "Dell",
+				OSDescription:      "Linux",
+				BrowserDescription: "Chrome",
+				Status:             1,
+			}},
+			Meta: ManagedPlatformPageMeta{
+				Page:      1,
+				PageSize:  25,
+				Total:     1,
+				LastPage:  1,
+				Sort:      "osDescription",
+				Direction: "asc",
+			},
+		},
+	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/manageplatforms/1?page=1&pageSize=25", nil)
+
+	handler.ManagedPlatforms(response, withPathParam(request, "type", "1"))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	body := response.Body.String()
+	for _, expected := range []string{`"data"`, `"hostname":"https://node.example:4444"`, `"browserDescription":"Chrome"`, `"meta"`} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("response missing %s: %s", expected, body)
+		}
+	}
+}
+
+func TestManagedPlatformsRejectsInvalidType(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/manageplatforms/not-a-number", nil)
+
+	handler.ManagedPlatforms(response, withPathParam(request, "type", "not-a-number"))
+
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", response.Code)
+	}
+	if !strings.Contains(response.Body.String(), "INVALID_PLATFORM_TYPE") {
+		t.Fatalf("stable error code missing: %s", response.Body.String())
+	}
+}
+
+func TestLaunchTargetsReturnsSafeTargetList(t *testing.T) {
+	now := time.Date(2026, 8, 25, 10, 0, 0, 0, time.UTC)
+	platformID := int64(9)
+	handler := NewHandler(catalogRepositoryStub{
+		launchTargets: []LaunchTargetItem{{
+			ID:           "platform-9",
+			Name:         "Chrome node",
+			Type:         "platform",
+			Runtime:      "selenium",
+			Capabilities: []string{"browserOverride"},
+			Capacity:     LaunchTargetCapacity{Available: 1, Max: 1, Queued: 0},
+			Health:       "healthy",
+			LastHealthAt: &now,
+			Region:       "eu-west",
+			Hostname:     "https://node.example:4444",
+			Browser:      "chrome",
+			IDPlatform:   &platformID,
+			PlatformID:   &platformID,
+		}},
+	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/launch/targets/7", nil)
+
+	handler.LaunchTargets(response, withPathParam(request, "idProject", "7"))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	body := response.Body.String()
+	for _, expected := range []string{`"id":"platform-9"`, `"runtime":"selenium"`, `"available":1`, `"hostname":"https://node.example:4444"`} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("response missing %s: %s", expected, body)
+		}
+	}
+	if strings.Contains(strings.ToLower(body), "token") || strings.Contains(strings.ToLower(body), "password") {
+		t.Fatalf("launcher target response leaked a sensitive field: %s", body)
+	}
+}
+
+func TestLaunchTargetsRejectsInvalidProject(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/launch/targets/not-a-number", nil)
+
+	handler.LaunchTargets(response, withPathParam(request, "idProject", "not-a-number"))
+
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", response.Code)
+	}
+	if !strings.Contains(response.Body.String(), "INVALID_PROJECT") {
+		t.Fatalf("stable error code missing: %s", response.Body.String())
+	}
+}
+
+func TestLaunchTargetsReturnsSafeUnavailableError(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{
+		err: errors.New("database password rejected"),
+	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/launch/targets/7", nil)
+
+	handler.LaunchTargets(response, withPathParam(request, "idProject", "7"))
+
+	if response.Code != http.StatusInternalServerError {
+		t.Fatalf("expected status 500, got %d", response.Code)
+	}
+	body := response.Body.String()
+	if !strings.Contains(body, "LAUNCH_TARGETS_UNAVAILABLE") {
+		t.Fatalf("stable error code missing: %s", body)
+	}
+	if strings.Contains(body, "password rejected") {
+		t.Fatalf("internal error leaked to client: %s", body)
 	}
 }
 

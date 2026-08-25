@@ -72,6 +72,48 @@ type BrowserVersionItem struct {
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 
+// ManagedPlatformItem is a Laravel-compatible managed execution platform row.
+type ManagedPlatformItem struct {
+	ID                 int64      `json:"id"`
+	Type               int64      `json:"type"`
+	Hostname           string     `json:"hostname"`
+	Location           int64      `json:"location"`
+	OS                 int64      `json:"os"`
+	OSVersion          int64      `json:"osversion"`
+	Brand              int64      `json:"brand"`
+	Browser            int64      `json:"browser"`
+	BrandDescription   string     `json:"brandDescription"`
+	OSDescription      string     `json:"osDescription"`
+	BrowserDescription string     `json:"browserDescription"`
+	Status             int64      `json:"status"`
+	CreatedAt          *time.Time `json:"created_at"`
+	UpdatedAt          *time.Time `json:"updated_at"`
+}
+
+// LaunchTargetCapacity describes bounded launcher capacity exposed to Web clients.
+type LaunchTargetCapacity struct {
+	Available int `json:"available"`
+	Max       int `json:"max"`
+	Queued    int `json:"queued"`
+}
+
+// LaunchTargetItem describes a safe launcher target candidate.
+type LaunchTargetItem struct {
+	ID           string               `json:"id"`
+	Name         string               `json:"name"`
+	Type         string               `json:"type"`
+	Runtime      string               `json:"runtime"`
+	Capabilities []string             `json:"capabilities"`
+	Capacity     LaunchTargetCapacity `json:"capacity"`
+	Health       string               `json:"health"`
+	LastHealthAt *time.Time           `json:"lastHealthAt,omitempty"`
+	Region       string               `json:"region,omitempty"`
+	Hostname     string               `json:"hostname,omitempty"`
+	Browser      string               `json:"browser,omitempty"`
+	IDPlatform   *int64               `json:"idPlatform,omitempty"`
+	PlatformID   *int64               `json:"platformId,omitempty"`
+}
+
 // LocationQuery contains the bounded legacy grid query options.
 type LocationQuery struct {
 	Page      int
@@ -189,6 +231,23 @@ func (query BrowserVersionQuery) IsPaged() bool {
 	return query.Paged
 }
 
+// ManagedPlatformQuery contains the bounded managed-platform grid query options.
+type ManagedPlatformQuery struct {
+	TypeID    int64
+	Page      int
+	PageSize  int
+	Paged     bool
+	Search    string
+	Sort      string
+	Direction string
+	FilterIDs []int64
+}
+
+// IsPaged reports whether the legacy endpoint should return data and meta.
+func (query ManagedPlatformQuery) IsPaged() bool {
+	return query.Paged
+}
+
 // LocationPage is the paginated legacy grid response.
 type LocationPage struct {
 	Data []LocationItem   `json:"data"`
@@ -229,6 +288,12 @@ type BrowserPage struct {
 type BrowserVersionPage struct {
 	Data []BrowserVersionItem   `json:"data"`
 	Meta BrowserVersionPageMeta `json:"meta"`
+}
+
+// ManagedPlatformPage is the paginated legacy managed-platform response.
+type ManagedPlatformPage struct {
+	Data []ManagedPlatformItem   `json:"data"`
+	Meta ManagedPlatformPageMeta `json:"meta"`
 }
 
 // LocationPageMeta contains Laravel EnterpriseGridResponse-compatible metadata.
@@ -329,6 +394,20 @@ type BrowserVersionPageMeta struct {
 	Partial         bool   `json:"partial"`
 }
 
+// ManagedPlatformPageMeta contains Laravel EnterpriseGridResponse-compatible metadata.
+type ManagedPlatformPageMeta struct {
+	Page            int    `json:"page"`
+	PageSize        int    `json:"pageSize"`
+	Total           int64  `json:"total"`
+	LastPage        int    `json:"lastPage"`
+	HasNextPage     bool   `json:"hasNextPage"`
+	HasPreviousPage bool   `json:"hasPreviousPage"`
+	Sort            string `json:"sort"`
+	Direction       string `json:"direction"`
+	Stale           bool   `json:"stale"`
+	Partial         bool   `json:"partial"`
+}
+
 // CatalogRepository reads global platform reference data.
 type CatalogRepository interface {
 	ListTypes(ctx context.Context) ([]CatalogItem, error)
@@ -340,4 +419,6 @@ type CatalogRepository interface {
 	ListOperatingSystemVersions(ctx context.Context, query OperatingSystemVersionQuery) (OperatingSystemVersionPage, error)
 	ListBrowsers(ctx context.Context, query BrowserQuery) (BrowserPage, error)
 	ListBrowserVersions(ctx context.Context, query BrowserVersionQuery) (BrowserVersionPage, error)
+	ListManagedPlatforms(ctx context.Context, query ManagedPlatformQuery) (ManagedPlatformPage, error)
+	ListLaunchTargets(ctx context.Context, projectID int64) ([]LaunchTargetItem, error)
 }

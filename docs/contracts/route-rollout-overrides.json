@@ -6,6 +6,7 @@
     "GET|HEAD /api/admin/platforms/browsers/{idOs}": "go-owned",
     "GET|HEAD /api/admin/platforms/brands": "go-owned",
     "GET|HEAD /api/admin/platforms/locations": "go-owned",
+    "GET|HEAD /api/admin/platforms/manageplatforms/{type}": "go-owned",
     "GET|HEAD /api/admin/platforms/models/{idBrand}": "go-owned",
     "GET|HEAD /api/admin/platforms/os/{idType}": "go-owned",
     "GET|HEAD /api/admin/platforms/osversion/{idOs}": "go-owned",

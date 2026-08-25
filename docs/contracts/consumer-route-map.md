@@ -203,7 +203,6 @@ These references are migration gaps, not active Laravel contracts.
 | --- | --- | --- |
 | `idelium-web` | `/api/admin/launch` | Canonical launch endpoint referenced by the Web compatibility layer but not registered by Laravel. |
 | `idelium-web` | `/api/admin/launch/preflight` | Canonical preflight endpoint referenced by the Web compatibility layer but not registered by Laravel. |
-| `idelium-web` | `/api/admin/launch/targets` | Canonical launch-target endpoint referenced by the Web compatibility layer but not registered by Laravel. |
 | `idelium-docker-wiki` | `/api/v1` | Planned versioned API prefix documented by the roadmap; no current Laravel route is registered under this prefix. |
 
 ## Governance

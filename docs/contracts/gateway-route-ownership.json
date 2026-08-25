@@ -46,6 +46,14 @@
       "fallback_owner": "laravel"
     },
     {
+      "route_id": "GET|HEAD /api/admin/platforms/manageplatforms/{type}",
+      "methods": ["GET", "HEAD"],
+      "public_path": "/api/admin/platforms/manageplatforms/{type}",
+      "go_path": "/admin/platforms/manageplatforms/{type}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
       "route_id": "GET|HEAD /api/admin/platforms/models/{idBrand}",
       "methods": ["GET", "HEAD"],
       "public_path": "/api/admin/platforms/models/{idBrand}",

@@ -25,7 +25,7 @@ class OpenAPIServerContractsTest(unittest.TestCase):
         self.assertEqual(self.generated, MODULE.render(self.operations))
 
     def test_generated_contract_contains_every_openapi_operation(self):
-        self.assertEqual(171, len(self.operations))
+        self.assertEqual(172, len(self.operations))
         for operation in self.operations:
             with self.subTest(operation=operation["operation_id"]):
                 self.assertIn(

@@ -30,6 +30,12 @@
       "actual_fixture": "testdata/golden/platform-locations-go.fixture.json"
     },
     {
+      "route_id": "GET|HEAD /api/admin/platforms/manageplatforms/{type}",
+      "method": "GET",
+      "expected_fixture": "testdata/golden/platform-managed-platforms.fixture.json",
+      "actual_fixture": "testdata/golden/platform-managed-platforms-go.fixture.json"
+    },
+    {
       "route_id": "GET|HEAD /api/admin/platforms/models/{idBrand}",
       "method": "GET",
       "expected_fixture": "testdata/golden/platform-models.fixture.json",

@@ -494,6 +494,119 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /admin/launch/targets/{idProject}:
+    get:
+      operationId: listLaunchTargets
+      summary: List launcher target candidates
+      description: >-
+        Returns safe launcher target candidates used by the Web launcher setup.
+        The response includes the generic platform pool and configured managed
+        platforms without exposing credentials, headers, cookies, or session data.
+      tags: [Launcher Configuration]
+      x-idelium-laravel-route: "/api/admin/launch/targets/{idProject}"
+      x-idelium-controller: "GoLauncherConfigurationController@targets"
+      x-idelium-current-owner: "go-application"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      x-idelium-consumers: ["idelium-web"]
+      parameters:
+        - name: idProject
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: Safe launcher target candidates.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationID"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LaunchTarget"
+        "400":
+          description: The project identifier is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          description: Launcher targets are unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /admin/platforms/manageplatforms/{type}:
+    get:
+      operationId: getAdminPlatformsManageplatformsType
+      summary: List managed launcher platforms
+      description: >-
+        Returns the Laravel-compatible managed platform grid used by launcher
+        setup. The read is bounded, redaction-safe, and preserves the legacy
+        array response when pagination query parameters are absent.
+      tags: [Platform Catalog]
+      x-idelium-laravel-route: "/api/admin/platforms/manageplatforms/{type}"
+      x-idelium-controller: "App\\Http\\Controllers\\PlatformController@index"
+      x-idelium-current-owner: "go-application"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      x-idelium-consumers: ["idelium-web"]
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: Laravel-compatible managed-platform grid or array.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationID"
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/ManagedPlatform"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ManagedPlatform"
+                      meta:
+                        $ref: "#/components/schemas/GridMeta"
+        "400":
+          description: The platform type identifier is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          description: The platform catalog is unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS
   /:
     get:
@@ -1946,37 +2059,6 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "422":
           $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/platforms/manageplatforms/{type}:
-    get:
-      operationId: getAdminPlatformsManageplatformsType
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/platforms/manageplatforms/{type}"
-      x-idelium-controller: "App\\Http\\Controllers\\PlatformController@index"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: ["idelium-web"]
-      parameters:
-        - name: type
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
   /admin/platforms/manageplatforms/{type}/{id}:
@@ -6561,3 +6643,137 @@ components:
           format: int64
         name:
           type: string
+    GridMeta:
+      type: object
+      required: [page, pageSize, total, lastPage, hasNextPage, hasPreviousPage, sort, direction, stale, partial]
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+          format: int64
+        lastPage:
+          type: integer
+        hasNextPage:
+          type: boolean
+        hasPreviousPage:
+          type: boolean
+        sort:
+          type: string
+        direction:
+          type: string
+          enum: [asc, desc]
+        stale:
+          type: boolean
+        partial:
+          type: boolean
+    ManagedPlatform:
+      type: object
+      required:
+        - id
+        - type
+        - hostname
+        - location
+        - os
+        - osversion
+        - brand
+        - browser
+        - brandDescription
+        - osDescription
+        - browserDescription
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+        type:
+          type: integer
+          format: int64
+        hostname:
+          type: string
+        location:
+          type: integer
+          format: int64
+        os:
+          type: integer
+          format: int64
+        osversion:
+          type: integer
+          format: int64
+        brand:
+          type: integer
+          format: int64
+        browser:
+          type: integer
+          format: int64
+        brandDescription:
+          type: string
+        osDescription:
+          type: string
+        browserDescription:
+          type: string
+        status:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    LaunchTarget:
+      type: object
+      required: [id, name, type, runtime, capabilities, capacity, health]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [platform-pool, platform]
+        runtime:
+          type: string
+          enum: [selenium, appium]
+        capabilities:
+          type: array
+          items:
+            type: string
+        capacity:
+          type: object
+          required: [available, max, queued]
+          properties:
+            available:
+              type: integer
+              minimum: 0
+            max:
+              type: integer
+              minimum: 1
+            queued:
+              type: integer
+              minimum: 0
+        health:
+          type: string
+          enum: [healthy, disabled]
+        lastHealthAt:
+          type: string
+          format: date-time
+          nullable: true
+        region:
+          type: string
+        hostname:
+          type: string
+        browser:
+          type: string
+        idPlatform:
+          type: integer
+          format: int64
+          nullable: true
+        platformId:
+          type: integer
+          format: int64
+          nullable: true

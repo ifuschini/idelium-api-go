@@ -29,6 +29,8 @@ type ServerInterface interface {
 	GetCLIPlugin(http.ResponseWriter, *http.Request)
 	ListCLIEnvironments(http.ResponseWriter, *http.Request)
 	GetCLIEnvironment(http.ResponseWriter, *http.Request)
+	ListLaunchTargets(http.ResponseWriter, *http.Request)
+	GetAdminPlatformsManageplatformsType(http.ResponseWriter, *http.Request)
 	Get(http.ResponseWriter, *http.Request)
 	GetAdminAccounts(http.ResponseWriter, *http.Request)
 	PostAdminAccounts(http.ResponseWriter, *http.Request)
@@ -72,7 +74,6 @@ type ServerInterface interface {
 	PutAdminPlatformsLocations(http.ResponseWriter, *http.Request)
 	PostAdminPlatformsManageplatforms(http.ResponseWriter, *http.Request)
 	PutAdminPlatformsManageplatforms(http.ResponseWriter, *http.Request)
-	GetAdminPlatformsManageplatformsType(http.ResponseWriter, *http.Request)
 	DeleteAdminPlatformsManageplatformsTypeId(http.ResponseWriter, *http.Request)
 	PostAdminPlatformsModels(http.ResponseWriter, *http.Request)
 	PutAdminPlatformsModels(http.ResponseWriter, *http.Request)
@@ -313,6 +314,28 @@ var Operations = []Operation{
 		TrustPath:          "api-key",
 		TenantContext:      true,
 		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/launch/targets/{idProject}",
+		OperationID:        "listLaunchTargets",
+		Tags:               []string{"Launcher Configuration"},
+		LaravelRoute:       "/api/admin/launch/targets/{idProject}",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          []string{"idelium-web"},
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/platforms/manageplatforms/{type}",
+		OperationID:        "getAdminPlatformsManageplatformsType",
+		Tags:               []string{"Platform Catalog"},
+		LaravelRoute:       "/api/admin/platforms/manageplatforms/{type}",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          []string{"idelium-web"},
 	},
 	{
 		Method:             "GET",
@@ -782,17 +805,6 @@ var Operations = []Operation{
 		OperationID:        "putAdminPlatformsManageplatforms",
 		Tags:               []string{"Laravel Compatibility"},
 		LaravelRoute:       "/api/admin/platforms/manageplatforms",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          []string{"idelium-web"},
-	},
-	{
-		Method:             "GET",
-		Path:               "/admin/platforms/manageplatforms/{type}",
-		OperationID:        "getAdminPlatformsManageplatformsType",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/platforms/manageplatforms/{type}",
 		AuthenticationMode: "browser-session",
 		TrustPath:          "browser-session",
 		TenantContext:      true,

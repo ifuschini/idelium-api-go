@@ -33,6 +33,10 @@ CATALOG_FIXTURE_PAIRS = {
         "platform-locations.fixture.json",
         "platform-locations-go.fixture.json",
     ),
+    "GET|HEAD /api/admin/platforms/manageplatforms/{type}": (
+        "platform-managed-platforms.fixture.json",
+        "platform-managed-platforms-go.fixture.json",
+    ),
     "GET|HEAD /api/admin/platforms/models/{idBrand}": (
         "platform-models.fixture.json",
         "platform-models-go.fixture.json",

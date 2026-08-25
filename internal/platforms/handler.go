@@ -291,6 +291,73 @@ func (handler *Handler) BrowserVersions(writer http.ResponseWriter, request *htt
 	httpx.WriteJSON(writer, http.StatusOK, page)
 }
 
+// ManagedPlatforms returns the legacy managed-platform grid contract scoped to a platform type.
+func (handler *Handler) ManagedPlatforms(writer http.ResponseWriter, request *http.Request) {
+	typeID, err := parsePositivePathID(chi.URLParam(request, "type"))
+	if err != nil {
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusBadRequest,
+			"INVALID_PLATFORM_TYPE",
+			"The platform type identifier must be a positive integer.",
+		)
+		return
+	}
+
+	query := parseManagedPlatformQuery(request)
+	query.TypeID = typeID
+	page, err := handler.repository.ListManagedPlatforms(request.Context(), query)
+	if err != nil {
+		handler.logger.ErrorContext(request.Context(), "list managed platforms failed", "error", err)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"PLATFORM_CATALOG_UNAVAILABLE",
+			"The platform catalog could not be loaded.",
+		)
+		return
+	}
+
+	if !query.IsPaged() {
+		httpx.WriteJSON(writer, http.StatusOK, page.Data)
+		return
+	}
+
+	httpx.WriteJSON(writer, http.StatusOK, page)
+}
+
+// LaunchTargets returns safe launcher target candidates for the Web launcher setup.
+func (handler *Handler) LaunchTargets(writer http.ResponseWriter, request *http.Request) {
+	projectID, err := parsePositivePathID(chi.URLParam(request, "idProject"))
+	if err != nil {
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusBadRequest,
+			"INVALID_PROJECT",
+			"The project identifier must be a positive integer.",
+		)
+		return
+	}
+
+	targets, err := handler.repository.ListLaunchTargets(request.Context(), projectID)
+	if err != nil {
+		handler.logger.ErrorContext(request.Context(), "list launcher targets failed", "error", err)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"LAUNCH_TARGETS_UNAVAILABLE",
+			"The launcher targets could not be loaded.",
+		)
+		return
+	}
+
+	httpx.WriteJSON(writer, http.StatusOK, targets)
+}
+
 func parseLocationQuery(request *http.Request) LocationQuery {
 	values := request.URL.Query()
 	sort := values.Get("sort")
@@ -426,6 +493,38 @@ func parseBrowserVersionQuery(request *http.Request) BrowserVersionQuery {
 	_, hasPage := values["page"]
 	_, hasPageSize := values["pageSize"]
 	query := BrowserVersionQuery{
+		Paged:     hasPage || hasPageSize,
+		Search:    boundedString(values.Get("search"), 200),
+		Sort:      sort,
+		Direction: direction,
+		FilterIDs: parseIDFilter(values.Get("filter[id]")),
+	}
+	if hasPage {
+		query.Page = boundedInt(values.Get("page"), 1, 1, 1<<31-1)
+	}
+	if hasPageSize {
+		query.PageSize = boundedInt(values.Get("pageSize"), 1, 1, 100)
+	}
+	return query
+}
+
+func parseManagedPlatformQuery(request *http.Request) ManagedPlatformQuery {
+	values := request.URL.Query()
+	sort := values.Get("sort")
+	switch sort {
+	case "hostname", "brandDescription", "osDescription", "browserDescription", "status", "created_at", "updated_at":
+	default:
+		sort = "osDescription"
+	}
+
+	direction := strings.ToLower(values.Get("direction"))
+	if direction != "desc" {
+		direction = "asc"
+	}
+
+	_, hasPage := values["page"]
+	_, hasPageSize := values["pageSize"]
+	query := ManagedPlatformQuery{
 		Paged:     hasPage || hasPageSize,
 		Search:    boundedString(values.Get("search"), 200),
 		Sort:      sort,

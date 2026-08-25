@@ -1,0 +1,93 @@
+{
+  "fixtureVersion": "1.0",
+  "id": "platform-managed-platforms-go-authorized",
+  "description": "Synthetic authorized Go response for managed launcher platforms scoped to a platform type.",
+  "source": {
+    "runtime": "go",
+    "repository": "idelium/idelium-api-go",
+    "revision": "0000000000000000000000000000000000000000",
+    "capturedAt": "2026-01-01T00:00:00Z",
+    "routeInventoryDigestSha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9"
+  },
+  "route": {
+    "method": "GET",
+    "path": "/api/admin/platforms/manageplatforms/1",
+    "trustPath": "browser-session",
+    "tenantOwned": true
+  },
+  "context": {
+    "tenant": { "id": "fixture-tenant-alpha", "synthetic": true },
+    "actor": { "id": "fixture-actor-admin", "synthetic": true }
+  },
+  "request": {
+    "headers": {
+      "Accept": "application/json",
+      "X-Correlation-ID": "fixture-correlation-platform-managed-platforms"
+    },
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "body": [
+      {
+        "id": 1,
+        "type": 1,
+        "hostname": "https://chrome-node.example:4444",
+        "location": 1,
+        "os": 1,
+        "osversion": 1,
+        "brand": 1,
+        "browser": 1,
+        "brandDescription": "Dell",
+        "osDescription": "Linux",
+        "browserDescription": "chrome",
+        "status": 1,
+        "created_at": null,
+        "updated_at": "2026-08-25T10:00:00Z"
+      },
+      {
+        "id": 2,
+        "type": 1,
+        "hostname": "https://firefox-node.example:4444",
+        "location": 2,
+        "os": 1,
+        "osversion": 1,
+        "brand": 1,
+        "browser": 2,
+        "brandDescription": "Dell",
+        "osDescription": "Linux",
+        "browserDescription": "firefox",
+        "status": 2,
+        "created_at": null,
+        "updated_at": "2026-08-25T10:00:00Z"
+      }
+    ]
+  },
+  "normalizations": [
+    {
+      "path": "$.request.headers.X-Correlation-ID",
+      "rule": "Replace the generated correlation identifier with a stable fixture value."
+    },
+    {
+      "path": "$.source.capturedAt",
+      "rule": "Use a fixed UTC timestamp."
+    },
+    {
+      "path": "$.source.revision",
+      "rule": "Use a zero revision until the route has a captured Go owner commit."
+    }
+  ],
+  "redactions": [
+    {
+      "path": "$.request.headers.Authorization",
+      "rule": "Remove the browser credential before the fixture is persisted."
+    },
+    {
+      "path": "$.request.headers.Cookie",
+      "rule": "Remove all session and CSRF cookies before the fixture is persisted."
+    }
+  ],
+  "sideEffects": []
+}

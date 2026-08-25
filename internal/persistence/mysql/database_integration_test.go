@@ -141,6 +141,7 @@ func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 		"DROP TABLE IF EXISTS version_os",
 		"DROP TABLE IF EXISTS browsers",
 		"DROP TABLE IF EXISTS version_browsers",
+		"DROP TABLE IF EXISTS platforms",
 		"CREATE TABLE types (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL)",
 		"CREATE TABLE statuses (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL)",
 		"CREATE TABLE locations (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
@@ -150,6 +151,22 @@ func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 		"CREATE TABLE version_os (id BIGINT PRIMARY KEY AUTO_INCREMENT, version VARCHAR(255) NOT NULL, idOs INT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
 		"CREATE TABLE browsers (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL, idOs INT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
 		"CREATE TABLE version_browsers (id BIGINT PRIMARY KEY AUTO_INCREMENT, version VARCHAR(255) NOT NULL, idBrowser INT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
+		`CREATE TABLE platforms (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			type INT NOT NULL,
+			hostname VARCHAR(255) NOT NULL,
+			location INT NOT NULL,
+			os INT NOT NULL,
+			osversion INT NOT NULL,
+			brand INT NOT NULL,
+			browser INT NOT NULL,
+			brandDescription VARCHAR(255) NOT NULL,
+			osDescription VARCHAR(255) NOT NULL,
+			browserDescription VARCHAR(255) NOT NULL,
+			status INT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
 		"INSERT INTO types (id, name) VALUES (2, 'mobile'), (1, 'desktop')",
 		"INSERT INTO statuses (id, name) VALUES (2, 'busy'), (1, 'free')",
 		"INSERT INTO locations (id, name, created_at, updated_at) VALUES (2, 'us-east', NULL, NULL), (1, 'eu-west', NULL, NULL)",
@@ -159,6 +176,12 @@ func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 		"INSERT INTO version_os (id, version, idOs, created_at, updated_at) VALUES (3, '13', 2, NULL, NULL), (2, '15', 1, NULL, NULL), (1, '14', 1, NULL, NULL)",
 		"INSERT INTO browsers (id, name, idOs, created_at, updated_at) VALUES (3, 'safari', 2, NULL, NULL), (2, 'firefox', 1, NULL, NULL), (1, 'chrome', 1, NULL, NULL)",
 		"INSERT INTO version_browsers (id, version, idBrowser, created_at, updated_at) VALUES (3, '17', 2, NULL, NULL), (2, '125', 1, NULL, NULL), (1, '124', 1, NULL, NULL)",
+		`INSERT INTO platforms
+			(id, type, hostname, location, os, osversion, brand, browser, brandDescription, osDescription, browserDescription, status, created_at, updated_at)
+		 VALUES
+			(1, 1, 'https://chrome-node.example:4444', 1, 1, 1, 1, 1, 'Dell', 'Linux', 'chrome', 1, NULL, '2026-08-25 10:00:00'),
+			(2, 1, 'https://firefox-node.example:4444', 2, 1, 1, 1, 2, 'Dell', 'Linux', 'firefox', 2, NULL, '2026-08-25 10:00:00'),
+			(3, 2, 'https://mobile-node.example:4723', 1, 3, 3, 2, 3, 'Samsung', 'Android', 'appium', 1, NULL, '2026-08-25 10:00:00')`,
 	} {
 		if _, err := database.ExecContext(ctx, statement); err != nil {
 			t.Fatalf("prepare catalog fixture %q: %v", statement, err)
@@ -245,6 +268,34 @@ func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	expectedBrowserVersions := []platforms.BrowserVersionItem{{ID: 1, Version: "124", IDBrowser: 1}, {ID: 2, Version: "125", IDBrowser: 1}}
 	if !reflect.DeepEqual(browserVersions.Data, expectedBrowserVersions) {
 		t.Fatalf("unexpected browser versions: %#v", browserVersions.Data)
+	}
+
+	managedPlatforms, err := repository.ListManagedPlatforms(ctx, platforms.ManagedPlatformQuery{TypeID: 1})
+	if err != nil {
+		t.Fatalf("ListManagedPlatforms() returned an error: %v", err)
+	}
+	if len(managedPlatforms.Data) != 2 || managedPlatforms.Data[0].Hostname != "https://chrome-node.example:4444" {
+		t.Fatalf("unexpected managed platforms: %#v", managedPlatforms.Data)
+	}
+
+	launchTargets, err := repository.ListLaunchTargets(ctx, 10)
+	if err != nil {
+		t.Fatalf("ListLaunchTargets() returned an error: %v", err)
+	}
+	if len(launchTargets) != 4 {
+		t.Fatalf("expected pool plus three managed launch targets, got %#v", launchTargets)
+	}
+	if launchTargets[0].ID != "platform-pool" || launchTargets[0].Runtime != "selenium" {
+		t.Fatalf("default platform-pool target missing or malformed: %#v", launchTargets[0])
+	}
+	if launchTargets[1].ID != "platform-1" || launchTargets[1].Health != "healthy" || launchTargets[1].Capacity.Available != 1 {
+		t.Fatalf("healthy platform target missing expected capacity: %#v", launchTargets[1])
+	}
+	if launchTargets[2].ID != "platform-2" || launchTargets[2].Health != "disabled" || launchTargets[2].Capacity.Available != 0 {
+		t.Fatalf("disabled platform target missing expected capacity: %#v", launchTargets[2])
+	}
+	if launchTargets[3].ID != "platform-3" || launchTargets[3].Runtime != "appium" {
+		t.Fatalf("mobile platform target missing appium runtime: %#v", launchTargets[3])
 	}
 }
 

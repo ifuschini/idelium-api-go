@@ -1,9 +1,11 @@
 # Shadow Read Comparison
 
-Wave 3 uses an offline shadow-read comparison before live gateway mirroring. The
-comparison loads the sanitized Laravel golden fixture and the sanitized Go
-golden fixture for every Go-owned safe read, then applies the same
-path-only-safe comparator used by the differential harness.
+Go-owned safe reads use an offline shadow-read comparison before live gateway
+mirroring. The comparison loads the sanitized Laravel golden fixture and the
+sanitized Go golden fixture for every Go-owned safe read, then applies the same
+path-only-safe comparator used by the differential harness. The plan started
+with Wave 3 platform catalog reads and now also covers the Wave 6 managed
+platform read used by launcher configuration.
 
 Run:
 

@@ -24,6 +24,11 @@
       "evidence": "Implemented by the platform catalog read slice and covered by Laravel-Go golden fixture comparison."
     },
     {
+      "route_id": "GET|HEAD /api/admin/platforms/manageplatforms/{type}",
+      "owner": "go-owned",
+      "evidence": "Implemented by the Wave 6 launcher configuration read slice and covered by MySQL integration tests."
+    },
+    {
       "route_id": "GET|HEAD /api/admin/platforms/locations",
       "owner": "go-owned",
       "evidence": "Implemented by the platform catalog read slice and covered by Laravel-Go golden fixture comparison."
@@ -54,13 +59,7 @@
       "evidence": "Implemented by the platform catalog read slice and covered by Laravel-Go golden fixture comparison."
     }
   ],
-  "deferred_candidates": [
-    {
-      "route_id": "GET|HEAD /api/admin/platforms/manageplatforms/{type}",
-      "owner": "laravel-owned",
-      "reason": "This route is a tenant-scoped management grid paired with POST, PUT, and DELETE platform management mutations. It is not a standalone lookup and must move with the Wave 6 platform catalog mutation aggregate so validation, authorization, rollback, and differential coverage remain coherent."
-    }
-  ],
+  "deferred_candidates": [],
   "out_of_scope_read_groups": [
     {
       "group": "CLI configuration reads",

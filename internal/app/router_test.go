@@ -72,6 +72,24 @@ func (fakeCatalogRepository) ListBrowserVersions(context.Context, platforms.Brow
 	}, nil
 }
 
+func (fakeCatalogRepository) ListManagedPlatforms(context.Context, platforms.ManagedPlatformQuery) (platforms.ManagedPlatformPage, error) {
+	return platforms.ManagedPlatformPage{
+		Data: []platforms.ManagedPlatformItem{{ID: 6, Type: 1, Hostname: "https://node.example:4444", BrowserDescription: "chrome"}},
+	}, nil
+}
+
+func (fakeCatalogRepository) ListLaunchTargets(context.Context, int64) ([]platforms.LaunchTargetItem, error) {
+	return []platforms.LaunchTargetItem{{
+		ID:           "platform-pool",
+		Name:         "Platform pool",
+		Type:         "platform-pool",
+		Runtime:      "selenium",
+		Capabilities: []string{"browserOverride", "parallel"},
+		Capacity:     platforms.LaunchTargetCapacity{Available: 1, Max: 1, Queued: 0},
+		Health:       "healthy",
+	}}, nil
+}
+
 type fakeLegacyKeyRepository struct{}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
@@ -570,6 +588,39 @@ func TestRouterReturnsCLIEnvironmentWithLegacyKey(t *testing.T) {
 		!strings.Contains(response.Body.String(), `"code":"demo"`) ||
 		!strings.Contains(response.Body.String(), `"idCostumer":42`) {
 		t.Fatalf("CLI environment response missing expected fields: %s", response.Body.String())
+	}
+}
+
+func TestRouterReturnsManagedPlatforms(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/manageplatforms/1", nil)
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"hostname":"https://node.example:4444"`) {
+		t.Fatalf("managed-platform response missing expected fields: %s", response.Body.String())
+	}
+}
+
+func TestRouterReturnsLaunchTargets(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/launch/targets/3", nil)
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"id":"platform-pool"`) ||
+		!strings.Contains(response.Body.String(), `"runtime":"selenium"`) {
+		t.Fatalf("launch-target response missing expected fields: %s", response.Body.String())
 	}
 }
 

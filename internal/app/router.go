@@ -47,6 +47,8 @@ func NewRouter(
 	router.Get("/admin/platforms/osversion/{idOs}", platformHandler.OperatingSystemVersions)
 	router.Get("/admin/platforms/browsers/{idOs}", platformHandler.Browsers)
 	router.Get("/admin/platforms/browserversions/{idBrowser}", platformHandler.BrowserVersions)
+	router.Get("/admin/platforms/manageplatforms/{type}", platformHandler.ManagedPlatforms)
+	router.Get("/admin/launch/targets/{idProject}", platformHandler.LaunchTargets)
 
 	cliHandler := cliapi.NewHandler(testCycleRepository, testRepository, stepRepository, pluginRepository, environmentRepository, logger)
 	cliAuthenticator := auth.NewLegacyKeyAuthenticator(legacyKeyRepository, logger)

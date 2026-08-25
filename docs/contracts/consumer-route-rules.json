@@ -117,11 +117,6 @@
       "reason": "Canonical preflight endpoint referenced by the Web compatibility layer but not registered by Laravel."
     },
     {
-      "consumer": "idelium-web",
-      "path": "/api/admin/launch/targets",
-      "reason": "Canonical launch-target endpoint referenced by the Web compatibility layer but not registered by Laravel."
-    },
-    {
       "consumer": "idelium-docker-wiki",
       "path": "/api/v1",
       "reason": "Planned versioned API prefix documented by the roadmap; no current Laravel route is registered under this prefix."

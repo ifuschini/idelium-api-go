@@ -102,7 +102,7 @@ does not require database restoration or reverse data replication.
 | `PUT` | `/api/admin/platforms/locations` | `platform-catalog` | mutation | laravel | yes | 6 |
 | `POST` | `/api/admin/platforms/manageplatforms` | `platform-catalog` | mutation | laravel | yes | 6 |
 | `PUT` | `/api/admin/platforms/manageplatforms` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `GET|HEAD` | `/api/admin/platforms/manageplatforms/{type}` | `platform-catalog` | read | laravel | yes | 3 |
+| `GET|HEAD` | `/api/admin/platforms/manageplatforms/{type}` | `platform-catalog` | read | go | yes | 3 |
 | `DELETE` | `/api/admin/platforms/manageplatforms/{type}/{id}` | `platform-catalog` | mutation | laravel | yes | 6 |
 | `POST` | `/api/admin/platforms/models` | `platform-catalog` | mutation | laravel | yes | 6 |
 | `PUT` | `/api/admin/platforms/models` | `platform-catalog` | mutation | laravel | yes | 6 |

@@ -19,18 +19,17 @@ comparison:
 - `/api/admin/platforms/osversion/{idOs}`
 - `/api/admin/platforms/browsers/{idOs}`
 - `/api/admin/platforms/browserversions/{idBrowser}`
+- `/api/admin/platforms/manageplatforms/{type}`
 
 The legacy `browserversions` spelling is intentionally preserved because it is
 part of the public Laravel route contract consumed by Idelium Web.
 
-## Deferred Wave 3 candidate
+## Wave 6 launcher configuration read
 
-`GET|HEAD /api/admin/platforms/manageplatforms/{type}` remains Laravel-owned.
-Although it is a read, it is not a standalone lookup: it is a tenant-scoped
-management grid paired with the `POST`, `PUT`, and `DELETE` platform management
-mutation routes. Moving it without the mutation aggregate would split validation,
-authorization, rollback, and differential coverage across two backends. It is
-therefore deferred to the Wave 6 platform catalog mutation aggregate.
+`GET|HEAD /api/admin/platforms/manageplatforms/{type}` is now Go-owned as part
+of the Wave 6 launcher configuration read slice. The paired `POST`, `PUT`, and
+`DELETE` platform management mutations remain Laravel-owned until their
+dedicated mutation tickets move validation and rollback behavior together.
 
 ## Other read groups
 

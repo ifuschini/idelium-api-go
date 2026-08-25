@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/idelium/idelium-api-go/internal/platforms"
 )
@@ -645,6 +646,171 @@ func (repository *PlatformCatalogRepository) ListBrowserVersions(ctx context.Con
 	return page, nil
 }
 
+// ListManagedPlatforms returns configured execution platforms using the Laravel-compatible grid contract.
+func (repository *PlatformCatalogRepository) ListManagedPlatforms(ctx context.Context, query platforms.ManagedPlatformQuery) (platforms.ManagedPlatformPage, error) {
+	sortColumns := map[string]string{
+		"hostname":           "hostname",
+		"brandDescription":   "brandDescription",
+		"osDescription":      "osDescription",
+		"browserDescription": "browserDescription",
+		"status":             "status",
+		"created_at":         "created_at",
+		"updated_at":         "updated_at",
+	}
+	sortColumn, ok := sortColumns[query.Sort]
+	if !ok {
+		sortColumn = "osDescription"
+		query.Sort = "osDescription"
+	}
+	if query.Direction != "desc" {
+		query.Direction = "asc"
+	}
+
+	where, args := managedPlatformWhereClause(query)
+	total, err := repository.countRows(ctx, "platforms", where, args)
+	if err != nil {
+		return platforms.ManagedPlatformPage{}, err
+	}
+
+	sqlQuery := `SELECT id, type, hostname, location, os, osversion, brand, browser,
+			brandDescription, osDescription, browserDescription, status, created_at, updated_at
+		FROM platforms` + where + " ORDER BY " + sortColumn + " " + query.Direction + ", id ASC"
+	if query.IsPaged() {
+		pageSize := query.PageSize
+		if pageSize == 0 {
+			pageSize = 25
+		}
+		page := query.Page
+		if page == 0 {
+			page = 1
+		}
+		args = append(args, pageSize, (page-1)*pageSize)
+		sqlQuery += " LIMIT ? OFFSET ?"
+		query.Page = page
+		query.PageSize = pageSize
+	}
+
+	items, err := repository.queryManagedPlatforms(ctx, sqlQuery, args...)
+	if err != nil {
+		return platforms.ManagedPlatformPage{}, err
+	}
+
+	page := platforms.ManagedPlatformPage{Data: items}
+	if query.IsPaged() {
+		lastPage := int((total + int64(query.PageSize) - 1) / int64(query.PageSize))
+		if lastPage == 0 {
+			lastPage = 1
+		}
+		page.Meta = platforms.ManagedPlatformPageMeta{
+			Page:            query.Page,
+			PageSize:        query.PageSize,
+			Total:           total,
+			LastPage:        lastPage,
+			HasNextPage:     query.Page < lastPage,
+			HasPreviousPage: query.Page > 1,
+			Sort:            query.Sort,
+			Direction:       query.Direction,
+			Stale:           false,
+			Partial:         false,
+		}
+	}
+
+	return page, nil
+}
+
+// ListLaunchTargets returns safe Web launcher target candidates.
+func (repository *PlatformCatalogRepository) ListLaunchTargets(ctx context.Context, projectID int64) ([]platforms.LaunchTargetItem, error) {
+	now := time.Now().UTC()
+	targets := []platforms.LaunchTargetItem{
+		{
+			ID:           "platform-pool",
+			Name:         "Platform pool",
+			Type:         "platform-pool",
+			Runtime:      "selenium",
+			Capabilities: []string{"browserOverride", "parallel"},
+			Capacity:     platforms.LaunchTargetCapacity{Available: 1, Max: 1, Queued: 0},
+			Health:       "healthy",
+			LastHealthAt: &now,
+			Region:       "project",
+		},
+	}
+	_ = projectID
+
+	rows, err := repository.database.QueryContext(
+		ctx,
+		`SELECT p.id, p.type, COALESCE(t.name, ''), p.hostname, p.location,
+				p.osDescription, p.browserDescription, p.status, p.updated_at
+		 FROM platforms p
+		 LEFT JOIN types t ON t.id = p.type
+		 ORDER BY p.osDescription ASC, p.id ASC
+		 LIMIT 49`,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("query launcher targets: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			id                 int64
+			typeID             int64
+			typeName           string
+			hostname           string
+			location           int64
+			osDescription      string
+			browserDescription string
+			status             int64
+			updatedAt          sql.NullTime
+		)
+		if err := rows.Scan(&id, &typeID, &typeName, &hostname, &location, &osDescription, &browserDescription, &status, &updatedAt); err != nil {
+			return nil, fmt.Errorf("scan launcher target row: %w", err)
+		}
+		health := "disabled"
+		available := 0
+		if status == 1 {
+			health = "healthy"
+			available = 1
+		}
+		name := strings.TrimSpace(hostname)
+		if name == "" {
+			name = strings.TrimSpace(strings.Join([]string{osDescription, browserDescription}, " · "))
+		}
+		if name == "" {
+			name = fmt.Sprintf("Platform %d", id)
+		}
+		runtime := "selenium"
+		if strings.Contains(strings.ToLower(typeName), "mobile") {
+			runtime = "appium"
+		}
+		platformID := id
+		var lastHealthAt *time.Time
+		if updatedAt.Valid {
+			lastHealthAt = &updatedAt.Time
+		}
+		_ = typeID
+		targets = append(targets, platforms.LaunchTargetItem{
+			ID:           fmt.Sprintf("platform-%d", id),
+			Name:         name,
+			Type:         "platform",
+			Runtime:      runtime,
+			Capabilities: []string{"browserOverride"},
+			Capacity:     platforms.LaunchTargetCapacity{Available: available, Max: 1, Queued: 0},
+			Health:       health,
+			LastHealthAt: lastHealthAt,
+			Region:       fmt.Sprintf("%d", location),
+			Hostname:     hostname,
+			Browser:      browserDescription,
+			IDPlatform:   &platformID,
+			PlatformID:   &platformID,
+		})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read launcher target rows: %w", err)
+	}
+
+	return targets, nil
+}
+
 func (repository *PlatformCatalogRepository) listCatalogItems(ctx context.Context, query string) ([]platforms.CatalogItem, error) {
 	rows, err := repository.database.QueryContext(ctx, query)
 	if err != nil {
@@ -664,6 +830,50 @@ func (repository *PlatformCatalogRepository) listCatalogItems(ctx context.Contex
 		return nil, fmt.Errorf("read platform catalog rows: %w", err)
 	}
 
+	return items, nil
+}
+
+func (repository *PlatformCatalogRepository) queryManagedPlatforms(ctx context.Context, query string, args ...any) ([]platforms.ManagedPlatformItem, error) {
+	rows, err := repository.database.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query managed platforms: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]platforms.ManagedPlatformItem, 0)
+	for rows.Next() {
+		var item platforms.ManagedPlatformItem
+		var createdAt sql.NullTime
+		var updatedAt sql.NullTime
+		if err := rows.Scan(
+			&item.ID,
+			&item.Type,
+			&item.Hostname,
+			&item.Location,
+			&item.OS,
+			&item.OSVersion,
+			&item.Brand,
+			&item.Browser,
+			&item.BrandDescription,
+			&item.OSDescription,
+			&item.BrowserDescription,
+			&item.Status,
+			&createdAt,
+			&updatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan managed platform row: %w", err)
+		}
+		if createdAt.Valid {
+			item.CreatedAt = &createdAt.Time
+		}
+		if updatedAt.Valid {
+			item.UpdatedAt = &updatedAt.Time
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read managed platform rows: %w", err)
+	}
 	return items, nil
 }
 
@@ -747,4 +957,25 @@ func browserVersionWhereClause(query platforms.BrowserVersionQuery) (string, []a
 		return " WHERE " + browserClause, []any{query.IDBrowser}
 	}
 	return where + " AND " + browserClause, append(args, query.IDBrowser)
+}
+
+func managedPlatformWhereClause(query platforms.ManagedPlatformQuery) (string, []any) {
+	clauses := make([]string, 0, 3)
+	args := make([]any, 0, 3)
+	clauses = append(clauses, "type = ?")
+	args = append(args, query.TypeID)
+	if query.Search != "" {
+		clauses = append(clauses, "(hostname LIKE ? OR brandDescription LIKE ? OR osDescription LIKE ? OR browserDescription LIKE ?)")
+		search := "%" + query.Search + "%"
+		args = append(args, search, search, search, search)
+	}
+	if len(query.FilterIDs) > 0 {
+		placeholders := make([]string, len(query.FilterIDs))
+		for index, id := range query.FilterIDs {
+			placeholders[index] = "?"
+			args = append(args, id)
+		}
+		clauses = append(clauses, "id IN ("+strings.Join(placeholders, ",")+")")
+	}
+	return " WHERE " + strings.Join(clauses, " AND "), args
 }
