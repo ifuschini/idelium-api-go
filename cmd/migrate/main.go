@@ -21,6 +21,7 @@ func main() {
 	showVersion := flag.Bool("version", false, "print safe build identity and exit")
 	showPlan := flag.Bool("plan", false, "print the reviewed migration baseline plan and exit")
 	markLaravelBaselineApplied := flag.Bool("mark-laravel-baseline-applied", false, "print or execute the Laravel baseline bridge marker plan")
+	verifyEmptyInstall := flag.Bool("verify-empty-install", false, "verify whether the configured database is ready for an empty Go migration install")
 	confirmBaselineID := flag.String("confirm-baseline-id", "", "reviewed baseline ID required before marking Laravel migrations as applied")
 	batch := flag.Int("batch", 0, "Laravel migrations table batch number for bridge markers")
 	execute := flag.Bool("execute", false, "execute the bridge marker plan against the configured database")
@@ -99,6 +100,38 @@ func main() {
 		if err := encoder.Encode(result); err != nil {
 			fmt.Fprintln(os.Stderr, "migrate could not encode the Laravel baseline bridge result")
 			os.Exit(1)
+		}
+		return
+	}
+	if *verifyEmptyInstall {
+		runtimeConfig, err := config.Load()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, safeBridgeError(err))
+			os.Exit(1)
+		}
+		database, err := mysqlpersistence.Open(runtimeConfig.Database)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "migrate could not initialize the database bridge")
+			os.Exit(1)
+		}
+		defer database.Close()
+
+		verification, err := migrations.VerifyEmptyInstall(
+			context.Background(),
+			migrations.NewMySQLSchemaInspector(database, runtimeConfig.Database.Name),
+		)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, safeBridgeError(err))
+			os.Exit(1)
+		}
+		encoder := json.NewEncoder(os.Stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(verification); err != nil {
+			fmt.Fprintln(os.Stderr, "migrate could not encode the empty-install verification result")
+			os.Exit(1)
+		}
+		if verification.Status != "ready" {
+			os.Exit(2)
 		}
 		return
 	}
