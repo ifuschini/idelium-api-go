@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "description": "Gateway ownership configuration for Wave 3 platform catalog reads.",
+  "default_owner": "laravel",
+  "upstreams": {
+    "go": {
+      "base_url_env": "IDELIUM_API_GO_BASE_URL",
+      "health_check_path": "/readyz"
+    },
+    "laravel": {
+      "base_url_env": "IDELIUM_LARAVEL_BASE_URL",
+      "health_check_path": "/api/health"
+    }
+  },
+  "routes": [
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/brands",
+      "methods": ["GET", "HEAD"],
+      "public_path": "/api/admin/platforms/brands",
+      "go_path": "/admin/platforms/brands",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/browsers/{idOs}",
+      "methods": ["GET", "HEAD"],
+      "public_path": "/api/admin/platforms/browsers/{idOs}",
+      "go_path": "/admin/platforms/browsers/{idOs}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/browserversions/{idBrowser}",
+      "methods": ["GET", "HEAD"],
+      "public_path": "/api/admin/platforms/browserversions/{idBrowser}",
+      "go_path": "/admin/platforms/browserversions/{idBrowser}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/locations",
+      "methods": ["GET", "HEAD"],
+      "public_path": "/api/admin/platforms/locations",
+      "go_path": "/admin/platforms/locations",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/models/{idBrand}",
+      "methods": ["GET", "HEAD"],
+      "public_path": "/api/admin/platforms/models/{idBrand}",
+      "go_path": "/admin/platforms/models/{idBrand}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/os/{idType}",
+      "methods": ["GET", "HEAD"],
+      "public_path": "/api/admin/platforms/os/{idType}",
+      "go_path": "/admin/platforms/os/{idType}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/osversion/{idOs}",
+      "methods": ["GET", "HEAD"],
+      "public_path": "/api/admin/platforms/osversion/{idOs}",
+      "go_path": "/admin/platforms/osversion/{idOs}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/status",
+      "methods": ["GET", "HEAD"],
+      "public_path": "/api/admin/platforms/status",
+      "go_path": "/admin/platforms/status",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/types",
+      "methods": ["GET", "HEAD"],
+      "public_path": "/api/admin/platforms/types",
+      "go_path": "/admin/platforms/types",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    }
+  ],
+  "rollback": {
+    "policy": "Switch every route owner back to laravel or remove the route from this gateway file before routing traffic back to Laravel.",
+    "requires_database_restore": false,
+    "requires_dual_writes": false
+  }
+}
