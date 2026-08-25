@@ -469,6 +469,94 @@ func (repository *PlatformCatalogRepository) ListOperatingSystemVersions(ctx con
 	return page, nil
 }
 
+// ListBrowsers returns browsers for one operating system using the Laravel-compatible grid contract.
+func (repository *PlatformCatalogRepository) ListBrowsers(ctx context.Context, query platforms.BrowserQuery) (platforms.BrowserPage, error) {
+	sortColumns := map[string]string{
+		"id":         "id",
+		"name":       "name",
+		"created_at": "created_at",
+		"updated_at": "updated_at",
+	}
+	sortColumn, ok := sortColumns[query.Sort]
+	if !ok {
+		sortColumn = "name"
+		query.Sort = "name"
+	}
+	if query.Direction != "desc" {
+		query.Direction = "asc"
+	}
+
+	where, args := browserWhereClause(query)
+	total, err := repository.countRows(ctx, "browsers", where, args)
+	if err != nil {
+		return platforms.BrowserPage{}, err
+	}
+
+	sqlQuery := "SELECT id, name, idOs, created_at, updated_at FROM browsers" + where + " ORDER BY " + sortColumn + " " + query.Direction
+	if query.IsPaged() {
+		pageSize := query.PageSize
+		if pageSize == 0 {
+			pageSize = 25
+		}
+		page := query.Page
+		if page == 0 {
+			page = 1
+		}
+		args = append(args, pageSize, (page-1)*pageSize)
+		sqlQuery += " LIMIT ? OFFSET ?"
+		query.Page = page
+		query.PageSize = pageSize
+	}
+
+	rows, err := repository.database.QueryContext(ctx, sqlQuery, args...)
+	if err != nil {
+		return platforms.BrowserPage{}, fmt.Errorf("query platform browsers: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]platforms.BrowserItem, 0)
+	for rows.Next() {
+		var item platforms.BrowserItem
+		var createdAt sql.NullTime
+		var updatedAt sql.NullTime
+		if err := rows.Scan(&item.ID, &item.Name, &item.IDOs, &createdAt, &updatedAt); err != nil {
+			return platforms.BrowserPage{}, fmt.Errorf("scan platform browser row: %w", err)
+		}
+		if createdAt.Valid {
+			item.CreatedAt = &createdAt.Time
+		}
+		if updatedAt.Valid {
+			item.UpdatedAt = &updatedAt.Time
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return platforms.BrowserPage{}, fmt.Errorf("read platform browser rows: %w", err)
+	}
+
+	page := platforms.BrowserPage{Data: items}
+	if query.IsPaged() {
+		lastPage := int((total + int64(query.PageSize) - 1) / int64(query.PageSize))
+		if lastPage == 0 {
+			lastPage = 1
+		}
+		page.Meta = platforms.BrowserPageMeta{
+			Page:            query.Page,
+			PageSize:        query.PageSize,
+			Total:           total,
+			LastPage:        lastPage,
+			HasNextPage:     query.Page < lastPage,
+			HasPreviousPage: query.Page > 1,
+			Sort:            query.Sort,
+			Direction:       query.Direction,
+			Stale:           false,
+			Partial:         false,
+		}
+	}
+
+	return page, nil
+}
+
 func (repository *PlatformCatalogRepository) listCatalogItems(ctx context.Context, query string) ([]platforms.CatalogItem, error) {
 	rows, err := repository.database.QueryContext(ctx, query)
 	if err != nil {
@@ -548,6 +636,15 @@ func operatingSystemWhereClause(query platforms.OperatingSystemQuery) (string, [
 
 func operatingSystemVersionWhereClause(query platforms.OperatingSystemVersionQuery) (string, []any) {
 	where, args := gridWhereClause(query.Search, "version", query.FilterIDs)
+	osClause := "idOs = ?"
+	if where == "" {
+		return " WHERE " + osClause, []any{query.IDOs}
+	}
+	return where + " AND " + osClause, append(args, query.IDOs)
+}
+
+func browserWhereClause(query platforms.BrowserQuery) (string, []any) {
+	where, args := gridWhereClause(query.Search, "name", query.FilterIDs)
 	osClause := "idOs = ?"
 	if where == "" {
 		return " WHERE " + osClause, []any{query.IDOs}

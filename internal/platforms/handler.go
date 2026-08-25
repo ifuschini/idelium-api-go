@@ -217,6 +217,43 @@ func (handler *Handler) OperatingSystemVersions(writer http.ResponseWriter, requ
 	httpx.WriteJSON(writer, http.StatusOK, page)
 }
 
+// Browsers returns the legacy browser grid contract scoped to an operating system.
+func (handler *Handler) Browsers(writer http.ResponseWriter, request *http.Request) {
+	idOs, err := parsePositivePathID(chi.URLParam(request, "idOs"))
+	if err != nil {
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusBadRequest,
+			"INVALID_OPERATING_SYSTEM",
+			"The operating-system identifier must be a positive integer.",
+		)
+		return
+	}
+
+	query := parseBrowserQuery(request)
+	query.IDOs = idOs
+	page, err := handler.repository.ListBrowsers(request.Context(), query)
+	if err != nil {
+		handler.logger.ErrorContext(request.Context(), "list platform browsers failed", "error", err)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"PLATFORM_CATALOG_UNAVAILABLE",
+			"The platform catalog could not be loaded.",
+		)
+		return
+	}
+
+	if !query.IsPaged() {
+		httpx.WriteJSON(writer, http.StatusOK, page.Data)
+		return
+	}
+
+	httpx.WriteJSON(writer, http.StatusOK, page)
+}
+
 func parseLocationQuery(request *http.Request) LocationQuery {
 	values := request.URL.Query()
 	sort := values.Get("sort")
@@ -292,6 +329,36 @@ func parseOperatingSystemVersionQuery(request *http.Request) OperatingSystemVers
 	_, hasPage := values["page"]
 	_, hasPageSize := values["pageSize"]
 	query := OperatingSystemVersionQuery{
+		Paged:     hasPage || hasPageSize,
+		Search:    boundedString(values.Get("search"), 200),
+		Sort:      sort,
+		Direction: direction,
+		FilterIDs: parseIDFilter(values.Get("filter[id]")),
+	}
+	if hasPage {
+		query.Page = boundedInt(values.Get("page"), 1, 1, 1<<31-1)
+	}
+	if hasPageSize {
+		query.PageSize = boundedInt(values.Get("pageSize"), 1, 1, 100)
+	}
+	return query
+}
+
+func parseBrowserQuery(request *http.Request) BrowserQuery {
+	values := request.URL.Query()
+	sort := values.Get("sort")
+	if sort != "id" && sort != "name" && sort != "created_at" && sort != "updated_at" {
+		sort = "name"
+	}
+
+	direction := strings.ToLower(values.Get("direction"))
+	if direction != "desc" {
+		direction = "asc"
+	}
+
+	_, hasPage := values["page"]
+	_, hasPageSize := values["pageSize"]
+	query := BrowserQuery{
 		Paged:     hasPage || hasPageSize,
 		Search:    boundedString(values.Get("search"), 200),
 		Sort:      sort,

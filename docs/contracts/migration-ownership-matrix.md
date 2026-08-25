@@ -93,7 +93,7 @@ does not require database restoration or reverse data replication.
 | `PUT` | `/api/admin/platforms/brands` | `platform-catalog` | mutation | laravel | yes | 6 |
 | `POST` | `/api/admin/platforms/browsers` | `platform-catalog` | mutation | laravel | yes | 6 |
 | `PUT` | `/api/admin/platforms/browsers` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `GET|HEAD` | `/api/admin/platforms/browsers/{idOs}` | `platform-catalog` | read | laravel | yes | 3 |
+| `GET|HEAD` | `/api/admin/platforms/browsers/{idOs}` | `platform-catalog` | read | go | yes | 3 |
 | `POST` | `/api/admin/platforms/browserversions` | `platform-catalog` | mutation | laravel | yes | 6 |
 | `PUT` | `/api/admin/platforms/browserversions` | `platform-catalog` | mutation | laravel | yes | 6 |
 | `GET|HEAD` | `/api/admin/platforms/browserversions/{idBrowser}` | `platform-catalog` | read | laravel | yes | 3 |
