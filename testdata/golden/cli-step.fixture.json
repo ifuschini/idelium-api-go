@@ -1,0 +1,78 @@
+{
+  "fixtureVersion": "1.0",
+  "id": "cli-step-authorized",
+  "description": "Synthetic authorized Laravel response for a CLI step configuration read.",
+  "source": {
+    "runtime": "laravel",
+    "repository": "idelium/idelium-api",
+    "revision": "ef97a6b3f42105cad583b3f1a68acf637a9d086e",
+    "capturedAt": "2026-01-01T00:00:00Z",
+    "routeInventoryDigestSha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9"
+  },
+  "route": {
+    "method": "GET",
+    "path": "/api/ideliumcl/step/{idStep}",
+    "trustPath": "api-key",
+    "tenantOwned": true
+  },
+  "context": {
+    "tenant": {
+      "id": "fixture-tenant-alpha",
+      "synthetic": true
+    },
+    "actor": {
+      "id": "fixture-cli-customer",
+      "synthetic": true
+    }
+  },
+  "request": {
+    "headers": {
+      "Accept": "application/json",
+      "X-Correlation-ID": "fixture-correlation-cli-step"
+    },
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "id": 12,
+      "name": "open page",
+      "description": "Open the browser",
+      "config": "[]",
+      "idProject": 3,
+      "order": 2,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z",
+      "idCostumer": 42
+    }
+  },
+  "normalizations": [
+    {
+      "path": "$.request.headers.X-Correlation-ID",
+      "rule": "Replace the generated correlation identifier with a stable fixture value."
+    },
+    {
+      "path": "$.source.capturedAt",
+      "rule": "Use a fixed UTC timestamp."
+    },
+    {
+      "path": "$.response.body.created_at",
+      "rule": "Normalize the persisted creation timestamp."
+    },
+    {
+      "path": "$.response.body.updated_at",
+      "rule": "Normalize the persisted update timestamp."
+    }
+  ],
+  "redactions": [
+    {
+      "path": "$.request.headers.Idelium-Key",
+      "rule": "Remove the legacy customer API key before the fixture is persisted."
+    }
+  ],
+  "sideEffects": []
+}

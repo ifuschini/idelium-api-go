@@ -17,15 +17,16 @@ import (
 type Handler struct {
 	testCycles TestCycleRepository
 	tests      TestRepository
+	steps      StepRepository
 	logger     *slog.Logger
 }
 
 // NewHandler creates a CLI API handler.
-func NewHandler(testCycles TestCycleRepository, tests TestRepository, logger *slog.Logger) *Handler {
+func NewHandler(testCycles TestCycleRepository, tests TestRepository, steps StepRepository, logger *slog.Logger) *Handler {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &Handler{testCycles: testCycles, tests: tests, logger: logger}
+	return &Handler{testCycles: testCycles, tests: tests, steps: steps, logger: logger}
 }
 
 // TestCycle returns one tenant-owned test cycle using the Laravel CLI contract.
@@ -128,6 +129,57 @@ func (handler *Handler) Test(writer http.ResponseWriter, request *http.Request) 
 	}
 
 	httpx.WriteJSON(writer, http.StatusOK, test)
+}
+
+// Step returns one tenant-owned step using the Laravel CLI contract.
+func (handler *Handler) Step(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		handler.logger.ErrorContext(
+			request.Context(),
+			"CLI tenant context missing",
+			"correlation_id", httpx.GetCorrelationID(request.Context()),
+			"path", request.URL.Path,
+		)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"CLI_TENANT_CONTEXT_MISSING",
+			"The CLI tenant context could not be resolved.",
+		)
+		return
+	}
+
+	stepID, ok := parseLegacyID(chi.URLParam(request, "idStep"))
+	if !ok {
+		writeInvalidID(writer)
+		return
+	}
+
+	step, err := handler.steps.GetStep(request.Context(), tenant.CustomerID, stepID)
+	if errors.Is(err, ErrNotFound) {
+		writeInvalidID(writer)
+		return
+	}
+	if err != nil {
+		handler.logger.ErrorContext(
+			request.Context(),
+			"CLI step read failed",
+			"correlation_id", httpx.GetCorrelationID(request.Context()),
+			"path", request.URL.Path,
+		)
+		httpx.WriteError(
+			writer,
+			request,
+			http.StatusInternalServerError,
+			"CLI_CONFIGURATION_UNAVAILABLE",
+			"The CLI configuration could not be loaded.",
+		)
+		return
+	}
+
+	httpx.WriteJSON(writer, http.StatusOK, step)
 }
 
 func parseLegacyID(value string) (int64, bool) {

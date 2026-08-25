@@ -408,3 +408,54 @@ func TestCLITestRepositoryIntegration(t *testing.T) {
 		t.Fatalf("expected missing test to be hidden, got %v", err)
 	}
 }
+
+func TestCLIStepRepositoryIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS steps",
+		`CREATE TABLE steps (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config JSON NOT NULL,
+			idProject INT NOT NULL,
+			` + "`order`" + ` INT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL
+		)`,
+		`INSERT INTO steps
+			(id, name, description, config, idProject, ` + "`order`" + `, created_at, updated_at, idCostumer)
+		 VALUES
+			(1, 'First step', 'Own step', JSON_ARRAY(), 10, 2, NULL, NULL, 42),
+			(2, 'Second step', 'Foreign step', JSON_ARRAY(), 20, 3, NULL, NULL, 99)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare CLI step fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewCLIStepRepository(database)
+	step, err := repository.GetStep(ctx, 42, 1)
+	if err != nil {
+		t.Fatalf("GetStep() returned an error: %v", err)
+	}
+	if step.ID != 1 || step.IDCostumer != 42 || step.IDProject != 10 || step.Order != 2 || step.Config != "[]" {
+		t.Fatalf("unexpected step payload: %#v", step)
+	}
+
+	_, err = repository.GetStep(ctx, 42, 2)
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant step to be hidden, got %v", err)
+	}
+
+	_, err = repository.GetStep(ctx, 42, 999)
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected missing step to be hidden, got %v", err)
+	}
+}

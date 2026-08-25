@@ -47,6 +47,22 @@ func (repository *fakeTestRepository) GetTest(ctx context.Context, customerID in
 	return repository.test, nil
 }
 
+type fakeStepRepository struct {
+	customerID int64
+	stepID     int64
+	step       Step
+	err        error
+}
+
+func (repository *fakeStepRepository) GetStep(ctx context.Context, customerID int64, stepID int64) (Step, error) {
+	repository.customerID = customerID
+	repository.stepID = stepID
+	if repository.err != nil {
+		return Step{}, repository.err
+	}
+	return repository.step, nil
+}
+
 func TestHandlerReturnsTenantScopedTestCycle(t *testing.T) {
 	repository := &fakeTestCycleRepository{
 		testCycle: TestCycle{
@@ -58,7 +74,7 @@ func TestHandlerReturnsTenantScopedTestCycle(t *testing.T) {
 			IDCostumer:   42,
 		},
 	}
-	handler := NewHandler(repository, &fakeTestRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	handler := NewHandler(repository, &fakeTestRepository{}, &fakeStepRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
 	response := httptest.NewRecorder()
 	request := requestWithTenant("/ideliumcl/testcycle/7", "7", 42)
 
@@ -78,7 +94,7 @@ func TestHandlerReturnsTenantScopedTestCycle(t *testing.T) {
 
 func TestHandlerReturnsInvalidIDForMalformedIdentifier(t *testing.T) {
 	repository := &fakeTestCycleRepository{}
-	handler := NewHandler(repository, &fakeTestRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	handler := NewHandler(repository, &fakeTestRepository{}, &fakeStepRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
 	response := httptest.NewRecorder()
 
 	handler.TestCycle(response, requestWithTenant("/ideliumcl/testcycle/not-number", "not-number", 42))
@@ -91,7 +107,7 @@ func TestHandlerReturnsInvalidIDForMalformedIdentifier(t *testing.T) {
 
 func TestHandlerReturnsInvalidIDForCrossTenantOrMissingCycle(t *testing.T) {
 	repository := &fakeTestCycleRepository{err: ErrNotFound}
-	handler := NewHandler(repository, &fakeTestRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	handler := NewHandler(repository, &fakeTestRepository{}, &fakeStepRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
 	response := httptest.NewRecorder()
 
 	handler.TestCycle(response, requestWithTenant("/ideliumcl/testcycle/8", "8", 42))
@@ -102,7 +118,7 @@ func TestHandlerReturnsInvalidIDForCrossTenantOrMissingCycle(t *testing.T) {
 func TestHandlerRedactsRepositoryFailures(t *testing.T) {
 	logBuffer := &bytes.Buffer{}
 	repository := &fakeTestCycleRepository{err: errors.New("database failed near secret-value")}
-	handler := NewHandler(repository, &fakeTestRepository{}, slog.New(slog.NewTextHandler(logBuffer, nil)))
+	handler := NewHandler(repository, &fakeTestRepository{}, &fakeStepRepository{}, slog.New(slog.NewTextHandler(logBuffer, nil)))
 	response := httptest.NewRecorder()
 
 	handler.TestCycle(response, requestWithTenant("/ideliumcl/testcycle/8", "8", 42))
@@ -126,7 +142,7 @@ func TestHandlerReturnsTenantScopedTest(t *testing.T) {
 			IDCostumer:   42,
 		},
 	}
-	handler := NewHandler(&fakeTestCycleRepository{}, repository, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	handler := NewHandler(&fakeTestCycleRepository{}, repository, &fakeStepRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
 	response := httptest.NewRecorder()
 	request := requestWithTenantParam("/ideliumcl/test/9", "idTest", "9", 42)
 
@@ -146,7 +162,7 @@ func TestHandlerReturnsTenantScopedTest(t *testing.T) {
 
 func TestHandlerReturnsInvalidIDForMalformedTestIdentifier(t *testing.T) {
 	repository := &fakeTestRepository{}
-	handler := NewHandler(&fakeTestCycleRepository{}, repository, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	handler := NewHandler(&fakeTestCycleRepository{}, repository, &fakeStepRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
 	response := httptest.NewRecorder()
 
 	handler.Test(response, requestWithTenantParam("/ideliumcl/test/not-number", "idTest", "not-number", 42))
@@ -159,7 +175,7 @@ func TestHandlerReturnsInvalidIDForMalformedTestIdentifier(t *testing.T) {
 
 func TestHandlerReturnsInvalidIDForCrossTenantOrMissingTest(t *testing.T) {
 	repository := &fakeTestRepository{err: ErrNotFound}
-	handler := NewHandler(&fakeTestCycleRepository{}, repository, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	handler := NewHandler(&fakeTestCycleRepository{}, repository, &fakeStepRepository{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
 	response := httptest.NewRecorder()
 
 	handler.Test(response, requestWithTenantParam("/ideliumcl/test/10", "idTest", "10", 42))
@@ -170,10 +186,80 @@ func TestHandlerReturnsInvalidIDForCrossTenantOrMissingTest(t *testing.T) {
 func TestHandlerRedactsTestRepositoryFailures(t *testing.T) {
 	logBuffer := &bytes.Buffer{}
 	repository := &fakeTestRepository{err: errors.New("database failed near secret-value")}
-	handler := NewHandler(&fakeTestCycleRepository{}, repository, slog.New(slog.NewTextHandler(logBuffer, nil)))
+	handler := NewHandler(&fakeTestCycleRepository{}, repository, &fakeStepRepository{}, slog.New(slog.NewTextHandler(logBuffer, nil)))
 	response := httptest.NewRecorder()
 
 	handler.Test(response, requestWithTenantParam("/ideliumcl/test/10", "idTest", "10", 42))
+
+	if response.Code != http.StatusInternalServerError {
+		t.Fatalf("expected status 500, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.Contains(logBuffer.String(), "secret-value") {
+		t.Fatalf("repository error leaked into logs: %s", logBuffer.String())
+	}
+}
+
+func TestHandlerReturnsTenantScopedStep(t *testing.T) {
+	repository := &fakeStepRepository{
+		step: Step{
+			ID:          12,
+			Name:        "open page",
+			Description: "Open the browser",
+			Config:      "[]",
+			IDProject:   3,
+			Order:       2,
+			IDCostumer:   42,
+		},
+	}
+	handler := NewHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, repository, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := requestWithTenantParam("/ideliumcl/step/12", "idStep", "12", 42)
+
+	handler.Step(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"id":12`) ||
+		!strings.Contains(response.Body.String(), `"order":2`) ||
+		!strings.Contains(response.Body.String(), `"idCostumer":42`) {
+		t.Fatalf("step response missing expected fields: %s", response.Body.String())
+	}
+	if repository.customerID != 42 || repository.stepID != 12 {
+		t.Fatalf("repository was not called with tenant-scoped identifiers: %#v", repository)
+	}
+}
+
+func TestHandlerReturnsInvalidIDForMalformedStepIdentifier(t *testing.T) {
+	repository := &fakeStepRepository{}
+	handler := NewHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, repository, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+
+	handler.Step(response, requestWithTenantParam("/ideliumcl/step/not-number", "idStep", "not-number", 42))
+
+	assertInvalidID(t, response)
+	if repository.stepID != 0 {
+		t.Fatalf("repository should not be called for malformed identifiers: %#v", repository)
+	}
+}
+
+func TestHandlerReturnsInvalidIDForCrossTenantOrMissingStep(t *testing.T) {
+	repository := &fakeStepRepository{err: ErrNotFound}
+	handler := NewHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, repository, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+
+	handler.Step(response, requestWithTenantParam("/ideliumcl/step/13", "idStep", "13", 42))
+
+	assertInvalidID(t, response)
+}
+
+func TestHandlerRedactsStepRepositoryFailures(t *testing.T) {
+	logBuffer := &bytes.Buffer{}
+	repository := &fakeStepRepository{err: errors.New("database failed near secret-value")}
+	handler := NewHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, repository, slog.New(slog.NewTextHandler(logBuffer, nil)))
+	response := httptest.NewRecorder()
+
+	handler.Step(response, requestWithTenantParam("/ideliumcl/step/13", "idStep", "13", 42))
 
 	if response.Code != http.StatusInternalServerError {
 		t.Fatalf("expected status 500, got %d: %s", response.Code, response.Body.String())

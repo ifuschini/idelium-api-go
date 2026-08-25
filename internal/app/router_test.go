@@ -113,6 +113,23 @@ func (fakeTestRepository) GetTest(ctx context.Context, customerID int64, testID 
 	}, nil
 }
 
+type fakeStepRepository struct{}
+
+func (fakeStepRepository) GetStep(ctx context.Context, customerID int64, stepID int64) (cliapi.Step, error) {
+	if customerID != 42 || stepID != 12 {
+		return cliapi.Step{}, cliapi.ErrNotFound
+	}
+	return cliapi.Step{
+		ID:          12,
+		Name:        "open page",
+		Description: "Open the browser",
+		Config:      "[]",
+		IDProject:   3,
+		Order:       2,
+		IDCostumer:   42,
+	}, nil
+}
+
 func testRouter(logger *slog.Logger) http.Handler {
 	return NewRouter(
 		logger,
@@ -122,6 +139,7 @@ func testRouter(logger *slog.Logger) http.Handler {
 		fakeLegacyKeyRepository{},
 		fakeTestCycleRepository{},
 		fakeTestRepository{},
+		fakeStepRepository{},
 	)
 }
 
@@ -354,6 +372,42 @@ func TestRouterHidesForeignCLITest(t *testing.T) {
 	router := testRouter(logger)
 	response := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/ideliumcl/test/10", nil)
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"message":"Invalid id"}` {
+		t.Fatalf("unexpected body: %s", response.Body.String())
+	}
+}
+
+func TestRouterReturnsCLIStepWithLegacyKey(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/ideliumcl/step/12", nil)
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"id":12`) ||
+		!strings.Contains(response.Body.String(), `"order":2`) ||
+		!strings.Contains(response.Body.String(), `"idCostumer":42`) {
+		t.Fatalf("CLI step response missing expected fields: %s", response.Body.String())
+	}
+}
+
+func TestRouterHidesForeignCLIStep(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/ideliumcl/step/13", nil)
 	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
 
 	router.ServeHTTP(response, request)

@@ -24,6 +24,7 @@ type ServerInterface interface {
 	ListPlatformStatuses(http.ResponseWriter, *http.Request)
 	GetCLITestCycle(http.ResponseWriter, *http.Request)
 	GetCLITest(http.ResponseWriter, *http.Request)
+	GetCLIStep(http.ResponseWriter, *http.Request)
 	Get(http.ResponseWriter, *http.Request)
 	GetAdminAccounts(http.ResponseWriter, *http.Request)
 	PostAdminAccounts(http.ResponseWriter, *http.Request)
@@ -169,7 +170,6 @@ type ServerInterface interface {
 	PostIdeliumclProjectsIdProjectParallelRunsParallelRunWorkersWorkerIdHeartbeat(http.ResponseWriter, *http.Request)
 	PostIdeliumclStep(http.ResponseWriter, *http.Request)
 	PutIdeliumclStep(http.ResponseWriter, *http.Request)
-	GetIdeliumclStepIdStep(http.ResponseWriter, *http.Request)
 	PostIdeliumclTest(http.ResponseWriter, *http.Request)
 	PutIdeliumclTest(http.ResponseWriter, *http.Request)
 	PostIdeliumclTestcycle(http.ResponseWriter, *http.Request)
@@ -254,6 +254,17 @@ var Operations = []Operation{
 		OperationID:        "getCLITest",
 		Tags:               []string{"CLI Configuration"},
 		LaravelRoute:       "/api/ideliumcl/test/{idTest}",
+		AuthenticationMode: "api-key",
+		TrustPath:          "api-key",
+		TenantContext:      true,
+		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
+	},
+	{
+		Method:             "GET",
+		Path:               "/ideliumcl/step/{idStep}",
+		OperationID:        "getCLIStep",
+		Tags:               []string{"CLI Configuration"},
+		LaravelRoute:       "/api/ideliumcl/step/{idStep}",
 		AuthenticationMode: "api-key",
 		TrustPath:          "api-key",
 		TenantContext:      true,
@@ -1849,17 +1860,6 @@ var Operations = []Operation{
 		OperationID:        "putIdeliumclStep",
 		Tags:               []string{"Laravel Compatibility"},
 		LaravelRoute:       "/api/ideliumcl/step",
-		AuthenticationMode: "api-key",
-		TrustPath:          "api-key",
-		TenantContext:      false,
-		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
-	},
-	{
-		Method:             "GET",
-		Path:               "/ideliumcl/step/{idStep}",
-		OperationID:        "getIdeliumclStepIdStep",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/ideliumcl/step/{idStep}",
 		AuthenticationMode: "api-key",
 		TrustPath:          "api-key",
 		TenantContext:      false,

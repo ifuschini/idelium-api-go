@@ -215,6 +215,61 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /ideliumcl/step/{idStep}:
+    get:
+      operationId: getCLIStep
+      summary: Read one CLI step configuration
+      description: >-
+        Returns the Laravel-compatible step row for the authenticated customer.
+        Missing and cross-tenant identifiers both return the legacy `Invalid id`
+        response to avoid revealing foreign tenant resources.
+      tags: [CLI Configuration]
+      x-idelium-laravel-route: "/api/ideliumcl/step/{idStep}"
+      x-idelium-controller: "App\\Http\\Controllers\\IdeliumClController@getStep"
+      x-idelium-current-owner: "go-application"
+      x-idelium-trust-path: "api-key"
+      x-idelium-authentication-mode: "api-key"
+      x-idelium-tenant-context: true
+      x-idelium-consumers: ["idelium-cli", "idelium-docker-wiki"]
+      parameters:
+        - name: idStep
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: Laravel-compatible step row.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationID"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CLIStep"
+        "401":
+          description: The legacy customer API key is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegacyMessageResponse"
+        "404":
+          description: The step is missing or outside the customer tenant.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegacyMessageResponse"
+        "500":
+          description: The CLI configuration could not be loaded.
+          headers:
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationID"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS
   /:
     get:
@@ -5485,37 +5540,6 @@ paths:
           $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
-  /ideliumcl/step/{idStep}:
-    get:
-      operationId: getIdeliumclStepIdStep
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/ideliumcl/step/{idStep}"
-      x-idelium-controller: "App\\Http\\Controllers\\IdeliumClController@getStep"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "api-key"
-      x-idelium-authentication-mode: "api-key"
-      x-idelium-tenant-context: false
-      x-idelium-consumers: ["idelium-cli", "idelium-docker-wiki"]
-      parameters:
-        - name: idStep
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
   /ideliumcl/test:
     post:
       operationId: postIdeliumclTest
@@ -6331,6 +6355,36 @@ components:
         config:
           type: string
         idProject:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        idCostumer:
+          type: integer
+          format: int64
+    CLIStep:
+      type: object
+      required: [id, name, description, config, idProject, order, idCostumer]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        config:
+          type: string
+        idProject:
+          type: integer
+          format: int64
+        order:
           type: integer
           format: int64
         created_at:

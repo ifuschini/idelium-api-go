@@ -205,7 +205,7 @@ does not require database restoration or reverse data replication.
 | `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `parallel-runs` | mutation | laravel | no | 8 |
 | `POST` | `/api/ideliumcl/step` | `execution-results` | mutation | laravel | no | 5 |
 | `PUT` | `/api/ideliumcl/step` | `execution-results` | mutation | laravel | no | 5 |
-| `GET|HEAD` | `/api/ideliumcl/step/{idStep}` | `steps` | read | laravel | no | 4 |
+| `GET|HEAD` | `/api/ideliumcl/step/{idStep}` | `steps` | read | go | no | 4 |
 | `POST` | `/api/ideliumcl/test` | `execution-results` | mutation | laravel | no | 5 |
 | `PUT` | `/api/ideliumcl/test` | `execution-results` | mutation | laravel | no | 5 |
 | `GET|HEAD` | `/api/ideliumcl/test/{idTest}` | `tests` | read | go | no | 4 |
