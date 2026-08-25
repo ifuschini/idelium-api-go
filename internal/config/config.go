@@ -44,6 +44,10 @@ type DatabaseConfig struct {
 
 // Load reads and validates configuration without exposing secret values.
 func Load() (Config, error) {
+	if err := rejectRetiredAuthBridgeConfiguration(); err != nil {
+		return Config{}, err
+	}
+
 	password, err := readSecret(
 		firstNonEmpty("IDELIUM_DB_PASSWORD_FILE", "DB_PASSWORD_FILE"),
 		firstNonEmpty("IDELIUM_DB_PASSWORD", "DB_PASSWORD"),
@@ -83,6 +87,22 @@ func Load() (Config, error) {
 	}
 
 	return config, nil
+}
+
+func rejectRetiredAuthBridgeConfiguration() error {
+	for _, name := range []string{
+		"IDELIUM_AUTH_BRIDGE_URL",
+		"IDELIUM_AUTH_BRIDGE_TOKEN",
+		"IDELIUM_AUTH_BRIDGE_SECRET",
+		"IDELIUM_BROWSER_AUTH_BRIDGE_URL",
+		"IDELIUM_LARAVEL_AUTH_INTROSPECTION_URL",
+	} {
+		if os.Getenv(name) != "" {
+			return fmt.Errorf("%s is retired; browser authentication must be handled by Go-native auth after compatibility cutover", name)
+		}
+	}
+
+	return nil
 }
 
 func (config Config) validate() error {

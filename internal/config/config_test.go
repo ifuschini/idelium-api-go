@@ -100,6 +100,24 @@ func TestLoadPrefersIdeliumDatabaseVariables(t *testing.T) {
 	}
 }
 
+func TestLoadRejectsRetiredAuthBridgeConfigurationSafely(t *testing.T) {
+	clearConfigurationEnvironment(t)
+	t.Setenv("IDELIUM_DB_PASSWORD", "safe-test-password")
+	t.Setenv("IDELIUM_AUTH_BRIDGE_SECRET", "legacy-bridge-secret-must-not-leak")
+
+	_, err := Load()
+	if err == nil {
+		t.Fatal("Load() accepted retired auth bridge configuration")
+	}
+	diagnostic := err.Error()
+	if !strings.Contains(diagnostic, "IDELIUM_AUTH_BRIDGE_SECRET is retired") {
+		t.Fatalf("diagnostic did not identify the retired bridge variable safely: %s", diagnostic)
+	}
+	if strings.Contains(diagnostic, "legacy-bridge-secret-must-not-leak") {
+		t.Fatalf("diagnostic exposed retired bridge secret value: %s", diagnostic)
+	}
+}
+
 func clearConfigurationEnvironment(t *testing.T) {
 	t.Helper()
 
@@ -131,6 +149,11 @@ func clearConfigurationEnvironment(t *testing.T) {
 		"IDELIUM_DB_MAX_OPEN_CONNECTIONS",
 		"IDELIUM_DB_MAX_IDLE_CONNECTIONS",
 		"IDELIUM_DB_CONNECTION_MAX_LIFETIME",
+		"IDELIUM_AUTH_BRIDGE_URL",
+		"IDELIUM_AUTH_BRIDGE_TOKEN",
+		"IDELIUM_AUTH_BRIDGE_SECRET",
+		"IDELIUM_BROWSER_AUTH_BRIDGE_URL",
+		"IDELIUM_LARAVEL_AUTH_INTROSPECTION_URL",
 	} {
 		t.Setenv(name, "")
 	}
