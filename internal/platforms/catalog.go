@@ -63,6 +63,15 @@ type BrowserItem struct {
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 
+// BrowserVersionItem is a legacy browser version catalog row.
+type BrowserVersionItem struct {
+	ID        int64      `json:"id"`
+	Version   string     `json:"version"`
+	IDBrowser int64      `json:"idBrowser"`
+	CreatedAt *time.Time `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+}
+
 // LocationQuery contains the bounded legacy grid query options.
 type LocationQuery struct {
 	Page      int
@@ -163,6 +172,23 @@ func (query BrowserQuery) IsPaged() bool {
 	return query.Paged
 }
 
+// BrowserVersionQuery contains the bounded legacy browser-version grid query options.
+type BrowserVersionQuery struct {
+	IDBrowser int64
+	Page      int
+	PageSize  int
+	Paged     bool
+	Search    string
+	Sort      string
+	Direction string
+	FilterIDs []int64
+}
+
+// IsPaged reports whether the legacy endpoint should return data and meta.
+func (query BrowserVersionQuery) IsPaged() bool {
+	return query.Paged
+}
+
 // LocationPage is the paginated legacy grid response.
 type LocationPage struct {
 	Data []LocationItem    `json:"data"`
@@ -197,6 +223,12 @@ type OperatingSystemVersionPage struct {
 type BrowserPage struct {
 	Data []BrowserItem    `json:"data"`
 	Meta BrowserPageMeta `json:"meta"`
+}
+
+// BrowserVersionPage is the paginated legacy browser-version grid response.
+type BrowserVersionPage struct {
+	Data []BrowserVersionItem    `json:"data"`
+	Meta BrowserVersionPageMeta `json:"meta"`
 }
 
 // LocationPageMeta contains Laravel EnterpriseGridResponse-compatible metadata.
@@ -283,6 +315,20 @@ type BrowserPageMeta struct {
 	Partial         bool   `json:"partial"`
 }
 
+// BrowserVersionPageMeta contains Laravel EnterpriseGridResponse-compatible metadata.
+type BrowserVersionPageMeta struct {
+	Page            int    `json:"page"`
+	PageSize        int    `json:"pageSize"`
+	Total           int64  `json:"total"`
+	LastPage        int    `json:"lastPage"`
+	HasNextPage     bool   `json:"hasNextPage"`
+	HasPreviousPage bool   `json:"hasPreviousPage"`
+	Sort            string `json:"sort"`
+	Direction       string `json:"direction"`
+	Stale           bool   `json:"stale"`
+	Partial         bool   `json:"partial"`
+}
+
 // CatalogRepository reads global platform reference data.
 type CatalogRepository interface {
 	ListTypes(ctx context.Context) ([]CatalogItem, error)
@@ -293,4 +339,5 @@ type CatalogRepository interface {
 	ListOperatingSystems(ctx context.Context, query OperatingSystemQuery) (OperatingSystemPage, error)
 	ListOperatingSystemVersions(ctx context.Context, query OperatingSystemVersionQuery) (OperatingSystemVersionPage, error)
 	ListBrowsers(ctx context.Context, query BrowserQuery) (BrowserPage, error)
+	ListBrowserVersions(ctx context.Context, query BrowserVersionQuery) (BrowserVersionPage, error)
 }

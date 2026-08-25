@@ -1,6 +1,6 @@
 {
   "consumer": "idelium-web",
-  "ownership_matrix_digest_sha256": "5cbddaa995e331f254789ecaf4e6ce1b156942d5f725f3e6bd426dc32c34bcfd",
+  "ownership_matrix_digest_sha256": "0e0ece2498da5588fa7d6e76c62efd2a82b7159e18cbb43007a0a091c0ce07d5",
   "route_inventory_digest_sha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9",
   "routes": [
     {
@@ -28,6 +28,21 @@
       "path": "/api/admin/platforms/browsers/{idOs}",
       "requires_synthetic_session": true,
       "route_id": "GET|HEAD /api/admin/platforms/browsers/{idOs}",
+      "smoke_method": "GET",
+      "target_base_url_env": "IDELIUM_WEB_SMOKE_GO_BASE_URL",
+      "tenant_context": true,
+      "trust_path": "browser-session"
+    },
+    {
+      "aggregate": "platform-catalog",
+      "authentication_mode": "browser-session",
+      "execution_mode": "safe-read",
+      "method": "GET|HEAD",
+      "operation_kind": "read",
+      "owner": "go",
+      "path": "/api/admin/platforms/browserversions/{idBrowser}",
+      "requires_synthetic_session": true,
+      "route_id": "GET|HEAD /api/admin/platforms/browserversions/{idBrowser}",
       "smoke_method": "GET",
       "target_base_url_env": "IDELIUM_WEB_SMOKE_GO_BASE_URL",
       "tenant_context": true,
@@ -464,21 +479,6 @@
       "requires_synthetic_session": true,
       "route_id": "PUT /api/admin/platforms/browserversions",
       "smoke_method": "PUT",
-      "target_base_url_env": "IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL",
-      "tenant_context": true,
-      "trust_path": "browser-session"
-    },
-    {
-      "aggregate": "platform-catalog",
-      "authentication_mode": "browser-session",
-      "execution_mode": "safe-read",
-      "method": "GET|HEAD",
-      "operation_kind": "read",
-      "owner": "laravel",
-      "path": "/api/admin/platforms/browserversions/{idBrowser}",
-      "requires_synthetic_session": true,
-      "route_id": "GET|HEAD /api/admin/platforms/browserversions/{idBrowser}",
-      "smoke_method": "GET",
       "target_base_url_env": "IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL",
       "tenant_context": true,
       "trust_path": "browser-session"
@@ -1376,8 +1376,8 @@
       "synthetic-mutation": 53
     },
     "owner_counts": {
-      "go": 8,
-      "laravel": 83
+      "go": 9,
+      "laravel": 82
     },
     "route_count": 91
   },

@@ -19,7 +19,7 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | Metric | Value |
 | --- | --- |
 | Routes | 91 |
-| Owners | go: 8, laravel: 83 |
+| Owners | go: 9, laravel: 82 |
 | Execution modes | safe-read: 38, synthetic-mutation: 53 |
 
 ## Routes
@@ -28,6 +28,7 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | --- | --- | --- | --- | --- | --- | --- |
 | `GET` | `/api/admin/platforms/brands` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `GET` | `/api/admin/platforms/browsers/{idOs}` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
+| `GET` | `/api/admin/platforms/browserversions/{idBrowser}` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `GET` | `/api/admin/platforms/locations` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `GET` | `/api/admin/platforms/models/{idBrand}` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `GET` | `/api/admin/platforms/os/{idType}` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
@@ -57,7 +58,6 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | `PUT` | `/api/admin/platforms/browsers` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `platform-catalog` |
 | `POST` | `/api/admin/platforms/browserversions` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `platform-catalog` |
 | `PUT` | `/api/admin/platforms/browserversions` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `platform-catalog` |
-| `GET` | `/api/admin/platforms/browserversions/{idBrowser}` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `POST` | `/api/admin/platforms/locations` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `platform-catalog` |
 | `PUT` | `/api/admin/platforms/locations` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `platform-catalog` |
 | `POST` | `/api/admin/platforms/manageplatforms` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `platform-catalog` |

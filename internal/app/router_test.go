@@ -63,6 +63,12 @@ func (fakeCatalogRepository) ListBrowsers(context.Context, platforms.BrowserQuer
 	}, nil
 }
 
+func (fakeCatalogRepository) ListBrowserVersions(context.Context, platforms.BrowserVersionQuery) (platforms.BrowserVersionPage, error) {
+	return platforms.BrowserVersionPage{
+		Data: []platforms.BrowserVersionItem{{ID: 1, Version: "124", IDBrowser: 1}},
+	}, nil
+}
+
 func TestRouterReturnsStableNotFoundResponse(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
 	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
@@ -198,5 +204,20 @@ func TestRouterReturnsPlatformBrowsers(t *testing.T) {
 	}
 	if !strings.Contains(response.Body.String(), `"name":"chrome"`) {
 		t.Fatalf("platform browser response missing: %s", response.Body.String())
+	}
+}
+
+func TestRouterReturnsPlatformBrowserVersions(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := NewRouter(logger, readyChecker{}, buildinfo.Current(), fakeCatalogRepository{})
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/platforms/browserversions/1", nil))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	if !strings.Contains(response.Body.String(), `"version":"124"`) {
+		t.Fatalf("platform browser-version response missing: %s", response.Body.String())
 	}
 }

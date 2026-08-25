@@ -22,6 +22,7 @@ type catalogRepositoryStub struct {
 	os        OperatingSystemPage
 	osVersion OperatingSystemVersionPage
 	browsers  BrowserPage
+	browserVersions BrowserVersionPage
 	err       error
 }
 
@@ -55,6 +56,10 @@ func (stub catalogRepositoryStub) ListOperatingSystemVersions(context.Context, O
 
 func (stub catalogRepositoryStub) ListBrowsers(context.Context, BrowserQuery) (BrowserPage, error) {
 	return stub.browsers, stub.err
+}
+
+func (stub catalogRepositoryStub) ListBrowserVersions(context.Context, BrowserVersionQuery) (BrowserVersionPage, error) {
+	return stub.browserVersions, stub.err
 }
 
 func TestTypesReturnsLegacyArrayShape(t *testing.T) {
@@ -462,6 +467,79 @@ func TestBrowsersRejectsInvalidOSIdentifier(t *testing.T) {
 	}
 	body := response.Body.String()
 	if !strings.Contains(body, "INVALID_OPERATING_SYSTEM") {
+		t.Fatalf("stable validation code missing: %s", body)
+	}
+}
+
+func TestBrowserVersionsReturnsLegacyArrayWhenUnpaged(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{
+		browserVersions: BrowserVersionPage{
+			Data: []BrowserVersionItem{{ID: 1, Version: "124", IDBrowser: 1}, {ID: 2, Version: "125", IDBrowser: 1}},
+		},
+	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/browserversions/1", nil)
+
+	handler.BrowserVersions(response, withPathParam(request, "idBrowser", "1"))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	body := response.Body.String()
+	for _, expected := range []string{`"id":1`, `"version":"124"`, `"idBrowser":1`, `"version":"125"`} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("response missing %s: %s", expected, body)
+		}
+	}
+	if strings.Contains(body, `"meta"`) {
+		t.Fatalf("unpaged browser-version response should preserve the legacy array shape: %s", body)
+	}
+}
+
+func TestBrowserVersionsReturnsPagedGridWhenRequested(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{
+		browserVersions: BrowserVersionPage{
+			Data: []BrowserVersionItem{{ID: 2, Version: "125", IDBrowser: 1}},
+			Meta: BrowserVersionPageMeta{
+				Page:        2,
+				PageSize:    1,
+				Total:       2,
+				LastPage:    2,
+				Sort:        "version",
+				Direction:   "desc",
+				Stale:       false,
+				Partial:     false,
+			},
+		},
+	}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/browserversions/1?page=2&pageSize=1&sort=version&direction=desc", nil)
+
+	handler.BrowserVersions(response, withPathParam(request, "idBrowser", "1"))
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	body := response.Body.String()
+	for _, expected := range []string{`"data"`, `"meta"`, `"page":2`, `"pageSize":1`, `"direction":"desc"`} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("response missing %s: %s", expected, body)
+		}
+	}
+}
+
+func TestBrowserVersionsRejectsInvalidBrowserIdentifier(t *testing.T) {
+	handler := NewHandler(catalogRepositoryStub{}, slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/admin/platforms/browserversions/not-a-number", nil)
+
+	handler.BrowserVersions(response, withPathParam(request, "idBrowser", "not-a-number"))
+
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", response.Code)
+	}
+	body := response.Body.String()
+	if !strings.Contains(body, "INVALID_BROWSER") {
 		t.Fatalf("stable validation code missing: %s", body)
 	}
 }

@@ -137,6 +137,7 @@ func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 		"DROP TABLE IF EXISTS os",
 		"DROP TABLE IF EXISTS version_os",
 		"DROP TABLE IF EXISTS browsers",
+		"DROP TABLE IF EXISTS version_browsers",
 		"CREATE TABLE types (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL)",
 		"CREATE TABLE statuses (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL)",
 		"CREATE TABLE locations (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
@@ -145,6 +146,7 @@ func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 		"CREATE TABLE os (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL, type INT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
 		"CREATE TABLE version_os (id BIGINT PRIMARY KEY AUTO_INCREMENT, version VARCHAR(255) NOT NULL, idOs INT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
 		"CREATE TABLE browsers (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL, idOs INT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
+		"CREATE TABLE version_browsers (id BIGINT PRIMARY KEY AUTO_INCREMENT, version VARCHAR(255) NOT NULL, idBrowser INT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)",
 		"INSERT INTO types (id, name) VALUES (2, 'mobile'), (1, 'desktop')",
 		"INSERT INTO statuses (id, name) VALUES (2, 'busy'), (1, 'free')",
 		"INSERT INTO locations (id, name, created_at, updated_at) VALUES (2, 'us-east', NULL, NULL), (1, 'eu-west', NULL, NULL)",
@@ -153,6 +155,7 @@ func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 		"INSERT INTO os (id, name, type, created_at, updated_at) VALUES (3, 'android', 2, NULL, NULL), (2, 'windows', 1, NULL, NULL), (1, 'linux', 1, NULL, NULL)",
 		"INSERT INTO version_os (id, version, idOs, created_at, updated_at) VALUES (3, '13', 2, NULL, NULL), (2, '15', 1, NULL, NULL), (1, '14', 1, NULL, NULL)",
 		"INSERT INTO browsers (id, name, idOs, created_at, updated_at) VALUES (3, 'safari', 2, NULL, NULL), (2, 'firefox', 1, NULL, NULL), (1, 'chrome', 1, NULL, NULL)",
+		"INSERT INTO version_browsers (id, version, idBrowser, created_at, updated_at) VALUES (3, '17', 2, NULL, NULL), (2, '125', 1, NULL, NULL), (1, '124', 1, NULL, NULL)",
 	} {
 		if _, err := database.ExecContext(ctx, statement); err != nil {
 			t.Fatalf("prepare catalog fixture %q: %v", statement, err)
@@ -230,5 +233,14 @@ func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	expectedBrowsers := []platforms.BrowserItem{{ID: 1, Name: "chrome", IDOs: 1}, {ID: 2, Name: "firefox", IDOs: 1}}
 	if !reflect.DeepEqual(browsers.Data, expectedBrowsers) {
 		t.Fatalf("unexpected browsers: %#v", browsers.Data)
+	}
+
+	browserVersions, err := repository.ListBrowserVersions(ctx, platforms.BrowserVersionQuery{IDBrowser: 1})
+	if err != nil {
+		t.Fatalf("ListBrowserVersions() returned an error: %v", err)
+	}
+	expectedBrowserVersions := []platforms.BrowserVersionItem{{ID: 1, Version: "124", IDBrowser: 1}, {ID: 2, Version: "125", IDBrowser: 1}}
+	if !reflect.DeepEqual(browserVersions.Data, expectedBrowserVersions) {
+		t.Fatalf("unexpected browser versions: %#v", browserVersions.Data)
 	}
 }

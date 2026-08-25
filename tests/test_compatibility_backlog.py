@@ -114,6 +114,10 @@ class CompatibilityBacklogTest(unittest.TestCase):
             self.item("GET|HEAD", "/api/admin/platforms/browsers/{idOs}")["rollout_status"],
         )
         self.assertEqual(
+            "go-owned",
+            self.item("GET|HEAD", "/api/admin/platforms/browserversions/{idBrowser}")["rollout_status"],
+        )
+        self.assertEqual(
             "laravel-owned",
             self.item("POST", "/api/admin/platforms/os")["rollout_status"],
         )
@@ -124,6 +128,10 @@ class CompatibilityBacklogTest(unittest.TestCase):
         self.assertEqual(
             "laravel-owned",
             self.item("POST", "/api/admin/platforms/browsers")["rollout_status"],
+        )
+        self.assertEqual(
+            "laravel-owned",
+            self.item("POST", "/api/admin/platforms/browserversions")["rollout_status"],
         )
 
     def test_rejects_unsupported_rollout_override_status(self):

@@ -15,8 +15,8 @@
     "route_count": 168,
     "mutation_route_count": 98,
     "route_owner_counts": {
-      "go": 8,
-      "laravel": 160
+      "go": 9,
+      "laravel": 159
     }
   },
   "aggregates": [
@@ -685,8 +685,8 @@
       "path": "/api/admin/platforms/browserversions/{idBrowser}",
       "aggregate": "platform-catalog",
       "operation_kind": "read",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 3
     },
