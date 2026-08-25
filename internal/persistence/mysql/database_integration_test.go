@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/idelium/idelium-api-go/internal/auth"
 	"github.com/idelium/idelium-api-go/internal/buildinfo"
 	"github.com/idelium/idelium-api-go/internal/config"
 	"github.com/idelium/idelium-api-go/internal/health"
@@ -242,5 +244,66 @@ func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	expectedBrowserVersions := []platforms.BrowserVersionItem{{ID: 1, Version: "124", IDBrowser: 1}, {ID: 2, Version: "125", IDBrowser: 1}}
 	if !reflect.DeepEqual(browserVersions.Data, expectedBrowserVersions) {
 		t.Fatalf("unexpected browser versions: %#v", browserVersions.Data)
+	}
+}
+
+func TestLegacyKeyRepositoryIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS costumers",
+		`CREATE TABLE costumers (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			costumer VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			logo JSON NULL,
+			licenseExpiration DATETIME NULL,
+			apiKey VARCHAR(255) NOT NULL UNIQUE,
+			apiKeyLastUsedAt TIMESTAMP NULL,
+			apiKeyExpiresAt TIMESTAMP NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`INSERT INTO costumers
+			(id, costumer, description, logo, licenseExpiration, apiKey, apiKeyExpiresAt)
+		 VALUES
+			(1, 'First customer', 'First customer', JSON_OBJECT(), NULL, 'first-api-key', NULL),
+			(2, 'Expired customer', 'Expired customer', JSON_OBJECT(), NULL, 'expired-api-key', '2026-08-25 09:00:00')`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare legacy key fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewLegacyKeyRepository(database)
+	usedAt := time.Date(2026, 8, 25, 10, 30, 0, 0, time.UTC)
+	customer, err := repository.AuthenticateLegacyCustomerKey(ctx, "first-api-key", usedAt)
+	if err != nil {
+		t.Fatalf("AuthenticateLegacyCustomerKey() returned an error: %v", err)
+	}
+	if customer.ID != 1 || customer.Name != "First customer" {
+		t.Fatalf("unexpected authenticated customer: %#v", customer)
+	}
+
+	var lastUsed sql.NullTime
+	if err := database.QueryRowContext(ctx, "SELECT apiKeyLastUsedAt FROM costumers WHERE id = 1").Scan(&lastUsed); err != nil {
+		t.Fatalf("read last-used timestamp: %v", err)
+	}
+	if !lastUsed.Valid || !lastUsed.Time.Equal(usedAt) {
+		t.Fatalf("last-used timestamp was not recorded: %#v", lastUsed)
+	}
+
+	_, err = repository.AuthenticateLegacyCustomerKey(ctx, "expired-api-key", usedAt)
+	if !errors.Is(err, auth.ErrInvalidLegacyKey) {
+		t.Fatalf("expected expired key to be rejected safely, got %v", err)
+	}
+
+	_, err = repository.AuthenticateLegacyCustomerKey(ctx, "missing-api-key", usedAt)
+	if !errors.Is(err, auth.ErrInvalidLegacyKey) {
+		t.Fatalf("expected missing key to be rejected safely, got %v", err)
 	}
 }

@@ -22,6 +22,7 @@ The repository currently provides the production foundation for the new API:
 - structured, redacted request logging;
 - correlation identifiers and a stable error envelope;
 - liveness and MySQL-backed readiness endpoints;
+- Laravel-compatible legacy CLI customer API-key authentication;
 - read-only legacy-compatible platform type and status catalog endpoints;
 - bounded HTTP and database timeouts;
 - graceful shutdown;
@@ -84,6 +85,8 @@ in [docs/operations/health-contracts.md](docs/operations/health-contracts.md).
 The shared correlation, redacted logging, panic recovery, and security-header
 contract is documented in
 [docs/operations/http-safety-observability.md](docs/operations/http-safety-observability.md).
+The legacy CLI customer API-key authentication boundary is documented in
+[docs/operations/legacy-cli-api-key-authentication.md](docs/operations/legacy-cli-api-key-authentication.md).
 
 ## Configuration
 
