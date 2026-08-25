@@ -13,6 +13,20 @@ from typing import Any, Iterable
 BEGIN = "  # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS"
 END = "  # END GENERATED LARAVEL COMPATIBILITY CONTRACTS"
 HTTP_METHODS = {"DELETE", "GET", "PATCH", "POST", "PUT"}
+GO_CUTOVER_GATED_ROUTES = {
+    "PUT /api/admin/identity/accounts/{user}/break-glass",
+    "POST /api/admin/identity/accounts/{user}/break-glass/test",
+    "GET|HEAD /api/admin/identity/providers",
+    "POST /api/admin/identity/providers",
+    "POST /api/admin/identity/providers/{identityProvider}/scim/users",
+    "POST /api/admin/profile/mfa/confirm",
+    "POST /api/admin/profile/mfa/enroll",
+    "POST /api/admin/profile/mfa/step-up",
+    "POST /api/oidc/token-exchange",
+    "POST /api/sso/{identityProvider}/oidc/callback",
+    "POST /api/sso/{identityProvider}/saml/callback",
+    "POST /api/sso/{identityProvider}/start",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -95,7 +109,16 @@ def generated_operation(route: dict[str, Any], method: str) -> list[str]:
     path = gateway_path(route["path"])
     path_params = re.findall(r"{([^}]+)}", path)
     consumer_ids = route.get("consumer_ids", [])
+    route_id = f"{route['method']} {route['path']}"
+    go_cutover_gated = route_id in GO_CUTOVER_GATED_ROUTES
     responses = ['        "200":', "          $ref: \"#/components/responses/LegacyCompatibilityResponse\""]
+    if go_cutover_gated:
+        responses.extend(
+            [
+                '        "501":',
+                "          $ref: \"#/components/responses/LegacyCompatibilityError\"",
+            ]
+        )
     if route["authentication_mode"] != "public":
         responses.extend(
             [
@@ -136,6 +159,13 @@ def generated_operation(route: dict[str, Any], method: str) -> list[str]:
         f"      x-idelium-tenant-context: {yaml_string(route['tenant_context'])}",
         f"      x-idelium-consumers: {scalar_list(consumer_ids)}",
     ]
+    if go_cutover_gated:
+        lines.extend(
+            [
+                "      x-idelium-go-cutover-gate: true",
+                "      x-idelium-go-cutover-error-code: \"IDENTITY_MIGRATION_DISABLED\"",
+            ]
+        )
     if path_params:
         lines.append("      parameters:")
         for name in path_params:

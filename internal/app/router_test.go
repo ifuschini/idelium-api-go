@@ -256,6 +256,28 @@ func TestRouterRejectsUnsupportedMethod(t *testing.T) {
 	}
 }
 
+func TestRouterFailsClosedForAdvancedIdentityRoutes(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(
+		response,
+		httptest.NewRequest(http.MethodPost, "/sso/7/oidc/callback", strings.NewReader("id_token=must-not-leak")),
+	)
+
+	if response.Code != http.StatusNotImplemented {
+		t.Fatalf("expected status 501, got %d", response.Code)
+	}
+	body := response.Body.String()
+	if !strings.Contains(body, "IDENTITY_MIGRATION_DISABLED") {
+		t.Fatalf("stable identity migration code missing: %s", body)
+	}
+	if strings.Contains(body, "must-not-leak") || strings.Contains(body, "id_token") {
+		t.Fatalf("identity route leaked callback payload: %s", body)
+	}
+}
+
 func TestRouterReturnsPlatformTypes(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
 	router := testRouter(logger)

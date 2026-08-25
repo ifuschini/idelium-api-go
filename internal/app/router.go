@@ -11,6 +11,7 @@ import (
 	"github.com/idelium/idelium-api-go/internal/cliapi"
 	"github.com/idelium/idelium-api-go/internal/health"
 	"github.com/idelium/idelium-api-go/internal/httpx"
+	"github.com/idelium/idelium-api-go/internal/identity"
 	"github.com/idelium/idelium-api-go/internal/platforms"
 )
 
@@ -49,6 +50,20 @@ func NewRouter(
 	router.Get("/admin/platforms/browserversions/{idBrowser}", platformHandler.BrowserVersions)
 	router.Get("/admin/platforms/manageplatforms/{type}", platformHandler.ManagedPlatforms)
 	router.Get("/admin/launch/targets/{idProject}", platformHandler.LaunchTargets)
+
+	identityHandler := identity.NewHandler(logger)
+	router.Get("/admin/identity/providers", identityHandler.Providers)
+	router.Post("/admin/identity/providers", identityHandler.Providers)
+	router.Put("/admin/identity/accounts/{user}/break-glass", identityHandler.BreakGlass)
+	router.Post("/admin/identity/accounts/{user}/break-glass/test", identityHandler.BreakGlassTest)
+	router.Post("/admin/identity/providers/{identityProvider}/scim/users", identityHandler.SCIMUsers)
+	router.Post("/admin/profile/mfa/enroll", identityHandler.MFAEnroll)
+	router.Post("/admin/profile/mfa/confirm", identityHandler.MFAConfirm)
+	router.Post("/admin/profile/mfa/step-up", identityHandler.MFAStepUp)
+	router.Post("/oidc/token-exchange", identityHandler.OIDCTokenExchange)
+	router.Post("/sso/{identityProvider}/start", identityHandler.SSOStart)
+	router.Post("/sso/{identityProvider}/oidc/callback", identityHandler.OIDCCallback)
+	router.Post("/sso/{identityProvider}/saml/callback", identityHandler.SAMLCallback)
 
 	cliHandler := cliapi.NewHandler(testCycleRepository, testRepository, stepRepository, pluginRepository, environmentRepository, logger)
 	cliAuthenticator := auth.NewLegacyKeyAuthenticator(legacyKeyRepository, logger)
