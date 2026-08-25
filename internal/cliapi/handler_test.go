@@ -368,6 +368,19 @@ func TestHandlerReturnsEmptyPluginList(t *testing.T) {
 	}
 }
 
+func TestHandlerReturnsInvalidIDForMalformedPluginListIdentifier(t *testing.T) {
+	repository := &fakePluginRepository{}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, repository, &bytes.Buffer{})
+	response := httptest.NewRecorder()
+
+	handler.Plugins(response, requestWithTenantParam("/ideliumcl/plugins/not-number", "idProject", "not-number", 42))
+
+	assertInvalidID(t, response)
+	if repository.projectID != 0 {
+		t.Fatalf("repository should not be called for malformed identifiers: %#v", repository)
+	}
+}
+
 func TestHandlerReturnsTenantScopedPlugin(t *testing.T) {
 	repository := &fakePluginRepository{
 		plugin: Plugin{
@@ -394,6 +407,19 @@ func TestHandlerReturnsTenantScopedPlugin(t *testing.T) {
 	}
 	if repository.customerID != 42 || repository.pluginID != 14 {
 		t.Fatalf("repository was not called with tenant-scoped identifiers: %#v", repository)
+	}
+}
+
+func TestHandlerReturnsInvalidIDForMalformedPluginIdentifier(t *testing.T) {
+	repository := &fakePluginRepository{}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, repository, &bytes.Buffer{})
+	response := httptest.NewRecorder()
+
+	handler.Plugin(response, requestWithTenantParam("/ideliumcl/plugin/not-number", "idPlugin", "not-number", 42))
+
+	assertInvalidID(t, response)
+	if repository.pluginID != 0 {
+		t.Fatalf("repository should not be called for malformed identifiers: %#v", repository)
 	}
 }
 
@@ -471,6 +497,20 @@ func TestHandlerReturnsEmptyEnvironmentList(t *testing.T) {
 	}
 }
 
+func TestHandlerReturnsInvalidIDForMalformedEnvironmentListIdentifier(t *testing.T) {
+	repository := &fakeEnvironmentRepository{}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.environments = repository
+	response := httptest.NewRecorder()
+
+	handler.Environments(response, requestWithTenantParam("/ideliumcl/environments/not-number", "idProject", "not-number", 42))
+
+	assertInvalidID(t, response)
+	if repository.projectID != 0 {
+		t.Fatalf("repository should not be called for malformed identifiers: %#v", repository)
+	}
+}
+
 func TestHandlerReturnsTenantScopedEnvironment(t *testing.T) {
 	repository := &fakeEnvironmentRepository{
 		environment: Environment{
@@ -499,6 +539,20 @@ func TestHandlerReturnsTenantScopedEnvironment(t *testing.T) {
 	}
 	if repository.customerID != 42 || repository.environmentID != 16 {
 		t.Fatalf("repository was not called with tenant-scoped identifiers: %#v", repository)
+	}
+}
+
+func TestHandlerReturnsInvalidIDForMalformedEnvironmentIdentifier(t *testing.T) {
+	repository := &fakeEnvironmentRepository{}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.environments = repository
+	response := httptest.NewRecorder()
+
+	handler.Environment(response, requestWithTenantParam("/ideliumcl/environment/not-number", "idEnvironment", "not-number", 42))
+
+	assertInvalidID(t, response)
+	if repository.environmentID != 0 {
+		t.Fatalf("repository should not be called for malformed identifiers: %#v", repository)
 	}
 }
 
