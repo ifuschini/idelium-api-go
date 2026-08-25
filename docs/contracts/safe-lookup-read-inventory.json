@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "decision": "Wave 3 has no remaining standalone safe lookup reads beyond the platform catalog endpoints already migrated to Go.",
+  "reviewed_source": "docs/contracts/migration-ownership-matrix.json",
+  "reviewed_scope": {
+    "migration_wave": 3,
+    "method": "GET|HEAD",
+    "aggregate": "platform-catalog"
+  },
+  "migrated_safe_lookup_reads": [
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/brands",
+      "owner": "go-owned",
+      "evidence": "Implemented by the platform catalog read slice and covered by Laravel-Go golden fixture comparison."
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/browsers/{idOs}",
+      "owner": "go-owned",
+      "evidence": "Implemented by the platform catalog read slice and covered by Laravel-Go golden fixture comparison."
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/browserversions/{idBrowser}",
+      "owner": "go-owned",
+      "evidence": "Implemented by the platform catalog read slice and covered by Laravel-Go golden fixture comparison."
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/locations",
+      "owner": "go-owned",
+      "evidence": "Implemented by the platform catalog read slice and covered by Laravel-Go golden fixture comparison."
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/models/{idBrand}",
+      "owner": "go-owned",
+      "evidence": "Implemented by the platform catalog read slice and covered by Laravel-Go golden fixture comparison."
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/os/{idType}",
+      "owner": "go-owned",
+      "evidence": "Implemented by the platform catalog read slice and covered by Laravel-Go golden fixture comparison."
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/osversion/{idOs}",
+      "owner": "go-owned",
+      "evidence": "Implemented by the platform catalog read slice and covered by Laravel-Go golden fixture comparison."
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/status",
+      "owner": "go-owned",
+      "evidence": "Implemented by the platform catalog read slice and covered by Laravel-Go golden fixture comparison."
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/types",
+      "owner": "go-owned",
+      "evidence": "Implemented by the platform catalog read slice and covered by Laravel-Go golden fixture comparison."
+    }
+  ],
+  "deferred_candidates": [
+    {
+      "route_id": "GET|HEAD /api/admin/platforms/manageplatforms/{type}",
+      "owner": "laravel-owned",
+      "reason": "This route is a tenant-scoped management grid paired with POST, PUT, and DELETE platform management mutations. It is not a standalone lookup and must move with the Wave 6 platform catalog mutation aggregate so validation, authorization, rollback, and differential coverage remain coherent."
+    }
+  ],
+  "out_of_scope_read_groups": [
+    {
+      "group": "CLI configuration reads",
+      "target_wave": 4,
+      "reason": "API-key trust path and execution configuration contracts require CLI-specific compatibility and result-contract gates."
+    },
+    {
+      "group": "Execution result reads",
+      "target_wave": 7,
+      "reason": "Execution artifacts, reports, and result details require storage, redaction, and tenant-scoped retrieval policies."
+    },
+    {
+      "group": "Identity, customer, project, account, and menu reads",
+      "target_wave": 9,
+      "reason": "Browser-session and tenant-context reads remain coupled to Laravel identity and administration semantics until the final administration wave."
+    }
+  ],
+  "rollback": "No additional traffic moved by this decision. Roll back by reverting this inventory and keeping route-rollout overrides unchanged."
+}
