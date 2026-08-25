@@ -4393,9 +4393,13 @@ paths:
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
       x-idelium-consumers: []
+      x-idelium-go-cutover-gate: true
+      x-idelium-go-cutover-error-code: "SERVICE_ACCOUNT_MIGRATION_DISABLED"
       responses:
         "200":
           $ref: "#/components/responses/LegacyCompatibilityResponse"
+        "501":
+          $ref: "#/components/responses/LegacyCompatibilityError"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -4417,6 +4421,8 @@ paths:
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
       x-idelium-consumers: []
+      x-idelium-go-cutover-gate: true
+      x-idelium-go-cutover-error-code: "SERVICE_ACCOUNT_MIGRATION_DISABLED"
       requestBody:
         required: false
         content:
@@ -4429,6 +4435,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/LegacyCompatibilityResponse"
+        "501":
+          $ref: "#/components/responses/LegacyCompatibilityError"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -4453,6 +4461,8 @@ paths:
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
       x-idelium-consumers: []
+      x-idelium-go-cutover-gate: true
+      x-idelium-go-cutover-error-code: "SERVICE_ACCOUNT_MIGRATION_DISABLED"
       parameters:
         - name: serviceAccount
           in: path
@@ -4471,6 +4481,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/LegacyCompatibilityResponse"
+        "501":
+          $ref: "#/components/responses/LegacyCompatibilityError"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":

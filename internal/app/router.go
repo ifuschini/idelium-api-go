@@ -13,6 +13,7 @@ import (
 	"github.com/idelium/idelium-api-go/internal/httpx"
 	"github.com/idelium/idelium-api-go/internal/identity"
 	"github.com/idelium/idelium-api-go/internal/platforms"
+	"github.com/idelium/idelium-api-go/internal/serviceaccounts"
 )
 
 // NewRouter builds the API router and common middleware chain.
@@ -64,6 +65,11 @@ func NewRouter(
 	router.Post("/sso/{identityProvider}/start", identityHandler.SSOStart)
 	router.Post("/sso/{identityProvider}/oidc/callback", identityHandler.OIDCCallback)
 	router.Post("/sso/{identityProvider}/saml/callback", identityHandler.SAMLCallback)
+
+	serviceAccountHandler := serviceaccounts.NewHandler(logger)
+	router.Get("/admin/service-accounts", serviceAccountHandler.Index)
+	router.Post("/admin/service-accounts", serviceAccountHandler.Store)
+	router.Post("/admin/service-accounts/{serviceAccount}/revoke", serviceAccountHandler.Revoke)
 
 	cliHandler := cliapi.NewHandler(testCycleRepository, testRepository, stepRepository, pluginRepository, environmentRepository, logger)
 	cliAuthenticator := auth.NewLegacyKeyAuthenticator(legacyKeyRepository, logger)

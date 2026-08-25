@@ -14,18 +14,21 @@ BEGIN = "  # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS"
 END = "  # END GENERATED LARAVEL COMPATIBILITY CONTRACTS"
 HTTP_METHODS = {"DELETE", "GET", "PATCH", "POST", "PUT"}
 GO_CUTOVER_GATED_ROUTES = {
-    "PUT /api/admin/identity/accounts/{user}/break-glass",
-    "POST /api/admin/identity/accounts/{user}/break-glass/test",
-    "GET|HEAD /api/admin/identity/providers",
-    "POST /api/admin/identity/providers",
-    "POST /api/admin/identity/providers/{identityProvider}/scim/users",
-    "POST /api/admin/profile/mfa/confirm",
-    "POST /api/admin/profile/mfa/enroll",
-    "POST /api/admin/profile/mfa/step-up",
-    "POST /api/oidc/token-exchange",
-    "POST /api/sso/{identityProvider}/oidc/callback",
-    "POST /api/sso/{identityProvider}/saml/callback",
-    "POST /api/sso/{identityProvider}/start",
+    "PUT /api/admin/identity/accounts/{user}/break-glass": "IDENTITY_MIGRATION_DISABLED",
+    "POST /api/admin/identity/accounts/{user}/break-glass/test": "IDENTITY_MIGRATION_DISABLED",
+    "GET|HEAD /api/admin/identity/providers": "IDENTITY_MIGRATION_DISABLED",
+    "POST /api/admin/identity/providers": "IDENTITY_MIGRATION_DISABLED",
+    "POST /api/admin/identity/providers/{identityProvider}/scim/users": "IDENTITY_MIGRATION_DISABLED",
+    "POST /api/admin/profile/mfa/confirm": "IDENTITY_MIGRATION_DISABLED",
+    "POST /api/admin/profile/mfa/enroll": "IDENTITY_MIGRATION_DISABLED",
+    "POST /api/admin/profile/mfa/step-up": "IDENTITY_MIGRATION_DISABLED",
+    "POST /api/oidc/token-exchange": "IDENTITY_MIGRATION_DISABLED",
+    "POST /api/sso/{identityProvider}/oidc/callback": "IDENTITY_MIGRATION_DISABLED",
+    "POST /api/sso/{identityProvider}/saml/callback": "IDENTITY_MIGRATION_DISABLED",
+    "POST /api/sso/{identityProvider}/start": "IDENTITY_MIGRATION_DISABLED",
+    "GET|HEAD /api/admin/service-accounts": "SERVICE_ACCOUNT_MIGRATION_DISABLED",
+    "POST /api/admin/service-accounts": "SERVICE_ACCOUNT_MIGRATION_DISABLED",
+    "POST /api/admin/service-accounts/{serviceAccount}/revoke": "SERVICE_ACCOUNT_MIGRATION_DISABLED",
 }
 
 
@@ -110,7 +113,8 @@ def generated_operation(route: dict[str, Any], method: str) -> list[str]:
     path_params = re.findall(r"{([^}]+)}", path)
     consumer_ids = route.get("consumer_ids", [])
     route_id = f"{route['method']} {route['path']}"
-    go_cutover_gated = route_id in GO_CUTOVER_GATED_ROUTES
+    go_cutover_error_code = GO_CUTOVER_GATED_ROUTES.get(route_id)
+    go_cutover_gated = go_cutover_error_code is not None
     responses = ['        "200":', "          $ref: \"#/components/responses/LegacyCompatibilityResponse\""]
     if go_cutover_gated:
         responses.extend(
@@ -163,7 +167,7 @@ def generated_operation(route: dict[str, Any], method: str) -> list[str]:
         lines.extend(
             [
                 "      x-idelium-go-cutover-gate: true",
-                "      x-idelium-go-cutover-error-code: \"IDENTITY_MIGRATION_DISABLED\"",
+                f"      x-idelium-go-cutover-error-code: {yaml_string(go_cutover_error_code)}",
             ]
         )
     if path_params:

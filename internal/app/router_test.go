@@ -278,6 +278,28 @@ func TestRouterFailsClosedForAdvancedIdentityRoutes(t *testing.T) {
 	}
 }
 
+func TestRouterFailsClosedForServiceAccountRoutes(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(
+		response,
+		httptest.NewRequest(http.MethodPost, "/admin/service-accounts", strings.NewReader(`{"token":"must-not-leak"}`)),
+	)
+
+	if response.Code != http.StatusNotImplemented {
+		t.Fatalf("expected status 501, got %d", response.Code)
+	}
+	body := response.Body.String()
+	if !strings.Contains(body, "SERVICE_ACCOUNT_MIGRATION_DISABLED") {
+		t.Fatalf("stable service-account migration code missing: %s", body)
+	}
+	if strings.Contains(body, "must-not-leak") || strings.Contains(body, "token") {
+		t.Fatalf("service-account route leaked credential payload: %s", body)
+	}
+}
+
 func TestRouterReturnsPlatformTypes(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
 	router := testRouter(logger)
