@@ -1,0 +1,77 @@
+{
+  "fixtureVersion": "1.0",
+  "id": "cli-graph-cycle-authorized",
+  "description": "Synthetic authorized Laravel CLI configuration graph for one cycle.",
+  "source": {
+    "runtime": "go",
+    "repository": "idelium/idelium-api-go",
+    "revision": "0000000000000000000000000000000000000000",
+    "capturedAt": "2026-01-01T00:00:00Z"
+  },
+  "context": {
+    "tenant": {
+      "id": "fixture-tenant-alpha",
+      "synthetic": true
+    },
+    "actor": {
+      "id": "fixture-cli-customer",
+      "synthetic": true
+    }
+  },
+  "graph": {
+    "customerId": 42,
+    "projectId": 3,
+    "cycle": {
+      "id": 7,
+      "name": "fixture cycle",
+      "description": "Synthetic CLI cycle",
+      "configTestIds": [9],
+      "idProject": 3,
+      "idCostumer": 42
+    },
+    "tests": [
+      {
+        "id": 9,
+        "name": "browser test",
+        "description": "Browser coverage",
+        "configStepIds": [12],
+        "idProject": 3,
+        "idCostumer": 42
+      }
+    ],
+    "steps": [
+      {
+        "id": 12,
+        "name": "open page",
+        "description": "Open the browser",
+        "order": 2,
+        "idProject": 3,
+        "idCostumer": 42
+      }
+    ],
+    "plugins": [
+      {
+        "id": 14,
+        "name": "python wrapper",
+        "idProject": 3,
+        "idCostumer": 42
+      }
+    ],
+    "environments": [
+      {
+        "id": 16,
+        "code": "demo",
+        "description": "Demo environment",
+        "idProject": 3,
+        "idCostumer": 42
+      }
+    ]
+  },
+  "redactions": [
+    {
+      "path": "$.request.headers.Idelium-Key",
+      "rule": "Remove the legacy customer API key before the fixture is persisted."
+    }
+  ],
+  "sideEffects": []
+}

@@ -100,6 +100,9 @@ The Go-owned CLI environment read paths are documented in
 The opt-in remote smoke runner for Go-owned CLI configuration reads is
 documented in
 [docs/operations/cli-remote-smoke-tests.md](docs/operations/cli-remote-smoke-tests.md).
+Graph-level Laravel-Go equivalence for a full CLI configuration cycle is
+documented in
+[docs/operations/cli-graph-equivalence.md](docs/operations/cli-graph-equivalence.md).
 
 ## Configuration
 
