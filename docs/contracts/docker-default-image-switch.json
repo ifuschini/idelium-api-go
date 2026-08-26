@@ -1,0 +1,50 @@
+{
+  "blockers": [
+    {
+      "control": "laravel-readonly-maintenance",
+      "reason": "The Laravel read-only maintenance gate is not ready."
+    },
+    {
+      "control": "staging-route-cutover",
+      "count": 136,
+      "reason": "The staging route cutover manifest still has Laravel blockers."
+    }
+  ],
+  "current_default": {
+    "api_service": "Laravel API image remains the default while this plan is blocked.",
+    "fallback_owner": "laravel",
+    "repository": "idelium-docker"
+  },
+  "preconditions": {
+    "go_fail_closed_routes": 15,
+    "go_owned_routes": 17,
+    "laravel_blocker_routes": 136,
+    "maintenance_status": "blocked",
+    "route_cutover_status": "blocked"
+  },
+  "production_enabled": false,
+  "redaction": "The switch plan contains only image names, control states, and route counts. It does not contain credentials or runtime secrets.",
+  "rollback": {
+    "dual_writes_allowed": false,
+    "requires_database_restore": false,
+    "strategy": "Restore the previous Laravel API image default, route traffic back to Laravel, and keep Go image available for diagnostics."
+  },
+  "schema_version": 1,
+  "status": "blocked",
+  "switch_controls": [
+    "Build and publish the exact Go API runtime image by immutable digest.",
+    "Update idelium-docker defaults only after maintenance and route-cutover gates are ready.",
+    "Keep the Laravel API image reference available as rollback fallback.",
+    "Require Go readiness before web and CLI traffic is admitted.",
+    "Run Docker quickstart, Web smoke, CLI smoke, and route cutover checks after the switch."
+  ],
+  "switch_id": "docker-default-api-image-switch",
+  "target_default": {
+    "api_service": "idelium/api-go",
+    "image_reference_policy": "pin-by-immutable-digest",
+    "liveness_path": "/healthz",
+    "readiness_path": "/readyz",
+    "repository": "idelium-docker",
+    "runtime_user": "65532:65532"
+  }
+}
