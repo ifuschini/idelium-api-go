@@ -1,6 +1,6 @@
 GO ?= go
 
-.PHONY: baseline-migration-check build cli-smoke contract-test format format-check integration-test openapi-check smoke-targets-check test test-race vet verify
+.PHONY: baseline-migration-check build cli-smoke contract-test format format-check integration-test openapi-check smoke-targets-check staging-cutover-check test test-race vet verify
 
 baseline-migration-check:
 	python3 scripts/build_go_baseline_migration.py \
@@ -34,6 +34,9 @@ smoke-targets-check:
 	python3 scripts/build_web_smoke_targets.py --check
 	python3 scripts/build_cli_smoke_targets.py --check
 
+staging-cutover-check:
+	python3 scripts/build_staging_route_cutover.py --check
+
 format:
 	$(GO) fmt ./...
 
@@ -52,4 +55,4 @@ integration-test:
 vet:
 	$(GO) vet ./...
 
-verify: format-check vet test test-race contract-test baseline-migration-check openapi-check smoke-targets-check build
+verify: format-check vet test test-race contract-test baseline-migration-check openapi-check smoke-targets-check staging-cutover-check build
