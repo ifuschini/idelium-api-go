@@ -9,7 +9,7 @@ Application-level dual writes are prohibited.
 
 | Measure | Value |
 | --- | ---: |
-| Aggregates | 26 |
+| Aggregates | 27 |
 | Routes | 168 |
 | Mutation routes | 98 |
 
@@ -24,11 +24,12 @@ Application-level dual writes are prohibited.
 | `asset-versions` | laravel | 5 | 1 | 5 | laravel-primary |
 | `audit-events` | none | 1 | 0 | 1 | laravel-primary |
 | `browser-identity` | laravel | 8 | 6 | 7 | laravel-primary |
+| `cli-performed-cycles` | go | 2 | 2 | 0 | laravel-primary |
 | `cli-performed-tests` | go | 2 | 2 | 0 | laravel-primary |
 | `customers` | laravel | 6 | 4 | 6 | laravel-primary |
 | `enterprise-identity` | laravel | 9 | 8 | 5 | laravel-primary |
 | `environments` | laravel | 7 | 3 | 5 | laravel-primary |
-| `execution-results` | laravel | 7 | 4 | 3 | laravel-primary |
+| `execution-results` | laravel | 5 | 2 | 3 | laravel-primary |
 | `grid-jobs` | laravel | 4 | 2 | 4 | laravel-primary |
 | `integrations` | laravel | 7 | 5 | 7 | laravel-primary |
 | `legacy-api-keys` | laravel | 2 | 1 | 2 | laravel-primary |
@@ -210,8 +211,8 @@ does not require database restoration or reverse data replication.
 | `POST` | `/api/ideliumcl/test` | `cli-performed-tests` | mutation | go | no | 5 |
 | `PUT` | `/api/ideliumcl/test` | `cli-performed-tests` | mutation | go | no | 5 |
 | `GET|HEAD` | `/api/ideliumcl/test/{idTest}` | `tests` | read | go | no | 4 |
-| `POST` | `/api/ideliumcl/testcycle` | `execution-results` | mutation | laravel | no | 5 |
-| `PUT` | `/api/ideliumcl/testcycle` | `execution-results` | mutation | laravel | no | 5 |
+| `POST` | `/api/ideliumcl/testcycle` | `cli-performed-cycles` | mutation | go | no | 5 |
+| `PUT` | `/api/ideliumcl/testcycle` | `cli-performed-cycles` | mutation | go | no | 5 |
 | `GET|HEAD` | `/api/ideliumcl/testcycle/{idTestCycle}` | `test-cycles` | read | go | no | 4 |
 | `POST` | `/api/ideliumrunner/claim` | `parallel-runs` | mutation | laravel | no | 8 |
 | `POST` | `/api/ideliumrunner/heartbeat` | `parallel-runs` | mutation | laravel | no | 8 |

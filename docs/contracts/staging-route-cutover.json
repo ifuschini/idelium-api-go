@@ -715,18 +715,6 @@
       "route_id": "PUT /api/ideliumcl/step"
     },
     {
-      "aggregate": "execution-results",
-      "migration_wave": 5,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/ideliumcl/testcycle"
-    },
-    {
-      "aggregate": "execution-results",
-      "migration_wave": 5,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "PUT /api/ideliumcl/testcycle"
-    },
-    {
       "aggregate": "parallel-runs",
       "migration_wave": 8,
       "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
@@ -3350,9 +3338,8 @@
       "tenant_context": false
     },
     {
-      "aggregate": "execution-results",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "aggregate": "cli-performed-cycles",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3361,15 +3348,14 @@
       "operation_kind": "mutation",
       "path": "/api/ideliumcl/testcycle",
       "route_id": "POST /api/ideliumcl/testcycle",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
-      "aggregate": "execution-results",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "aggregate": "cli-performed-cycles",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3378,9 +3364,9 @@
       "operation_kind": "mutation",
       "path": "/api/ideliumcl/testcycle",
       "route_id": "PUT /api/ideliumcl/testcycle",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
@@ -3664,8 +3650,8 @@
   "summary": {
     "gateway_go_routes": 10,
     "go_fail_closed_routes": 17,
-    "go_owned_routes": 19,
-    "laravel_blocker_routes": 132,
+    "go_owned_routes": 21,
+    "laravel_blocker_routes": 130,
     "route_count": 168
   }
 }

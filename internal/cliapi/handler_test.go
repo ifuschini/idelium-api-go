@@ -31,6 +31,41 @@ func (repository *fakeTestCycleRepository) GetTestCycle(ctx context.Context, cus
 	return repository.testCycle, nil
 }
 
+type fakePerformedCycleRepository struct {
+	createCustomerID int64
+	createCommand    CreatePerformedCycleRequest
+	createID         int64
+	createErr        error
+	updateCustomerID int64
+	updateCommand    UpdatePerformedCycleRequest
+	updateID         int64
+	updateErr        error
+}
+
+func (repository *fakePerformedCycleRepository) CreatePerformedCycle(ctx context.Context, customerID int64, command CreatePerformedCycleRequest) (int64, error) {
+	repository.createCustomerID = customerID
+	repository.createCommand = command
+	if repository.createErr != nil {
+		return 0, repository.createErr
+	}
+	if repository.createID != 0 {
+		return repository.createID, nil
+	}
+	return 501, nil
+}
+
+func (repository *fakePerformedCycleRepository) UpdatePerformedCycle(ctx context.Context, customerID int64, command UpdatePerformedCycleRequest) (int64, error) {
+	repository.updateCustomerID = customerID
+	repository.updateCommand = command
+	if repository.updateErr != nil {
+		return 0, repository.updateErr
+	}
+	if repository.updateID != 0 {
+		return repository.updateID, nil
+	}
+	return command.TestCycleID, nil
+}
+
 type fakeTestRepository struct {
 	customerID int64
 	testID     int64
@@ -217,6 +252,82 @@ func TestHandlerRedactsRepositoryFailures(t *testing.T) {
 	}
 	if strings.Contains(logBuffer.String(), "secret-value") {
 		t.Fatalf("repository error leaked into logs: %s", logBuffer.String())
+	}
+}
+
+func TestHandlerCreatesTenantScopedPerformedCycle(t *testing.T) {
+	repository := &fakePerformedCycleRepository{createID: 44}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedCycles = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(http.MethodPost, "/ideliumcl/testcycle", `{"testCycleId":7}`, 42)
+
+	handler.CreatePerformedCycle(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"idCycle":44}` {
+		t.Fatalf("unexpected create body: %s", response.Body.String())
+	}
+	if repository.createCustomerID != 42 || repository.createCommand.TestCycleID != 7 {
+		t.Fatalf("repository was not called with tenant-scoped cycle command: %#v", repository)
+	}
+}
+
+func TestHandlerReturnsInvalidDetailsForMissingPerformedCycleReference(t *testing.T) {
+	repository := &fakePerformedCycleRepository{createErr: ErrNotFound}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedCycles = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(http.MethodPost, "/ideliumcl/testcycle", `{"testCycleId":7}`, 42)
+
+	handler.CreatePerformedCycle(response, request)
+
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"message":"Invalid details"}` {
+		t.Fatalf("unexpected invalid details body: %s", response.Body.String())
+	}
+}
+
+func TestHandlerUpdatesTenantScopedPerformedCycle(t *testing.T) {
+	repository := &fakePerformedCycleRepository{updateID: 44}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedCycles = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(http.MethodPut, "/ideliumcl/testcycle", `{"testCycleId":44,"status":1}`, 42)
+
+	handler.UpdatePerformedCycle(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"idCycle":44}` {
+		t.Fatalf("unexpected update body: %s", response.Body.String())
+	}
+	if repository.updateCustomerID != 42 ||
+		repository.updateCommand.TestCycleID != 44 ||
+		repository.updateCommand.Status != 1 {
+		t.Fatalf("repository was not called with tenant-scoped cycle update command: %#v", repository)
+	}
+}
+
+func TestHandlerValidatesPerformedCycleStatus(t *testing.T) {
+	repository := &fakePerformedCycleRepository{}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedCycles = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(http.MethodPut, "/ideliumcl/testcycle", `{"testCycleId":44,"status":3}`, 42)
+
+	handler.UpdatePerformedCycle(response, request)
+
+	if response.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected status 422, got %d: %s", response.Code, response.Body.String())
+	}
+	if repository.updateCustomerID != 0 {
+		t.Fatalf("repository should not be called for invalid status: %#v", repository)
 	}
 }
 
@@ -761,7 +872,7 @@ func testHandler(
 	plugins PluginRepository,
 	logBuffer *bytes.Buffer,
 ) *Handler {
-	return NewHandler(testCycles, tests, &fakePerformedTestRepository{}, steps, plugins, &fakeEnvironmentRepository{}, slog.New(slog.NewTextHandler(logBuffer, nil)))
+	return NewHandler(testCycles, &fakePerformedCycleRepository{}, tests, &fakePerformedTestRepository{}, steps, plugins, &fakeEnvironmentRepository{}, slog.New(slog.NewTextHandler(logBuffer, nil)))
 }
 
 func requestWithTenant(target string, pathID string, customerID int64) *http.Request {

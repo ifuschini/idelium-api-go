@@ -19,7 +19,7 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | Metric | Value |
 | --- | --- |
 | Routes | 13 |
-| Owners | go: 9, laravel: 4 |
+| Owners | go: 11, laravel: 2 |
 | Execution modes | configuration-read: 7, result-reporting-write: 6 |
 
 ## Routes
@@ -34,11 +34,11 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | `POST` | `/api/ideliumcl/test` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `result-reporting-write` | no | `cli-performed-tests` |
 | `PUT` | `/api/ideliumcl/test` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `result-reporting-write` | no | `cli-performed-tests` |
 | `GET` | `/api/ideliumcl/test/{idTest}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `tests` |
+| `POST` | `/api/ideliumcl/testcycle` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `result-reporting-write` | no | `cli-performed-cycles` |
+| `PUT` | `/api/ideliumcl/testcycle` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `result-reporting-write` | no | `cli-performed-cycles` |
 | `GET` | `/api/ideliumcl/testcycle/{idTestCycle}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `test-cycles` |
 | `POST` | `/api/ideliumcl/step` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
 | `PUT` | `/api/ideliumcl/step` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
-| `POST` | `/api/ideliumcl/testcycle` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
-| `PUT` | `/api/ideliumcl/testcycle` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
 
 ## Compatibility and rollback
 

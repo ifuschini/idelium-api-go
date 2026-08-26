@@ -125,6 +125,8 @@ func tenantRowExists(ctx context.Context, transaction *sql.Tx, tableName string,
 	switch tableName {
 	case "performed_test_cycles":
 		query = "SELECT EXISTS (SELECT 1 FROM performed_test_cycles WHERE id = ? AND idCostumer = ?)"
+	case "test_cycles":
+		query = "SELECT EXISTS (SELECT 1 FROM test_cycles WHERE id = ? AND idCostumer = ?)"
 	case "tests":
 		query = "SELECT EXISTS (SELECT 1 FROM tests WHERE id = ? AND idCostumer = ?)"
 	default:

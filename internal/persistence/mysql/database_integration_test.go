@@ -460,6 +460,94 @@ func TestCLITestRepositoryIntegration(t *testing.T) {
 	}
 }
 
+func TestCLIPerformedCycleRepositoryIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS performed_test_cycles",
+		"DROP TABLE IF EXISTS test_cycles",
+		`CREATE TABLE test_cycles (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config JSON NOT NULL,
+			idProject INT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL
+		)`,
+		`CREATE TABLE performed_test_cycles (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			testCycleId INT NOT NULL,
+			date DATETIME NOT NULL,
+			status INT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL
+		)`,
+		`INSERT INTO test_cycles
+			(id, name, description, config, idProject, created_at, updated_at, idCostumer)
+		 VALUES
+			(7, 'Own cycle', 'Own cycle', JSON_ARRAY(), 10, NULL, NULL, 42),
+			(8, 'Foreign cycle', 'Foreign cycle', JSON_ARRAY(), 10, NULL, NULL, 99)`,
+		`INSERT INTO performed_test_cycles
+			(id, testCycleId, date, status, created_at, updated_at, idCostumer)
+		 VALUES
+			(44, 7, '2026-08-26 10:00:00', 0, NULL, NULL, 42),
+			(45, 8, '2026-08-26 10:00:00', 0, NULL, NULL, 99)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare CLI performed-cycle fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewCLIPerformedCycleRepository(database)
+	performedCycleID, err := repository.CreatePerformedCycle(ctx, 42, cliapi.CreatePerformedCycleRequest{TestCycleID: 7})
+	if err != nil {
+		t.Fatalf("CreatePerformedCycle() returned an error: %v", err)
+	}
+	var storedCustomerID int64
+	var storedStatus int
+	if err := database.QueryRowContext(
+		ctx,
+		"SELECT idCostumer, status FROM performed_test_cycles WHERE id = ?",
+		performedCycleID,
+	).Scan(&storedCustomerID, &storedStatus); err != nil {
+		t.Fatalf("read created performed cycle: %v", err)
+	}
+	if storedCustomerID != 42 || storedStatus != 0 {
+		t.Fatalf("created performed cycle was not tenant-scoped with default status: customer=%d status=%d", storedCustomerID, storedStatus)
+	}
+
+	_, err = repository.CreatePerformedCycle(ctx, 42, cliapi.CreatePerformedCycleRequest{TestCycleID: 8})
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant source cycle to be hidden, got %v", err)
+	}
+
+	updatedID, err := repository.UpdatePerformedCycle(ctx, 42, cliapi.UpdatePerformedCycleRequest{TestCycleID: 44, Status: 2})
+	if err != nil {
+		t.Fatalf("UpdatePerformedCycle() returned an error: %v", err)
+	}
+	if updatedID != 44 {
+		t.Fatalf("unexpected updated performed-cycle id: %d", updatedID)
+	}
+	if err := database.QueryRowContext(ctx, "SELECT status FROM performed_test_cycles WHERE id = ? AND idCostumer = ?", 44, 42).Scan(&storedStatus); err != nil {
+		t.Fatalf("read updated performed cycle: %v", err)
+	}
+	if storedStatus != 2 {
+		t.Fatalf("unexpected updated performed-cycle status: %d", storedStatus)
+	}
+
+	_, err = repository.UpdatePerformedCycle(ctx, 42, cliapi.UpdatePerformedCycleRequest{TestCycleID: 45, Status: 1})
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant performed cycle to be hidden, got %v", err)
+	}
+}
+
 func TestCLIPerformedTestRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

@@ -15,21 +15,22 @@ import (
 
 // Handler exposes Idelium CLI configuration read endpoints.
 type Handler struct {
-	testCycles     TestCycleRepository
-	tests          TestRepository
-	performedTests PerformedTestRepository
-	steps          StepRepository
-	plugins        PluginRepository
-	environments   EnvironmentRepository
-	logger         *slog.Logger
+	testCycles      TestCycleRepository
+	performedCycles PerformedCycleRepository
+	tests           TestRepository
+	performedTests  PerformedTestRepository
+	steps           StepRepository
+	plugins         PluginRepository
+	environments    EnvironmentRepository
+	logger          *slog.Logger
 }
 
 // NewHandler creates a CLI API handler.
-func NewHandler(testCycles TestCycleRepository, tests TestRepository, performedTests PerformedTestRepository, steps StepRepository, plugins PluginRepository, environments EnvironmentRepository, logger *slog.Logger) *Handler {
+func NewHandler(testCycles TestCycleRepository, performedCycles PerformedCycleRepository, tests TestRepository, performedTests PerformedTestRepository, steps StepRepository, plugins PluginRepository, environments EnvironmentRepository, logger *slog.Logger) *Handler {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &Handler{testCycles: testCycles, tests: tests, performedTests: performedTests, steps: steps, plugins: plugins, environments: environments, logger: logger}
+	return &Handler{testCycles: testCycles, performedCycles: performedCycles, tests: tests, performedTests: performedTests, steps: steps, plugins: plugins, environments: environments, logger: logger}
 }
 
 // TestCycle returns one tenant-owned test cycle using the Laravel CLI contract.
