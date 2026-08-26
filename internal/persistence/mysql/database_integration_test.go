@@ -460,6 +460,122 @@ func TestCLITestRepositoryIntegration(t *testing.T) {
 	}
 }
 
+func TestCLIPerformedTestRepositoryIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS performed_tests",
+		"DROP TABLE IF EXISTS performed_test_cycles",
+		"DROP TABLE IF EXISTS tests",
+		`CREATE TABLE performed_test_cycles (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			idCostumer INT NOT NULL
+		)`,
+		`CREATE TABLE tests (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config JSON NOT NULL,
+			idProject INT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL
+		)`,
+		`CREATE TABLE performed_tests (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			testCycleDoneId INT NOT NULL,
+			testId INT NOT NULL,
+			status INT NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			postmanData LONGTEXT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL
+		)`,
+		"INSERT INTO performed_test_cycles (id, idCostumer) VALUES (7, 42), (8, 99)",
+		`INSERT INTO tests
+			(id, name, description, config, idProject, created_at, updated_at, idCostumer)
+		 VALUES
+			(9, 'Own test', 'Own test', JSON_ARRAY(), 10, NULL, NULL, 42),
+			(10, 'Foreign test', 'Foreign test', JSON_ARRAY(), 10, NULL, NULL, 99)`,
+		`INSERT INTO performed_tests
+			(id, testCycleDoneId, testId, status, name, postmanData, created_at, updated_at, idCostumer)
+		 VALUES
+			(55, 7, 9, 0, 'Existing own test', NULL, NULL, NULL, 42),
+			(56, 8, 10, 0, 'Existing foreign test', NULL, NULL, NULL, 99)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare CLI performed-test fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewCLIPerformedTestRepository(database)
+	performedTestID, err := repository.CreatePerformedTest(ctx, 42, cliapi.CreatePerformedTestRequest{
+		TestCycleID: 7,
+		TestID:      9,
+		Name:        "Created own test",
+	})
+	if err != nil {
+		t.Fatalf("CreatePerformedTest() returned an error: %v", err)
+	}
+	var storedCustomerID int64
+	var storedStatus int
+	if err := database.QueryRowContext(
+		ctx,
+		"SELECT idCostumer, status FROM performed_tests WHERE id = ?",
+		performedTestID,
+	).Scan(&storedCustomerID, &storedStatus); err != nil {
+		t.Fatalf("read created performed test: %v", err)
+	}
+	if storedCustomerID != 42 || storedStatus != 0 {
+		t.Fatalf("created performed test was not tenant-scoped with default status: customer=%d status=%d", storedCustomerID, storedStatus)
+	}
+
+	_, err = repository.CreatePerformedTest(ctx, 42, cliapi.CreatePerformedTestRequest{TestCycleID: 8, TestID: 9, Name: "Foreign cycle"})
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant performed cycle to be hidden, got %v", err)
+	}
+	_, err = repository.CreatePerformedTest(ctx, 42, cliapi.CreatePerformedTestRequest{TestCycleID: 7, TestID: 10, Name: "Foreign test"})
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant test to be hidden, got %v", err)
+	}
+
+	postmanData := `[{"request":{"header":{"Authorization":"[REDACTED]"},"url":"https://api.example.test"},"response":{"code":200}}]`
+	updatedID, err := repository.UpdatePerformedTest(ctx, 42, cliapi.UpdatePerformedTestRequest{
+		TestID:             55,
+		Status:             1,
+		PostmanDataPresent: true,
+		PostmanData:        &postmanData,
+	})
+	if err != nil {
+		t.Fatalf("UpdatePerformedTest() returned an error: %v", err)
+	}
+	if updatedID != 55 {
+		t.Fatalf("unexpected updated performed-test id: %d", updatedID)
+	}
+	var storedPostmanData sql.NullString
+	if err := database.QueryRowContext(
+		ctx,
+		"SELECT status, postmanData FROM performed_tests WHERE id = ? AND idCostumer = ?",
+		55,
+		42,
+	).Scan(&storedStatus, &storedPostmanData); err != nil {
+		t.Fatalf("read updated performed test: %v", err)
+	}
+	if storedStatus != 1 || !storedPostmanData.Valid || !strings.Contains(storedPostmanData.String, "[REDACTED]") {
+		t.Fatalf("unexpected updated performed-test payload: status=%d postmanData=%q", storedStatus, storedPostmanData.String)
+	}
+
+	_, err = repository.UpdatePerformedTest(ctx, 42, cliapi.UpdatePerformedTestRequest{TestID: 56, Status: 1})
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant performed test to be hidden, got %v", err)
+	}
+}
+
 func TestCLIStepRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

@@ -26,6 +26,7 @@ func NewRouter(
 	legacyKeyRepository auth.LegacyKeyRepository,
 	testCycleRepository cliapi.TestCycleRepository,
 	testRepository cliapi.TestRepository,
+	performedTestRepository cliapi.PerformedTestRepository,
 	stepRepository cliapi.StepRepository,
 	pluginRepository cliapi.PluginRepository,
 	environmentRepository cliapi.EnvironmentRepository,
@@ -77,10 +78,12 @@ func NewRouter(
 	router.Post("/admin/service-accounts", serviceAccountHandler.Store)
 	router.Post("/admin/service-accounts/{serviceAccount}/revoke", serviceAccountHandler.Revoke)
 
-	cliHandler := cliapi.NewHandler(testCycleRepository, testRepository, stepRepository, pluginRepository, environmentRepository, logger)
+	cliHandler := cliapi.NewHandler(testCycleRepository, testRepository, performedTestRepository, stepRepository, pluginRepository, environmentRepository, logger)
 	cliAuthenticator := auth.NewLegacyKeyAuthenticator(legacyKeyRepository, logger)
 	router.Group(func(router chi.Router) {
 		router.Use(cliAuthenticator.Middleware)
+		router.Post("/ideliumcl/test", cliHandler.CreatePerformedTest)
+		router.Put("/ideliumcl/test", cliHandler.UpdatePerformedTest)
 		router.Get("/ideliumcl/testcycle/{idTestCycle}", cliHandler.TestCycle)
 		router.Get("/ideliumcl/test/{idTest}", cliHandler.Test)
 		router.Get("/ideliumcl/step/{idStep}", cliHandler.Step)

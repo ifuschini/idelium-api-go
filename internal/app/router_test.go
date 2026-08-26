@@ -131,6 +131,22 @@ func (fakeTestRepository) GetTest(ctx context.Context, customerID int64, testID 
 	}, nil
 }
 
+type fakePerformedTestRepository struct{}
+
+func (fakePerformedTestRepository) CreatePerformedTest(ctx context.Context, customerID int64, command cliapi.CreatePerformedTestRequest) (int64, error) {
+	if customerID != 42 || command.TestCycleID != 7 || command.TestID != 9 {
+		return 0, cliapi.ErrNotFound
+	}
+	return 55, nil
+}
+
+func (fakePerformedTestRepository) UpdatePerformedTest(ctx context.Context, customerID int64, command cliapi.UpdatePerformedTestRequest) (int64, error) {
+	if customerID != 42 || command.TestID != 55 {
+		return 0, cliapi.ErrNotFound
+	}
+	return command.TestID, nil
+}
+
 type fakeStepRepository struct{}
 
 func (fakeStepRepository) GetStep(ctx context.Context, customerID int64, stepID int64) (cliapi.Step, error) {
@@ -217,6 +233,7 @@ func testRouter(logger *slog.Logger) http.Handler {
 		fakeLegacyKeyRepository{},
 		fakeTestCycleRepository{},
 		fakeTestRepository{},
+		fakePerformedTestRepository{},
 		fakeStepRepository{},
 		fakePluginRepository{},
 		fakeEnvironmentRepository{},
@@ -539,6 +556,59 @@ func TestRouterHidesForeignCLITest(t *testing.T) {
 	}
 	if strings.TrimSpace(response.Body.String()) != `{"message":"Invalid id"}` {
 		t.Fatalf("unexpected body: %s", response.Body.String())
+	}
+}
+
+func TestRouterCreatesCLIPerformedTestWithLegacyKey(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/ideliumcl/test", strings.NewReader(`{"testCycleId":7,"testId":9,"name":"browser test"}`))
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+	request.Header.Set("Content-Type", "application/json")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"idTest":55}` {
+		t.Fatalf("unexpected CLI performed-test create body: %s", response.Body.String())
+	}
+}
+
+func TestRouterRejectsCLIPerformedTestCreateWithoutLegacyKey(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/ideliumcl/test", strings.NewReader(`{"testCycleId":7,"testId":9,"name":"browser test"}`))
+	request.Header.Set("Content-Type", "application/json")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status 401, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"message":"Invalid key"}` {
+		t.Fatalf("unexpected body: %s", response.Body.String())
+	}
+}
+
+func TestRouterUpdatesCLIPerformedTestWithLegacyKey(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPut, "/ideliumcl/test", strings.NewReader(`{"testId":55,"status":1,"postmanData":[]}`))
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+	request.Header.Set("Content-Type", "application/json")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"idTest":55}` {
+		t.Fatalf("unexpected CLI performed-test update body: %s", response.Body.String())
 	}
 }
 

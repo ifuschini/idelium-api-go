@@ -47,6 +47,41 @@ func (repository *fakeTestRepository) GetTest(ctx context.Context, customerID in
 	return repository.test, nil
 }
 
+type fakePerformedTestRepository struct {
+	createCustomerID int64
+	createCommand    CreatePerformedTestRequest
+	createID         int64
+	createErr        error
+	updateCustomerID int64
+	updateCommand    UpdatePerformedTestRequest
+	updateID         int64
+	updateErr        error
+}
+
+func (repository *fakePerformedTestRepository) CreatePerformedTest(ctx context.Context, customerID int64, command CreatePerformedTestRequest) (int64, error) {
+	repository.createCustomerID = customerID
+	repository.createCommand = command
+	if repository.createErr != nil {
+		return 0, repository.createErr
+	}
+	if repository.createID != 0 {
+		return repository.createID, nil
+	}
+	return 701, nil
+}
+
+func (repository *fakePerformedTestRepository) UpdatePerformedTest(ctx context.Context, customerID int64, command UpdatePerformedTestRequest) (int64, error) {
+	repository.updateCustomerID = customerID
+	repository.updateCommand = command
+	if repository.updateErr != nil {
+		return 0, repository.updateErr
+	}
+	if repository.updateID != 0 {
+		return repository.updateID, nil
+	}
+	return command.TestID, nil
+}
+
 type fakeStepRepository struct {
 	customerID int64
 	stepID     int64
@@ -281,6 +316,141 @@ func TestHandlerReturnsTenantScopedStep(t *testing.T) {
 	}
 	if repository.customerID != 42 || repository.stepID != 12 {
 		t.Fatalf("repository was not called with tenant-scoped identifiers: %#v", repository)
+	}
+}
+
+func TestHandlerCreatesTenantScopedPerformedTest(t *testing.T) {
+	repository := &fakePerformedTestRepository{createID: 55}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedTests = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(
+		http.MethodPost,
+		"/ideliumcl/test",
+		`{"testCycleId":7,"testId":9,"name":"browser test"}`,
+		42,
+	)
+
+	handler.CreatePerformedTest(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"idTest":55}` {
+		t.Fatalf("unexpected create body: %s", response.Body.String())
+	}
+	if repository.createCustomerID != 42 ||
+		repository.createCommand.TestCycleID != 7 ||
+		repository.createCommand.TestID != 9 ||
+		repository.createCommand.Name != "browser test" {
+		t.Fatalf("repository was not called with tenant-scoped command: %#v", repository)
+	}
+}
+
+func TestHandlerReturnsInvalidDetailsForMissingPerformedTestReferences(t *testing.T) {
+	repository := &fakePerformedTestRepository{createErr: ErrNotFound}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedTests = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(
+		http.MethodPost,
+		"/ideliumcl/test",
+		`{"testCycleId":7,"testId":9,"name":"browser test"}`,
+		42,
+	)
+
+	handler.CreatePerformedTest(response, request)
+
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"message":"Invalid details"}` {
+		t.Fatalf("unexpected invalid details body: %s", response.Body.String())
+	}
+}
+
+func TestHandlerValidatesPerformedTestCreate(t *testing.T) {
+	repository := &fakePerformedTestRepository{}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedTests = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(http.MethodPost, "/ideliumcl/test", `{"testCycleId":7,"testId":9}`, 42)
+
+	handler.CreatePerformedTest(response, request)
+
+	if response.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected status 422, got %d: %s", response.Code, response.Body.String())
+	}
+	if repository.createCustomerID != 0 {
+		t.Fatalf("repository should not be called for invalid requests: %#v", repository)
+	}
+}
+
+func TestHandlerUpdatesTenantScopedPerformedTestWithRedactedPostmanData(t *testing.T) {
+	repository := &fakePerformedTestRepository{updateID: 55}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedTests = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(
+		http.MethodPut,
+		"/ideliumcl/test",
+		`{"testId":55,"status":1,"postmanData":[{"request":{"header":{"Authorization":"Bearer unsafe-token"},"url":"https://api.example.test"},"response":{"code":200}}]}`,
+		42,
+	)
+
+	handler.UpdatePerformedTest(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"idTest":55}` {
+		t.Fatalf("unexpected update body: %s", response.Body.String())
+	}
+	if repository.updateCustomerID != 42 ||
+		repository.updateCommand.TestID != 55 ||
+		repository.updateCommand.Status != 1 ||
+		!repository.updateCommand.PostmanDataPresent ||
+		repository.updateCommand.PostmanData == nil {
+		t.Fatalf("repository was not called with tenant-scoped update command: %#v", repository)
+	}
+	if strings.Contains(*repository.updateCommand.PostmanData, "unsafe-token") ||
+		!strings.Contains(*repository.updateCommand.PostmanData, "[REDACTED]") ||
+		!strings.Contains(*repository.updateCommand.PostmanData, "https://api.example.test") {
+		t.Fatalf("postmanData redaction did not preserve safe detail and hide secrets: %s", *repository.updateCommand.PostmanData)
+	}
+}
+
+func TestHandlerAllowsNullPostmanDataOnPerformedTestUpdate(t *testing.T) {
+	repository := &fakePerformedTestRepository{updateID: 55}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedTests = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(http.MethodPut, "/ideliumcl/test", `{"testId":55,"status":0,"postmanData":null}`, 42)
+
+	handler.UpdatePerformedTest(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !repository.updateCommand.PostmanDataPresent || repository.updateCommand.PostmanData != nil {
+		t.Fatalf("null postmanData should be explicit and stored as nil: %#v", repository.updateCommand)
+	}
+}
+
+func TestHandlerRejectsNonArrayPostmanData(t *testing.T) {
+	repository := &fakePerformedTestRepository{}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedTests = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(http.MethodPut, "/ideliumcl/test", `{"testId":55,"status":1,"postmanData":{"token":"unsafe"}}`, 42)
+
+	handler.UpdatePerformedTest(response, request)
+
+	if response.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected status 422, got %d: %s", response.Code, response.Body.String())
+	}
+	if repository.updateCustomerID != 0 {
+		t.Fatalf("repository should not be called for invalid postmanData: %#v", repository)
 	}
 }
 
@@ -591,7 +761,7 @@ func testHandler(
 	plugins PluginRepository,
 	logBuffer *bytes.Buffer,
 ) *Handler {
-	return NewHandler(testCycles, tests, steps, plugins, &fakeEnvironmentRepository{}, slog.New(slog.NewTextHandler(logBuffer, nil)))
+	return NewHandler(testCycles, tests, &fakePerformedTestRepository{}, steps, plugins, &fakeEnvironmentRepository{}, slog.New(slog.NewTextHandler(logBuffer, nil)))
 }
 
 func requestWithTenant(target string, pathID string, customerID int64) *http.Request {
@@ -604,6 +774,13 @@ func requestWithTenantParam(target string, pathParam string, pathID string, cust
 	request := httptest.NewRequest(http.MethodGet, target, nil)
 	ctx := context.WithValue(request.Context(), chi.RouteCtxKey, routerContext)
 	ctx = auth.ContextWithTenant(ctx, auth.TenantContext{CustomerID: customerID})
+	return request.WithContext(ctx)
+}
+
+func requestWithTenantBody(method string, target string, body string, customerID int64) *http.Request {
+	request := httptest.NewRequest(method, target, strings.NewReader(body))
+	request.Header.Set("Content-Type", "application/json")
+	ctx := auth.ContextWithTenant(request.Context(), auth.TenantContext{CustomerID: customerID})
 	return request.WithContext(ctx)
 }
 

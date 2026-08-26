@@ -18,6 +18,8 @@
     "GET|HEAD /api/ideliumcl/plugins/{idProject}": "go-owned",
     "GET|HEAD /api/ideliumcl/step/{idStep}": "go-owned",
     "GET|HEAD /api/ideliumcl/test/{idTest}": "go-owned",
-    "GET|HEAD /api/ideliumcl/testcycle/{idTestCycle}": "go-owned"
+    "GET|HEAD /api/ideliumcl/testcycle/{idTestCycle}": "go-owned",
+    "POST /api/ideliumcl/test": "go-owned",
+    "PUT /api/ideliumcl/test": "go-owned"
   }
 }

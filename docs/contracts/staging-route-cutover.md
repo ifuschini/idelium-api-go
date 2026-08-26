@@ -12,9 +12,9 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | Cutover status | `blocked` |
 | Production enabled | `false` |
 | Route count | 168 |
-| Go-owned routes | 17 |
+| Go-owned routes | 19 |
 | Go fail-closed routes | 17 |
-| Laravel blocker routes | 134 |
+| Laravel blocker routes | 132 |
 | Gateway Go routes | 10 |
 
 ## Staging policy
@@ -40,7 +40,7 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `browser-identity` | 5 |
 | `customers` | 6 |
 | `environments` | 5 |
-| `execution-results` | 9 |
+| `execution-results` | 7 |
 | `grid-jobs` | 4 |
 | `integrations` | 7 |
 | `operations` | 4 |
@@ -205,8 +205,8 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `POST` | `/api/ideliumcl/step` | `execution-results` | `blocked` | `laravel` | `keep-on-laravel` |
 | `PUT` | `/api/ideliumcl/step` | `execution-results` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/ideliumcl/step/{idStep}` | `steps` | `ready` | `go` | `send-to-go` |
-| `POST` | `/api/ideliumcl/test` | `execution-results` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/ideliumcl/test` | `execution-results` | `blocked` | `laravel` | `keep-on-laravel` |
+| `POST` | `/api/ideliumcl/test` | `cli-performed-tests` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/ideliumcl/test` | `cli-performed-tests` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/ideliumcl/test/{idTest}` | `tests` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/ideliumcl/testcycle` | `execution-results` | `blocked` | `laravel` | `keep-on-laravel` |
 | `PUT` | `/api/ideliumcl/testcycle` | `execution-results` | `blocked` | `laravel` | `keep-on-laravel` |

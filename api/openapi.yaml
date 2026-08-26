@@ -607,6 +607,129 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /ideliumcl/test:
+    post:
+      operationId: postIdeliumclTest
+      summary: Create a CLI performed test
+      description: >-
+        Creates one tenant-owned performed-test row for an Idelium CLI run.
+        The response shape intentionally preserves the Laravel CLI contract.
+      tags: [Idelium CLI]
+      x-idelium-laravel-route: "/api/ideliumcl/test"
+      x-idelium-controller: "App\\Http\\Controllers\\IdeliumInsertClController@createTest"
+      x-idelium-current-owner: "go-application"
+      x-idelium-trust-path: "api-key"
+      x-idelium-authentication-mode: "api-key"
+      x-idelium-tenant-context: true
+      x-idelium-consumers: ["idelium-cli", "idelium-docker-wiki"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [testCycleId, testId, name]
+              additionalProperties: true
+              properties:
+                testCycleId:
+                  type: integer
+                  minimum: 1
+                testId:
+                  type: integer
+                  minimum: 1
+                name:
+                  type: string
+                  minLength: 1
+      responses:
+        "200":
+          description: Performed test created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [idTest]
+                properties:
+                  idTest:
+                    type: integer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Missing or cross-tenant performed-test reference.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message]
+                properties:
+                  message:
+                    type: string
+                    example: Invalid details
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+    put:
+      operationId: putIdeliumclTest
+      summary: Update a CLI performed test
+      description: >-
+        Updates the tenant-owned performed-test status and optional Postman
+        execution result payload. The response shape intentionally preserves the
+        Laravel CLI contract.
+      tags: [Idelium CLI]
+      x-idelium-laravel-route: "/api/ideliumcl/test"
+      x-idelium-controller: "App\\Http\\Controllers\\IdeliumInsertClController@updateTest"
+      x-idelium-current-owner: "go-application"
+      x-idelium-trust-path: "api-key"
+      x-idelium-authentication-mode: "api-key"
+      x-idelium-tenant-context: true
+      x-idelium-consumers: ["idelium-cli", "idelium-docker-wiki"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [testId, status]
+              additionalProperties: true
+              properties:
+                testId:
+                  type: integer
+                  minimum: 1
+                status:
+                  type: integer
+                postmanData:
+                  nullable: true
+                  type: array
+                  items:
+                    type: object
+      responses:
+        "200":
+          description: Performed test updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [idTest]
+                properties:
+                  idTest:
+                    type: integer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Missing or cross-tenant performed-test row.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message]
+                properties:
+                  message:
+                    type: string
+                    example: Invalid details
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
   # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS
   /:
     get:
@@ -5749,77 +5872,6 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/ideliumcl/step"
       x-idelium-controller: "App\\Http\\Controllers\\IdeliumInsertClController@updateStep"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "api-key"
-      x-idelium-authentication-mode: "api-key"
-      x-idelium-tenant-context: false
-      x-idelium-consumers: ["idelium-cli", "idelium-docker-wiki"]
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /ideliumcl/test:
-    post:
-      operationId: postIdeliumclTest
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/ideliumcl/test"
-      x-idelium-controller: "App\\Http\\Controllers\\IdeliumInsertClController@createTest"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "api-key"
-      x-idelium-authentication-mode: "api-key"
-      x-idelium-tenant-context: false
-      x-idelium-consumers: ["idelium-cli", "idelium-docker-wiki"]
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-    put:
-      operationId: putIdeliumclTest
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/ideliumcl/test"
-      x-idelium-controller: "App\\Http\\Controllers\\IdeliumInsertClController@updateTest"
       x-idelium-current-owner: "laravel-application"
       x-idelium-trust-path: "api-key"
       x-idelium-authentication-mode: "api-key"

@@ -36,8 +36,10 @@ class OwnershipMatrixTest(unittest.TestCase):
             if aggregate["mutation_route_count"]
         ]
         self.assertTrue(mutating)
-        self.assertTrue(all(aggregate["mutation_owner"] == "laravel" for aggregate in mutating))
+        self.assertTrue(all(aggregate["mutation_owner"] in MODULE.OWNERS for aggregate in mutating))
         self.assertTrue(all(not aggregate["dual_writes_allowed"] for aggregate in mutating))
+        go_mutating = [aggregate for aggregate in mutating if aggregate["mutation_owner"] == "go"]
+        self.assertEqual(["cli-performed-tests"], [aggregate["aggregate"] for aggregate in go_mutating])
 
     def test_rejects_split_mutation_ownership(self):
         backlog = copy.deepcopy(self.backlog)

@@ -2,7 +2,7 @@
   "blockers": [
     {
       "control": "route-cutover",
-      "count": 134,
+      "count": 132,
       "reason": "Routes without Go implementation or fail-closed gates remain on Laravel."
     }
   ],
@@ -48,8 +48,8 @@
   "maintenance_id": "laravel-readonly-maintenance",
   "preconditions": {
     "go_fail_closed_routes": 17,
-    "go_owned_routes": 17,
-    "laravel_blocker_routes": 134,
+    "go_owned_routes": 19,
+    "laravel_blocker_routes": 132,
     "route_cutover_status": "blocked",
     "schema_freeze_status": "frozen"
   },

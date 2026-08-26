@@ -31,6 +31,8 @@ type ServerInterface interface {
 	GetCLIEnvironment(http.ResponseWriter, *http.Request)
 	ListLaunchTargets(http.ResponseWriter, *http.Request)
 	GetAdminPlatformsManageplatformsType(http.ResponseWriter, *http.Request)
+	PostIdeliumclTest(http.ResponseWriter, *http.Request)
+	PutIdeliumclTest(http.ResponseWriter, *http.Request)
 	Get(http.ResponseWriter, *http.Request)
 	GetAdminAccounts(http.ResponseWriter, *http.Request)
 	PostAdminAccounts(http.ResponseWriter, *http.Request)
@@ -171,8 +173,6 @@ type ServerInterface interface {
 	PostIdeliumclProjectsIdProjectParallelRunsParallelRunWorkersWorkerIdHeartbeat(http.ResponseWriter, *http.Request)
 	PostIdeliumclStep(http.ResponseWriter, *http.Request)
 	PutIdeliumclStep(http.ResponseWriter, *http.Request)
-	PostIdeliumclTest(http.ResponseWriter, *http.Request)
-	PutIdeliumclTest(http.ResponseWriter, *http.Request)
 	PostIdeliumclTestcycle(http.ResponseWriter, *http.Request)
 	PutIdeliumclTestcycle(http.ResponseWriter, *http.Request)
 	PostIdeliumrunnerClaim(http.ResponseWriter, *http.Request)
@@ -336,6 +336,28 @@ var Operations = []Operation{
 		TrustPath:          "browser-session",
 		TenantContext:      true,
 		Consumers:          []string{"idelium-web"},
+	},
+	{
+		Method:             "POST",
+		Path:               "/ideliumcl/test",
+		OperationID:        "postIdeliumclTest",
+		Tags:               []string{"Idelium CLI"},
+		LaravelRoute:       "/api/ideliumcl/test",
+		AuthenticationMode: "api-key",
+		TrustPath:          "api-key",
+		TenantContext:      true,
+		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
+	},
+	{
+		Method:             "PUT",
+		Path:               "/ideliumcl/test",
+		OperationID:        "putIdeliumclTest",
+		Tags:               []string{"Idelium CLI"},
+		LaravelRoute:       "/api/ideliumcl/test",
+		AuthenticationMode: "api-key",
+		TrustPath:          "api-key",
+		TenantContext:      true,
+		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
 	},
 	{
 		Method:             "GET",
@@ -1872,28 +1894,6 @@ var Operations = []Operation{
 		OperationID:        "putIdeliumclStep",
 		Tags:               []string{"Laravel Compatibility"},
 		LaravelRoute:       "/api/ideliumcl/step",
-		AuthenticationMode: "api-key",
-		TrustPath:          "api-key",
-		TenantContext:      false,
-		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
-	},
-	{
-		Method:             "POST",
-		Path:               "/ideliumcl/test",
-		OperationID:        "postIdeliumclTest",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/ideliumcl/test",
-		AuthenticationMode: "api-key",
-		TrustPath:          "api-key",
-		TenantContext:      false,
-		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
-	},
-	{
-		Method:             "PUT",
-		Path:               "/ideliumcl/test",
-		OperationID:        "putIdeliumclTest",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/ideliumcl/test",
 		AuthenticationMode: "api-key",
 		TrustPath:          "api-key",
 		TenantContext:      false,

@@ -55,6 +55,7 @@ func run(logger *slog.Logger) error {
 			mysqlpersistence.NewLegacyKeyRepository(database),
 			mysqlpersistence.NewCLITestCycleRepository(database),
 			mysqlpersistence.NewCLITestRepository(database),
+			mysqlpersistence.NewCLIPerformedTestRepository(database),
 			mysqlpersistence.NewCLIStepRepository(database),
 			mysqlpersistence.NewCLIPluginRepository(database),
 			mysqlpersistence.NewCLIEnvironmentRepository(database),

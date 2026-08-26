@@ -19,7 +19,7 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | Metric | Value |
 | --- | --- |
 | Routes | 13 |
-| Owners | go: 7, laravel: 6 |
+| Owners | go: 9, laravel: 4 |
 | Execution modes | configuration-read: 7, result-reporting-write: 6 |
 
 ## Routes
@@ -31,12 +31,12 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | `GET` | `/api/ideliumcl/plugin/{idPlugin}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `plugins` |
 | `GET` | `/api/ideliumcl/plugins/{idProject}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `plugins` |
 | `GET` | `/api/ideliumcl/step/{idStep}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `steps` |
+| `POST` | `/api/ideliumcl/test` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `result-reporting-write` | no | `cli-performed-tests` |
+| `PUT` | `/api/ideliumcl/test` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `result-reporting-write` | no | `cli-performed-tests` |
 | `GET` | `/api/ideliumcl/test/{idTest}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `tests` |
 | `GET` | `/api/ideliumcl/testcycle/{idTestCycle}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `test-cycles` |
 | `POST` | `/api/ideliumcl/step` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
 | `PUT` | `/api/ideliumcl/step` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
-| `POST` | `/api/ideliumcl/test` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
-| `PUT` | `/api/ideliumcl/test` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
 | `POST` | `/api/ideliumcl/testcycle` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
 | `PUT` | `/api/ideliumcl/testcycle` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
 

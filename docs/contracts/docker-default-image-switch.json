@@ -6,7 +6,7 @@
     },
     {
       "control": "staging-route-cutover",
-      "count": 134,
+      "count": 132,
       "reason": "The staging route cutover manifest still has Laravel blockers."
     }
   ],
@@ -17,8 +17,8 @@
   },
   "preconditions": {
     "go_fail_closed_routes": 17,
-    "go_owned_routes": 17,
-    "laravel_blocker_routes": 134,
+    "go_owned_routes": 19,
+    "laravel_blocker_routes": 132,
     "maintenance_status": "blocked",
     "route_cutover_status": "blocked"
   },
