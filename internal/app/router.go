@@ -12,6 +12,7 @@ import (
 	"github.com/idelium/idelium-api-go/internal/health"
 	"github.com/idelium/idelium-api-go/internal/httpx"
 	"github.com/idelium/idelium-api-go/internal/identity"
+	"github.com/idelium/idelium-api-go/internal/legacyapikeys"
 	"github.com/idelium/idelium-api-go/internal/platforms"
 	"github.com/idelium/idelium-api-go/internal/serviceaccounts"
 )
@@ -65,6 +66,11 @@ func NewRouter(
 	router.Post("/sso/{identityProvider}/start", identityHandler.SSOStart)
 	router.Post("/sso/{identityProvider}/oidc/callback", identityHandler.OIDCCallback)
 	router.Post("/sso/{identityProvider}/saml/callback", identityHandler.SAMLCallback)
+
+	legacyAPIKeyHandler := legacyapikeys.NewHandler(logger)
+	router.Get("/admin/apikey", legacyAPIKeyHandler.Show)
+	router.Head("/admin/apikey", legacyAPIKeyHandler.Show)
+	router.Put("/admin/apikey", legacyAPIKeyHandler.Replace)
 
 	serviceAccountHandler := serviceaccounts.NewHandler(logger)
 	router.Get("/admin/service-accounts", serviceAccountHandler.Index)

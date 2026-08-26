@@ -43,18 +43,6 @@
       "route_id": "PUT /api/admin/agents/{agentRegistration}/status"
     },
     {
-      "aggregate": "legacy-api-keys",
-      "migration_wave": 9,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "GET|HEAD /api/admin/apikey"
-    },
-    {
-      "aggregate": "legacy-api-keys",
-      "migration_wave": 9,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "PUT /api/admin/apikey"
-    },
-    {
       "aggregate": "customers",
       "migration_wave": 9,
       "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
@@ -949,36 +937,38 @@
     },
     {
       "aggregate": "legacy-api-keys",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
       "current_owner": "laravel",
       "dual_writes_allowed": false,
+      "error_code": "LEGACY_API_KEY_MIGRATION_DISABLED",
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
+      "go_public_path": "/admin/apikey",
       "method": "GET|HEAD",
       "migration_wave": 9,
       "operation_kind": "read",
       "path": "/api/admin/apikey",
       "route_id": "GET|HEAD /api/admin/apikey",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go-gate",
+      "staging_owner": "go-fail-closed",
+      "staging_state": "gated",
       "tenant_context": true
     },
     {
       "aggregate": "legacy-api-keys",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
       "current_owner": "laravel",
       "dual_writes_allowed": false,
+      "error_code": "LEGACY_API_KEY_MIGRATION_DISABLED",
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
+      "go_public_path": "/admin/apikey",
       "method": "PUT",
       "migration_wave": 9,
       "operation_kind": "mutation",
       "path": "/api/admin/apikey",
       "route_id": "PUT /api/admin/apikey",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go-gate",
+      "staging_owner": "go-fail-closed",
+      "staging_state": "gated",
       "tenant_context": true
     },
     {
@@ -3687,9 +3677,9 @@
   "status": "blocked",
   "summary": {
     "gateway_go_routes": 10,
-    "go_fail_closed_routes": 15,
+    "go_fail_closed_routes": 17,
     "go_owned_routes": 17,
-    "laravel_blocker_routes": 136,
+    "laravel_blocker_routes": 134,
     "route_count": 168
   }
 }

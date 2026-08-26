@@ -15,7 +15,7 @@ read-only maintenance, and staging route cutover gates are ready.
 | Docker switch status | `blocked` |
 | Maintenance status | `blocked` |
 | Route cutover status | `blocked` |
-| Laravel blocker routes | 136 |
+| Laravel blocker routes | 134 |
 | Max recovery objective | 30 minutes |
 
 ## Ordered rehearsal steps

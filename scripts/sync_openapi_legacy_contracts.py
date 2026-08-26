@@ -14,6 +14,8 @@ BEGIN = "  # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS"
 END = "  # END GENERATED LARAVEL COMPATIBILITY CONTRACTS"
 HTTP_METHODS = {"DELETE", "GET", "PATCH", "POST", "PUT"}
 GO_CUTOVER_GATED_ROUTES = {
+    "GET|HEAD /api/admin/apikey": "LEGACY_API_KEY_MIGRATION_DISABLED",
+    "PUT /api/admin/apikey": "LEGACY_API_KEY_MIGRATION_DISABLED",
     "PUT /api/admin/identity/accounts/{user}/break-glass": "IDENTITY_MIGRATION_DISABLED",
     "POST /api/admin/identity/accounts/{user}/break-glass/test": "IDENTITY_MIGRATION_DISABLED",
     "GET|HEAD /api/admin/identity/providers": "IDENTITY_MIGRATION_DISABLED",

@@ -300,6 +300,40 @@ func TestRouterFailsClosedForServiceAccountRoutes(t *testing.T) {
 	}
 }
 
+func TestRouterFailsClosedForLegacyAPIKeyRoutes(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(
+		response,
+		httptest.NewRequest(http.MethodPut, "/admin/apikey", strings.NewReader(`{"apiKey":"must-not-leak"}`)),
+	)
+
+	if response.Code != http.StatusNotImplemented {
+		t.Fatalf("expected status 501, got %d", response.Code)
+	}
+	body := response.Body.String()
+	if !strings.Contains(body, "LEGACY_API_KEY_MIGRATION_DISABLED") {
+		t.Fatalf("stable legacy API-key migration code missing: %s", body)
+	}
+	if strings.Contains(body, "must-not-leak") || strings.Contains(body, "apiKey") {
+		t.Fatalf("legacy API-key route leaked credential payload: %s", body)
+	}
+}
+
+func TestRouterFailsClosedForLegacyAPIKeyHeadRoute(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodHead, "/admin/apikey", nil))
+
+	if response.Code != http.StatusNotImplemented {
+		t.Fatalf("expected status 501, got %d", response.Code)
+	}
+}
+
 func TestRouterReturnsPlatformTypes(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
 	router := testRouter(logger)

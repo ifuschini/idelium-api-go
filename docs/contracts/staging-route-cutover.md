@@ -13,8 +13,8 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | Production enabled | `false` |
 | Route count | 168 |
 | Go-owned routes | 17 |
-| Go fail-closed routes | 15 |
-| Laravel blocker routes | 136 |
+| Go fail-closed routes | 17 |
+| Laravel blocker routes | 134 |
 | Gateway Go routes | 10 |
 
 ## Staging policy
@@ -43,7 +43,6 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `execution-results` | 9 |
 | `grid-jobs` | 4 |
 | `integrations` | 7 |
-| `legacy-api-keys` | 2 |
 | `operations` | 4 |
 | `parallel-runs` | 23 |
 | `platform-catalog` | 17 |
@@ -66,8 +65,8 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `PUT` | `/api/admin/accounts/{idUser}` | `accounts` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/admin/agents` | `agent-registry` | `blocked` | `laravel` | `keep-on-laravel` |
 | `PUT` | `/api/admin/agents/{agentRegistration}/status` | `agent-registry` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/apikey` | `legacy-api-keys` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/apikey` | `legacy-api-keys` | `blocked` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/api/admin/apikey` | `legacy-api-keys` | `gated` | `go-fail-closed` | `send-to-go-gate` |
+| `PUT` | `/api/admin/apikey` | `legacy-api-keys` | `gated` | `go-fail-closed` | `send-to-go-gate` |
 | `GET|HEAD` | `/api/admin/costumers` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |
 | `POST` | `/api/admin/costumers` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |
 | `DELETE` | `/api/admin/costumers/{idCostumer}` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |

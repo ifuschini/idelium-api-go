@@ -17,7 +17,7 @@ route cutover gates are ready.
 | Readiness path | `/readyz` |
 | Maintenance status | `blocked` |
 | Route cutover status | `blocked` |
-| Laravel blocker routes | 136 |
+| Laravel blocker routes | 134 |
 
 ## Switch controls
 
@@ -32,7 +32,7 @@ route cutover gates are ready.
 | Control | Reason | Count |
 | --- | --- | ---: |
 | `laravel-readonly-maintenance` | The Laravel read-only maintenance gate is not ready. | 1 |
-| `staging-route-cutover` | The staging route cutover manifest still has Laravel blockers. | 136 |
+| `staging-route-cutover` | The staging route cutover manifest still has Laravel blockers. | 134 |
 
 ## Rollback
 
