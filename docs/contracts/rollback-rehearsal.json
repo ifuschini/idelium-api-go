@@ -1,0 +1,80 @@
+{
+  "blockers": [
+    {
+      "control": "docker-default-image-switch",
+      "reason": "docker-default-image-switch is not ready."
+    },
+    {
+      "control": "laravel-readonly-maintenance",
+      "reason": "laravel-readonly-maintenance is not ready."
+    },
+    {
+      "control": "staging-route-cutover",
+      "reason": "staging-route-cutover is not ready."
+    }
+  ],
+  "preconditions": {
+    "docker_switch_status": "blocked",
+    "laravel_blocker_routes": 136,
+    "maintenance_status": "blocked",
+    "route_cutover_status": "blocked"
+  },
+  "production_enabled": false,
+  "redaction": "The rehearsal plan records only control states, ordered actions, and aggregate route counts. It contains no credentials, cookies, authorization headers, or payload data.",
+  "rehearsal_id": "last-dual-runtime-rollback",
+  "safety": {
+    "dual_writes_allowed": false,
+    "max_recovery_minutes": 30,
+    "requires_database_restore": false,
+    "reverse_application_replay_allowed": false
+  },
+  "schema_version": 1,
+  "status": "blocked",
+  "steps": [
+    {
+      "description": "Stop further Go promotion and declare rollback ownership.",
+      "name": "freeze-forward-rollout",
+      "order": 1
+    },
+    {
+      "description": "Switch route ownership back to Laravel at the gateway.",
+      "name": "gateway-switchback",
+      "order": 2
+    },
+    {
+      "description": "Restore the last dual-runtime Laravel API image default.",
+      "name": "restore-laravel-api-image",
+      "order": 3
+    },
+    {
+      "description": "Resume Laravel queue workers and scheduled jobs after switchback.",
+      "name": "resume-laravel-processing",
+      "order": 4
+    },
+    {
+      "description": "Run Docker quickstart, Web smoke, CLI smoke, and route ownership checks.",
+      "name": "smoke-and-observe",
+      "order": 5
+    },
+    {
+      "description": "Record command output, route owner, image digest, and observation window results.",
+      "name": "record-rehearsal-evidence",
+      "order": 6
+    }
+  ],
+  "success_criteria": [
+    "Gateway owner after rollback is Laravel.",
+    "Laravel API image is the default API image.",
+    "Laravel workers and scheduled jobs are resumed.",
+    "Go routes can be drained without reverse data replay.",
+    "Docker quickstart, Web smoke, and CLI smoke checks pass.",
+    "No database restore is required."
+  ],
+  "target": {
+    "gateway_owner_after_rollback": "laravel",
+    "release": "last-dual-runtime-release",
+    "restore_laravel_api_image": true,
+    "resume_laravel_scheduler": true,
+    "resume_laravel_workers": true
+  }
+}
