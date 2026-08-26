@@ -1,6 +1,6 @@
 GO ?= go
 
-.PHONY: baseline-migration-check build cli-smoke contract-test format format-check integration-test openapi-check smoke-targets-check staging-cutover-check test test-race vet verify
+.PHONY: baseline-migration-check build cli-smoke contract-test format format-check integration-test laravel-schema-freeze-check openapi-check smoke-targets-check staging-cutover-check test test-race vet verify
 
 baseline-migration-check:
 	python3 scripts/build_go_baseline_migration.py \
@@ -9,6 +9,9 @@ baseline-migration-check:
 		--output-markdown docs/contracts/go-baseline-migration.md \
 		--output-embedded-json internal/migrations/baseline_manifest.json \
 		--check
+
+laravel-schema-freeze-check:
+	python3 scripts/check_laravel_schema_freeze.py --check
 
 build:
 	$(GO) build ./...
@@ -55,4 +58,4 @@ integration-test:
 vet:
 	$(GO) vet ./...
 
-verify: format-check vet test test-race contract-test baseline-migration-check openapi-check smoke-targets-check staging-cutover-check build
+verify: format-check vet test test-race contract-test baseline-migration-check laravel-schema-freeze-check openapi-check smoke-targets-check staging-cutover-check build

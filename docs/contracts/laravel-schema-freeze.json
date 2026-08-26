@@ -1,0 +1,25 @@
+{
+  "baseline_id": "go-baseline-2026-08-25",
+  "current": {
+    "aggregate_sha256": "7d37bf8e716cd62affe16c8f74b3f52fa02c8e284af5eb202e04465353b1bf5a",
+    "migration_count": 66
+  },
+  "expected": {
+    "aggregate_sha256": "7d37bf8e716cd62affe16c8f74b3f52fa02c8e284af5eb202e04465353b1bf5a",
+    "migration_count": 66
+  },
+  "freeze_id": "laravel-schema-freeze-2026-08-26",
+  "policy": {
+    "dual_writes_allowed": false,
+    "exception_process": "Open a versioned schema-change issue and update the reviewed Go baseline after approval.",
+    "go_baseline_application_enabled": false,
+    "laravel_migration_edits_allowed": false,
+    "new_laravel_migrations_allowed": false,
+    "schema_owner": "laravel-until-handover"
+  },
+  "redaction": "Only migration file names, hashes, sizes, and aggregate counts are recorded.",
+  "schema_version": 1,
+  "source_directory": "../idelium-api/database/migrations",
+  "status": "frozen",
+  "violations": []
+}
