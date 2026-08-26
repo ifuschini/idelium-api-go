@@ -548,6 +548,88 @@ func TestCLIPerformedCycleRepositoryIntegration(t *testing.T) {
 	}
 }
 
+func TestCLIPerformedCycleRepositoryPersistsExecutionContextWhenColumnExists(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS performed_test_cycles",
+		"DROP TABLE IF EXISTS test_cycles",
+		`CREATE TABLE test_cycles (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config JSON NOT NULL,
+			idProject INT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL
+		)`,
+		`CREATE TABLE performed_test_cycles (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			testCycleId INT NOT NULL,
+			date DATETIME NOT NULL,
+			status INT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL,
+			executionContext JSON NULL
+		)`,
+		`INSERT INTO test_cycles
+			(id, name, description, config, idProject, created_at, updated_at, idCostumer)
+		 VALUES
+			(7, 'Own cycle', 'Own cycle', JSON_ARRAY(), 10, NULL, NULL, 42)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare CLI performed-cycle snapshot fixture %q: %v", statement, err)
+		}
+	}
+
+	executionContext := `{"environment":"demo","browser":"firefox","operatingSystem":"darwin","apiToken":"[REDACTED]"}`
+	repository := NewCLIPerformedCycleRepository(database)
+	performedCycleID, err := repository.CreatePerformedCycle(
+		ctx,
+		42,
+		cliapi.CreatePerformedCycleRequest{
+			TestCycleID:              7,
+			ExecutionContextProvided: true,
+			ExecutionContext:         &executionContext,
+		},
+	)
+	if err != nil {
+		t.Fatalf("CreatePerformedCycle() returned an error: %v", err)
+	}
+
+	var storedContext string
+	if err := database.QueryRowContext(
+		ctx,
+		"SELECT JSON_UNQUOTE(JSON_EXTRACT(executionContext, '$.browser')) FROM performed_test_cycles WHERE id = ? AND idCostumer = ?",
+		performedCycleID,
+		42,
+	).Scan(&storedContext); err != nil {
+		t.Fatalf("read persisted execution context: %v", err)
+	}
+	if storedContext != "firefox" {
+		t.Fatalf("unexpected persisted browser snapshot: %s", storedContext)
+	}
+
+	var storedToken string
+	if err := database.QueryRowContext(
+		ctx,
+		"SELECT JSON_UNQUOTE(JSON_EXTRACT(executionContext, '$.apiToken')) FROM performed_test_cycles WHERE id = ? AND idCostumer = ?",
+		performedCycleID,
+		42,
+	).Scan(&storedToken); err != nil {
+		t.Fatalf("read persisted redacted token: %v", err)
+	}
+	if storedToken != "[REDACTED]" {
+		t.Fatalf("execution context stored an unredacted token: %s", storedToken)
+	}
+}
+
 func TestCLIPerformedTestRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

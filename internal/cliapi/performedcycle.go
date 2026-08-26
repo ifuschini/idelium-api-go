@@ -1,16 +1,22 @@
 package cliapi
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/idelium/idelium-api-go/internal/httpx"
 )
 
+const maxExecutionContextBytes = 64 << 10
+
 // CreatePerformedCycleRequest is the Laravel-compatible CLI performed-cycle creation command.
 type CreatePerformedCycleRequest struct {
-	TestCycleID int64
+	TestCycleID              int64
+	ExecutionContext         *string
+	ExecutionContextProvided bool
 }
 
 // UpdatePerformedCycleRequest is the Laravel-compatible CLI performed-cycle update command.
@@ -36,20 +42,15 @@ func (handler *Handler) CreatePerformedCycle(writer http.ResponseWriter, request
 		return
 	}
 
-	fields, ok := decodeJSONObject(writer, request)
+	command, ok := decodeCreatePerformedCycle(writer, request)
 	if !ok {
-		return
-	}
-	testCycleID, ok := requiredPositiveInt(fields, "testCycleId")
-	if !ok {
-		writeValidationError(writer, request, "testCycleId is required and must be a positive integer.")
 		return
 	}
 
 	performedCycleID, err := handler.performedCycles.CreatePerformedCycle(
 		request.Context(),
 		tenant.CustomerID,
-		CreatePerformedCycleRequest{TestCycleID: testCycleID},
+		command,
 	)
 	if errors.Is(err, ErrNotFound) {
 		writeInvalidDetails(writer)
@@ -67,6 +68,41 @@ func (handler *Handler) CreatePerformedCycle(writer http.ResponseWriter, request
 	}
 
 	httpx.WriteJSON(writer, http.StatusOK, map[string]int64{"idCycle": performedCycleID})
+}
+
+func decodeCreatePerformedCycle(writer http.ResponseWriter, request *http.Request) (CreatePerformedCycleRequest, bool) {
+	fields, ok := decodeJSONObject(writer, request)
+	if !ok {
+		return CreatePerformedCycleRequest{}, false
+	}
+	testCycleID, ok := requiredPositiveInt(fields, "testCycleId")
+	if !ok {
+		writeValidationError(writer, request, "testCycleId is required and must be a positive integer.")
+		return CreatePerformedCycleRequest{}, false
+	}
+
+	command := CreatePerformedCycleRequest{TestCycleID: testCycleID}
+	rawExecutionContext, exists := fields["executionContext"]
+	if !exists || bytes.Equal(bytes.TrimSpace(rawExecutionContext), []byte("null")) {
+		return command, true
+	}
+	command.ExecutionContextProvided = true
+	if len(rawExecutionContext) > maxExecutionContextBytes {
+		writeValidationError(writer, request, "executionContext must be a JSON object smaller than 64 KiB.")
+		return CreatePerformedCycleRequest{}, false
+	}
+	var executionContext map[string]any
+	if err := json.Unmarshal(rawExecutionContext, &executionContext); err != nil || executionContext == nil {
+		writeValidationError(writer, request, "executionContext must be a JSON object.")
+		return CreatePerformedCycleRequest{}, false
+	}
+	redacted, err := redactPostmanJSON(rawExecutionContext)
+	if err != nil {
+		writeValidationError(writer, request, "executionContext must be valid JSON.")
+		return CreatePerformedCycleRequest{}, false
+	}
+	command.ExecutionContext = &redacted
+	return command, true
 }
 
 // UpdatePerformedCycle updates one tenant-owned performed cycle using the Laravel CLI contract.

@@ -310,6 +310,54 @@ func TestHandlerCreatesTenantScopedPerformedCycle(t *testing.T) {
 	}
 }
 
+func TestHandlerCreatesPerformedCycleWithRedactedExecutionContext(t *testing.T) {
+	repository := &fakePerformedCycleRepository{createID: 44}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedCycles = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(
+		http.MethodPost,
+		"/ideliumcl/testcycle",
+		`{"testCycleId":7,"executionContext":{"environment":"demo","browser":"firefox","operatingSystem":"darwin","apiToken":"secret-value"}}`,
+		42,
+	)
+
+	handler.CreatePerformedCycle(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if !repository.createCommand.ExecutionContextProvided || repository.createCommand.ExecutionContext == nil {
+		t.Fatalf("execution context was not captured: %#v", repository.createCommand)
+	}
+	contextJSON := *repository.createCommand.ExecutionContext
+	for _, expected := range []string{`"environment":"demo"`, `"browser":"firefox"`, `"operatingSystem":"darwin"`, `"apiToken":"[REDACTED]"`} {
+		if !strings.Contains(contextJSON, expected) {
+			t.Fatalf("execution context %s did not contain %s", contextJSON, expected)
+		}
+	}
+	if strings.Contains(contextJSON, "secret-value") {
+		t.Fatalf("execution context leaked a sensitive value: %s", contextJSON)
+	}
+}
+
+func TestHandlerRejectsInvalidExecutionContext(t *testing.T) {
+	repository := &fakePerformedCycleRepository{createID: 44}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedCycles = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(http.MethodPost, "/ideliumcl/testcycle", `{"testCycleId":7,"executionContext":["not","an","object"]}`, 42)
+
+	handler.CreatePerformedCycle(response, request)
+
+	if response.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected status 422, got %d: %s", response.Code, response.Body.String())
+	}
+	if repository.createCustomerID != 0 {
+		t.Fatalf("repository should not be called for invalid execution context: %#v", repository)
+	}
+}
+
 func TestHandlerReturnsInvalidDetailsForMissingPerformedCycleReference(t *testing.T) {
 	repository := &fakePerformedCycleRepository{createErr: ErrNotFound}
 	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})

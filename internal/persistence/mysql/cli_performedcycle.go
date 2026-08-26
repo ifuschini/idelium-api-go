@@ -35,14 +35,7 @@ func (repository *CLIPerformedCycleRepository) CreatePerformedCycle(ctx context.
 		return 0, cliapi.ErrNotFound
 	}
 
-	result, err := transaction.ExecContext(
-		ctx,
-		`INSERT INTO performed_test_cycles
-			(testCycleId, date, status, idCostumer, created_at, updated_at)
-		 VALUES (?, NOW(), 0, ?, NOW(), NOW())`,
-		command.TestCycleID,
-		customerID,
-	)
+	result, err := repository.insertPerformedCycle(ctx, transaction, customerID, command)
 	if err != nil {
 		return 0, fmt.Errorf("insert CLI performed cycle: %w", safeDatabaseFailure("insert CLI performed cycle", err))
 	}
@@ -54,6 +47,67 @@ func (repository *CLIPerformedCycleRepository) CreatePerformedCycle(ctx context.
 		return 0, fmt.Errorf("commit CLI performed-cycle create: %w", safeDatabaseFailure("commit CLI performed-cycle create", err))
 	}
 	return performedCycleID, nil
+}
+
+func (repository *CLIPerformedCycleRepository) insertPerformedCycle(ctx context.Context, transaction *sql.Tx, customerID int64, command cliapi.CreatePerformedCycleRequest) (sql.Result, error) {
+	if command.ExecutionContext != nil {
+		column, found, err := optionalPerformedCycleExecutionContextColumn(ctx, transaction)
+		if err != nil {
+			return nil, err
+		}
+		if found {
+			columnSQL, ok := performedCycleExecutionContextColumnSQL(column)
+			if !ok {
+				return nil, fmt.Errorf("unsupported performed-cycle execution context column %q", column)
+			}
+			return transaction.ExecContext(
+				ctx,
+				fmt.Sprintf(`INSERT INTO performed_test_cycles
+					(testCycleId, date, status, idCostumer, created_at, updated_at, %s)
+				 VALUES (?, NOW(), 0, ?, NOW(), NOW(), ?)`, columnSQL),
+				command.TestCycleID,
+				customerID,
+				*command.ExecutionContext,
+			)
+		}
+	}
+
+	return transaction.ExecContext(
+		ctx,
+		`INSERT INTO performed_test_cycles
+			(testCycleId, date, status, idCostumer, created_at, updated_at)
+		 VALUES (?, NOW(), 0, ?, NOW(), NOW())`,
+		command.TestCycleID,
+		customerID,
+	)
+}
+
+func optionalPerformedCycleExecutionContextColumn(ctx context.Context, queryer interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}) (string, bool, error) {
+	for _, column := range []string{"executionContext", "execution_context", "context"} {
+		exists, err := mysqlColumnExists(ctx, queryer, "performed_test_cycles", column)
+		if err != nil {
+			return "", false, err
+		}
+		if exists {
+			return column, true, nil
+		}
+	}
+	return "", false, nil
+}
+
+func performedCycleExecutionContextColumnSQL(column string) (string, bool) {
+	switch column {
+	case "executionContext":
+		return "`executionContext`", true
+	case "execution_context":
+		return "`execution_context`", true
+	case "context":
+		return "`context`", true
+	default:
+		return "", false
+	}
 }
 
 // UpdatePerformedCycle updates a performed cycle only when the record belongs to the tenant.

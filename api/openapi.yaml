@@ -634,6 +634,16 @@ paths:
                 testCycleId:
                   type: integer
                   minimum: 1
+                executionContext:
+                  type: object
+                  additionalProperties: true
+                  maxProperties: 32
+                  description: >-
+                    Optional non-sensitive CLI runtime snapshot. Go validates
+                    that the value is a JSON object, redacts sensitive keys such
+                    as tokens, cookies, passwords, and authorization headers,
+                    and persists it when the database exposes a compatible
+                    snapshot column.
                 testId:
                   type: integer
                   minimum: 1
