@@ -11,12 +11,12 @@
     "default_fallback_owner": "laravel"
   },
   "summary": {
-    "aggregate_count": 27,
+    "aggregate_count": 28,
     "route_count": 168,
     "mutation_route_count": 98,
     "route_owner_counts": {
-      "go": 21,
-      "laravel": 147
+      "go": 23,
+      "laravel": 145
     }
   },
   "aggregates": [
@@ -101,6 +101,16 @@
       "fallback_owner": "laravel"
     },
     {
+      "aggregate": "cli-performed-steps",
+      "mutation_owner": "go",
+      "route_count": 2,
+      "mutation_route_count": 2,
+      "tenant_scoped_route_count": 0,
+      "rollout_state": "laravel-primary",
+      "dual_writes_allowed": false,
+      "fallback_owner": "laravel"
+    },
+    {
       "aggregate": "cli-performed-tests",
       "mutation_owner": "go",
       "route_count": 2,
@@ -142,9 +152,9 @@
     },
     {
       "aggregate": "execution-results",
-      "mutation_owner": "laravel",
-      "route_count": 5,
-      "mutation_route_count": 2,
+      "mutation_owner": null,
+      "route_count": 3,
+      "mutation_route_count": 0,
       "tenant_scoped_route_count": 3,
       "rollout_state": "laravel-primary",
       "dual_writes_allowed": false,
@@ -1880,10 +1890,10 @@
       "route_id": "POST /api/ideliumcl/step",
       "method": "POST",
       "path": "/api/ideliumcl/step",
-      "aggregate": "execution-results",
+      "aggregate": "cli-performed-steps",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 5
     },
@@ -1891,10 +1901,10 @@
       "route_id": "PUT /api/ideliumcl/step",
       "method": "PUT",
       "path": "/api/ideliumcl/step",
-      "aggregate": "execution-results",
+      "aggregate": "cli-performed-steps",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 5
     },

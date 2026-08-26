@@ -19,6 +19,7 @@ type Handler struct {
 	performedCycles PerformedCycleRepository
 	tests           TestRepository
 	performedTests  PerformedTestRepository
+	performedSteps  PerformedStepRepository
 	steps           StepRepository
 	plugins         PluginRepository
 	environments    EnvironmentRepository
@@ -26,11 +27,11 @@ type Handler struct {
 }
 
 // NewHandler creates a CLI API handler.
-func NewHandler(testCycles TestCycleRepository, performedCycles PerformedCycleRepository, tests TestRepository, performedTests PerformedTestRepository, steps StepRepository, plugins PluginRepository, environments EnvironmentRepository, logger *slog.Logger) *Handler {
+func NewHandler(testCycles TestCycleRepository, performedCycles PerformedCycleRepository, tests TestRepository, performedTests PerformedTestRepository, performedSteps PerformedStepRepository, steps StepRepository, plugins PluginRepository, environments EnvironmentRepository, logger *slog.Logger) *Handler {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &Handler{testCycles: testCycles, performedCycles: performedCycles, tests: tests, performedTests: performedTests, steps: steps, plugins: plugins, environments: environments, logger: logger}
+	return &Handler{testCycles: testCycles, performedCycles: performedCycles, tests: tests, performedTests: performedTests, performedSteps: performedSteps, steps: steps, plugins: plugins, environments: environments, logger: logger}
 }
 
 // TestCycle returns one tenant-owned test cycle using the Laravel CLI contract.

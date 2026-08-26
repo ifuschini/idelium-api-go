@@ -664,6 +664,150 @@ func TestCLIPerformedTestRepositoryIntegration(t *testing.T) {
 	}
 }
 
+func TestCLIPerformedStepRepositoryIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS performed_steps",
+		"DROP TABLE IF EXISTS performed_tests",
+		"DROP TABLE IF EXISTS performed_test_cycles",
+		"DROP TABLE IF EXISTS steps",
+		`CREATE TABLE performed_test_cycles (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			idCostumer INT NOT NULL
+		)`,
+		`CREATE TABLE performed_tests (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			testCycleDoneId INT NOT NULL,
+			testId INT NOT NULL,
+			status INT NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			postmanData LONGTEXT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL
+		)`,
+		`CREATE TABLE steps (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config JSON NOT NULL,
+			idProject INT NOT NULL,
+			` + "`order`" + ` INT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL
+		)`,
+		`CREATE TABLE performed_steps (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			testCycleDoneId INT NOT NULL,
+			testDoneId INT NOT NULL,
+			stepId INT NOT NULL,
+			status INT NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			screenshots JSON NOT NULL,
+			type VARCHAR(255) NOT NULL,
+			data JSON NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL,
+			idCostumer INT NOT NULL
+		)`,
+		"INSERT INTO performed_test_cycles (id, idCostumer) VALUES (44, 42), (45, 99)",
+		`INSERT INTO performed_tests
+			(id, testCycleDoneId, testId, status, name, postmanData, created_at, updated_at, idCostumer)
+		 VALUES
+			(55, 44, 9, 0, 'Own performed test', NULL, NULL, NULL, 42),
+			(56, 45, 10, 0, 'Foreign performed test', NULL, NULL, NULL, 99)`,
+		`INSERT INTO steps
+			(id, name, description, config, idProject, ` + "`order`" + `, created_at, updated_at, idCostumer)
+		 VALUES
+			(12, 'Own step', 'Own step', JSON_ARRAY(), 10, 2, NULL, NULL, 42),
+			(13, 'Foreign step', 'Foreign step', JSON_ARRAY(), 10, 3, NULL, NULL, 99)`,
+		`INSERT INTO performed_steps
+			(id, testCycleDoneId, testDoneId, stepId, status, name, screenshots, type, data, created_at, updated_at, idCostumer)
+		 VALUES
+			(77, 44, 55, 12, 0, 'Existing own step', JSON_ARRAY(), 'selenium', JSON_OBJECT('ok', true), NULL, NULL, 42),
+			(78, 45, 56, 13, 0, 'Existing foreign step', JSON_ARRAY(), 'selenium', JSON_OBJECT('ok', true), NULL, NULL, 99)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare CLI performed-step fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewCLIPerformedStepRepository(database)
+	performedStepID, err := repository.CreatePerformedStep(ctx, 42, cliapi.CreatePerformedStepRequest{
+		TestCycleID: 44,
+		TestID:      55,
+		StepID:      12,
+		Name:        "Created own step",
+		Status:      1,
+		Screenshots: "[]",
+		Data:        `{"result":"ok","token":"[REDACTED]"}`,
+		Type:        "selenium",
+	})
+	if err != nil {
+		t.Fatalf("CreatePerformedStep() returned an error: %v", err)
+	}
+	var storedCustomerID int64
+	var storedStatus int
+	var storedData string
+	if err := database.QueryRowContext(
+		ctx,
+		"SELECT idCostumer, status, data FROM performed_steps WHERE id = ?",
+		performedStepID,
+	).Scan(&storedCustomerID, &storedStatus, &storedData); err != nil {
+		t.Fatalf("read created performed step: %v", err)
+	}
+	if storedCustomerID != 42 || storedStatus != 1 || !strings.Contains(storedData, "[REDACTED]") {
+		t.Fatalf("created performed step was not tenant-scoped with expected payload: customer=%d status=%d data=%q", storedCustomerID, storedStatus, storedData)
+	}
+
+	_, err = repository.CreatePerformedStep(ctx, 42, cliapi.CreatePerformedStepRequest{TestCycleID: 45, TestID: 55, StepID: 12, Name: "Foreign cycle", Status: 1, Screenshots: "[]", Data: `{}`, Type: "selenium"})
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant performed cycle to be hidden, got %v", err)
+	}
+	_, err = repository.CreatePerformedStep(ctx, 42, cliapi.CreatePerformedStepRequest{TestCycleID: 44, TestID: 56, StepID: 12, Name: "Foreign test", Status: 1, Screenshots: "[]", Data: `{}`, Type: "selenium"})
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant performed test to be hidden, got %v", err)
+	}
+	_, err = repository.CreatePerformedStep(ctx, 42, cliapi.CreatePerformedStepRequest{TestCycleID: 44, TestID: 55, StepID: 13, Name: "Foreign step", Status: 1, Screenshots: "[]", Data: `{}`, Type: "selenium"})
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant source step to be hidden, got %v", err)
+	}
+
+	updatedID, err := repository.UpdatePerformedStep(ctx, 42, cliapi.UpdatePerformedStepRequest{
+		StepID:      77,
+		Screenshots: `[{"name":"screen.png"}]`,
+	})
+	if err != nil {
+		t.Fatalf("UpdatePerformedStep() returned an error: %v", err)
+	}
+	if updatedID != 77 {
+		t.Fatalf("unexpected updated performed-step id: %d", updatedID)
+	}
+	var storedScreenshots string
+	if err := database.QueryRowContext(
+		ctx,
+		"SELECT screenshots FROM performed_steps WHERE id = ? AND idCostumer = ?",
+		77,
+		42,
+	).Scan(&storedScreenshots); err != nil {
+		t.Fatalf("read updated performed step: %v", err)
+	}
+	if !strings.Contains(storedScreenshots, "screen.png") {
+		t.Fatalf("unexpected updated performed-step screenshots: %q", storedScreenshots)
+	}
+
+	_, err = repository.UpdatePerformedStep(ctx, 42, cliapi.UpdatePerformedStepRequest{StepID: 78, Screenshots: "[]"})
+	if !errors.Is(err, cliapi.ErrNotFound) {
+		t.Fatalf("expected cross-tenant performed step to be hidden, got %v", err)
+	}
+}
+
 func TestCLIStepRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

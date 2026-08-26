@@ -163,6 +163,22 @@ func (fakePerformedTestRepository) UpdatePerformedTest(ctx context.Context, cust
 	return command.TestID, nil
 }
 
+type fakePerformedStepRepository struct{}
+
+func (fakePerformedStepRepository) CreatePerformedStep(ctx context.Context, customerID int64, command cliapi.CreatePerformedStepRequest) (int64, error) {
+	if customerID != 42 || command.TestCycleID != 44 || command.TestID != 55 || command.StepID != 12 {
+		return 0, cliapi.ErrNotFound
+	}
+	return 77, nil
+}
+
+func (fakePerformedStepRepository) UpdatePerformedStep(ctx context.Context, customerID int64, command cliapi.UpdatePerformedStepRequest) (int64, error) {
+	if customerID != 42 || command.StepID != 77 {
+		return 0, cliapi.ErrNotFound
+	}
+	return command.StepID, nil
+}
+
 type fakeStepRepository struct{}
 
 func (fakeStepRepository) GetStep(ctx context.Context, customerID int64, stepID int64) (cliapi.Step, error) {
@@ -251,6 +267,7 @@ func testRouter(logger *slog.Logger) http.Handler {
 		fakePerformedCycleRepository{},
 		fakeTestRepository{},
 		fakePerformedTestRepository{},
+		fakePerformedStepRepository{},
 		fakeStepRepository{},
 		fakePluginRepository{},
 		fakeEnvironmentRepository{},
@@ -662,6 +679,42 @@ func TestRouterUpdatesCLIPerformedTestWithLegacyKey(t *testing.T) {
 	}
 	if strings.TrimSpace(response.Body.String()) != `{"idTest":55}` {
 		t.Fatalf("unexpected CLI performed-test update body: %s", response.Body.String())
+	}
+}
+
+func TestRouterCreatesCLIPerformedStepWithLegacyKey(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/ideliumcl/step", strings.NewReader(`{"testCycleId":44,"testId":55,"stepId":12,"name":"open page","status":1,"screenshots":"[]","data":"{\"result\":\"ok\"}","type":"selenium"}`))
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+	request.Header.Set("Content-Type", "application/json")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"idStep":77}` {
+		t.Fatalf("unexpected CLI performed-step create body: %s", response.Body.String())
+	}
+}
+
+func TestRouterUpdatesCLIPerformedStepWithLegacyKey(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
+	router := testRouter(logger)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPut, "/ideliumcl/step", strings.NewReader(`{"stepId":77,"screenshots":"[]"}`))
+	request.Header.Set(auth.IdeliumKeyHeader, "valid-key")
+	request.Header.Set("Content-Type", "application/json")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"idStep":77}` {
+		t.Fatalf("unexpected CLI performed-step update body: %s", response.Body.String())
 	}
 }
 

@@ -9,7 +9,7 @@ Application-level dual writes are prohibited.
 
 | Measure | Value |
 | --- | ---: |
-| Aggregates | 27 |
+| Aggregates | 28 |
 | Routes | 168 |
 | Mutation routes | 98 |
 
@@ -25,11 +25,12 @@ Application-level dual writes are prohibited.
 | `audit-events` | none | 1 | 0 | 1 | laravel-primary |
 | `browser-identity` | laravel | 8 | 6 | 7 | laravel-primary |
 | `cli-performed-cycles` | go | 2 | 2 | 0 | laravel-primary |
+| `cli-performed-steps` | go | 2 | 2 | 0 | laravel-primary |
 | `cli-performed-tests` | go | 2 | 2 | 0 | laravel-primary |
 | `customers` | laravel | 6 | 4 | 6 | laravel-primary |
 | `enterprise-identity` | laravel | 9 | 8 | 5 | laravel-primary |
 | `environments` | laravel | 7 | 3 | 5 | laravel-primary |
-| `execution-results` | laravel | 5 | 2 | 3 | laravel-primary |
+| `execution-results` | none | 3 | 0 | 3 | laravel-primary |
 | `grid-jobs` | laravel | 4 | 2 | 4 | laravel-primary |
 | `integrations` | laravel | 7 | 5 | 7 | laravel-primary |
 | `legacy-api-keys` | laravel | 2 | 1 | 2 | laravel-primary |
@@ -205,8 +206,8 @@ does not require database restoration or reverse data replication.
 | `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke` | `parallel-runs` | mutation | laravel | no | 8 |
 | `PUT` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `parallel-runs` | mutation | laravel | no | 8 |
 | `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `parallel-runs` | mutation | laravel | no | 8 |
-| `POST` | `/api/ideliumcl/step` | `execution-results` | mutation | laravel | no | 5 |
-| `PUT` | `/api/ideliumcl/step` | `execution-results` | mutation | laravel | no | 5 |
+| `POST` | `/api/ideliumcl/step` | `cli-performed-steps` | mutation | go | no | 5 |
+| `PUT` | `/api/ideliumcl/step` | `cli-performed-steps` | mutation | go | no | 5 |
 | `GET|HEAD` | `/api/ideliumcl/step/{idStep}` | `steps` | read | go | no | 4 |
 | `POST` | `/api/ideliumcl/test` | `cli-performed-tests` | mutation | go | no | 5 |
 | `PUT` | `/api/ideliumcl/test` | `cli-performed-tests` | mutation | go | no | 5 |

@@ -94,7 +94,7 @@ def aggregate_for(item: dict[str, Any]) -> str:
     if path == "/api/ideliumcl/testcycle" and mutation:
         return "cli-performed-cycles"
     if path == "/api/ideliumcl/step" and mutation:
-        return "execution-results"
+        return "cli-performed-steps"
     if path.startswith("/api/ideliumcl/step/"):
         return "steps"
     if path.startswith("/api/ideliumcl/test/"):

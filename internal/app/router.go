@@ -28,6 +28,7 @@ func NewRouter(
 	performedCycleRepository cliapi.PerformedCycleRepository,
 	testRepository cliapi.TestRepository,
 	performedTestRepository cliapi.PerformedTestRepository,
+	performedStepRepository cliapi.PerformedStepRepository,
 	stepRepository cliapi.StepRepository,
 	pluginRepository cliapi.PluginRepository,
 	environmentRepository cliapi.EnvironmentRepository,
@@ -79,7 +80,7 @@ func NewRouter(
 	router.Post("/admin/service-accounts", serviceAccountHandler.Store)
 	router.Post("/admin/service-accounts/{serviceAccount}/revoke", serviceAccountHandler.Revoke)
 
-	cliHandler := cliapi.NewHandler(testCycleRepository, performedCycleRepository, testRepository, performedTestRepository, stepRepository, pluginRepository, environmentRepository, logger)
+	cliHandler := cliapi.NewHandler(testCycleRepository, performedCycleRepository, testRepository, performedTestRepository, performedStepRepository, stepRepository, pluginRepository, environmentRepository, logger)
 	cliAuthenticator := auth.NewLegacyKeyAuthenticator(legacyKeyRepository, logger)
 	router.Group(func(router chi.Router) {
 		router.Use(cliAuthenticator.Middleware)
@@ -87,6 +88,8 @@ func NewRouter(
 		router.Put("/ideliumcl/testcycle", cliHandler.UpdatePerformedCycle)
 		router.Post("/ideliumcl/test", cliHandler.CreatePerformedTest)
 		router.Put("/ideliumcl/test", cliHandler.UpdatePerformedTest)
+		router.Post("/ideliumcl/step", cliHandler.CreatePerformedStep)
+		router.Put("/ideliumcl/step", cliHandler.UpdatePerformedStep)
 		router.Get("/ideliumcl/testcycle/{idTestCycle}", cliHandler.TestCycle)
 		router.Get("/ideliumcl/test/{idTest}", cliHandler.Test)
 		router.Get("/ideliumcl/step/{idStep}", cliHandler.Step)

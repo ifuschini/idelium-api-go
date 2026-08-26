@@ -244,9 +244,40 @@ func requiredString(fields map[string]json.RawMessage, name string) (string, boo
 	return value, value != ""
 }
 
+func jsonStringField(fields map[string]json.RawMessage, name string) (string, bool) {
+	raw, ok := fields[name]
+	if !ok {
+		return "", false
+	}
+	var value string
+	if err := json.Unmarshal(raw, &value); err == nil {
+		return value, true
+	}
+	if len(bytes.TrimSpace(raw)) > 0 {
+		return string(raw), true
+	}
+	return "", false
+}
+
+func validJSONStringField(fields map[string]json.RawMessage, name string) (string, bool) {
+	value, ok := jsonStringField(fields, name)
+	if !ok {
+		return "", false
+	}
+	var decoded any
+	if err := json.Unmarshal([]byte(value), &decoded); err != nil {
+		return "", false
+	}
+	return value, true
+}
+
 func isJSONArray(raw json.RawMessage) bool {
 	var value []json.RawMessage
 	return json.Unmarshal(raw, &value) == nil
+}
+
+func redactJSONString(value string) (string, error) {
+	return redactPostmanJSON(json.RawMessage(value))
 }
 
 func redactPostmanJSON(raw json.RawMessage) (string, error) {

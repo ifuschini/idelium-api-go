@@ -842,6 +842,138 @@ paths:
           $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
+  /ideliumcl/step:
+    post:
+      operationId: postIdeliumclStep
+      summary: Create a CLI performed step
+      description: >-
+        Creates one tenant-owned performed-step row for an Idelium CLI run.
+        The response shape intentionally preserves the Laravel CLI contract.
+      tags: [Idelium CLI]
+      x-idelium-laravel-route: "/api/ideliumcl/step"
+      x-idelium-controller: "App\\Http\\Controllers\\IdeliumInsertClController@createStep"
+      x-idelium-current-owner: "go-application"
+      x-idelium-trust-path: "api-key"
+      x-idelium-authentication-mode: "api-key"
+      x-idelium-tenant-context: true
+      x-idelium-consumers: ["idelium-cli", "idelium-docker-wiki"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [testCycleId, testId, stepId, name, status, screenshots, data, type]
+              additionalProperties: true
+              properties:
+                testCycleId:
+                  type: integer
+                  minimum: 1
+                testId:
+                  type: integer
+                  minimum: 1
+                stepId:
+                  type: integer
+                  minimum: 1
+                name:
+                  type: string
+                  minLength: 1
+                status:
+                  type: integer
+                screenshots:
+                  description: JSON string containing screenshot artifact metadata.
+                  type: string
+                data:
+                  description: JSON string containing the step result contract payload.
+                  type: string
+                type:
+                  type: string
+                  enum: [selenium, seleniumOrAppium, postman, dsl]
+      responses:
+        "200":
+          description: Performed step created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [idStep]
+                properties:
+                  idStep:
+                    type: integer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Missing or cross-tenant performed-step dependency.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message]
+                properties:
+                  message:
+                    type: string
+                    example: Invalid details
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+    put:
+      operationId: putIdeliumclStep
+      summary: Update a CLI performed step
+      description: >-
+        Updates screenshot artifact metadata for a tenant-owned performed-step
+        row. The response shape intentionally preserves the Laravel CLI contract.
+      tags: [Idelium CLI]
+      x-idelium-laravel-route: "/api/ideliumcl/step"
+      x-idelium-controller: "App\\Http\\Controllers\\IdeliumInsertClController@updateStep"
+      x-idelium-current-owner: "go-application"
+      x-idelium-trust-path: "api-key"
+      x-idelium-authentication-mode: "api-key"
+      x-idelium-tenant-context: true
+      x-idelium-consumers: ["idelium-cli", "idelium-docker-wiki"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stepId, screenshots]
+              additionalProperties: true
+              properties:
+                stepId:
+                  type: integer
+                  minimum: 1
+                screenshots:
+                  description: Screenshot artifact metadata, preserved as supplied by the legacy CLI contract.
+                  nullable: true
+      responses:
+        "200":
+          description: Performed step updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [idStep]
+                properties:
+                  idStep:
+                    type: integer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Missing or cross-tenant performed-step row.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message]
+                properties:
+                  message:
+                    type: string
+                    example: Invalid details
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
   # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS
   /:
     get:
@@ -5918,77 +6050,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /ideliumcl/step:
-    post:
-      operationId: postIdeliumclStep
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/ideliumcl/step"
-      x-idelium-controller: "App\\Http\\Controllers\\IdeliumInsertClController@createStep"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "api-key"
-      x-idelium-authentication-mode: "api-key"
-      x-idelium-tenant-context: false
-      x-idelium-consumers: ["idelium-cli", "idelium-docker-wiki"]
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-    put:
-      operationId: putIdeliumclStep
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/ideliumcl/step"
-      x-idelium-controller: "App\\Http\\Controllers\\IdeliumInsertClController@updateStep"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "api-key"
-      x-idelium-authentication-mode: "api-key"
-      x-idelium-tenant-context: false
-      x-idelium-consumers: ["idelium-cli", "idelium-docker-wiki"]
       requestBody:
         required: false
         content:

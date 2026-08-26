@@ -1,6 +1,6 @@
 {
   "consumer": "idelium-cli",
-  "ownership_matrix_digest_sha256": "e5976649722790d5947a0312a7d1ce870ff6e75a35d3c46aab11b61a90cdd948",
+  "ownership_matrix_digest_sha256": "a85a4fc316c12519d2233a855b916ff6d6afd334a25fb7747cb866f5b940d707",
   "route_inventory_digest_sha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9",
   "routes": [
     {
@@ -59,6 +59,36 @@
       "requires_runtime_credential": true,
       "route_id": "GET|HEAD /api/ideliumcl/plugins/{idProject}",
       "smoke_method": "GET",
+      "target_base_url_env": "IDELIUM_CLI_SMOKE_GO_BASE_URL",
+      "tenant_context": false,
+      "trust_path": "api-key"
+    },
+    {
+      "aggregate": "cli-performed-steps",
+      "authentication_mode": "api-key",
+      "execution_mode": "result-reporting-write",
+      "method": "POST",
+      "operation_kind": "mutation",
+      "owner": "go",
+      "path": "/api/ideliumcl/step",
+      "requires_runtime_credential": true,
+      "route_id": "POST /api/ideliumcl/step",
+      "smoke_method": "POST",
+      "target_base_url_env": "IDELIUM_CLI_SMOKE_GO_BASE_URL",
+      "tenant_context": false,
+      "trust_path": "api-key"
+    },
+    {
+      "aggregate": "cli-performed-steps",
+      "authentication_mode": "api-key",
+      "execution_mode": "result-reporting-write",
+      "method": "PUT",
+      "operation_kind": "mutation",
+      "owner": "go",
+      "path": "/api/ideliumcl/step",
+      "requires_runtime_credential": true,
+      "route_id": "PUT /api/ideliumcl/step",
+      "smoke_method": "PUT",
       "target_base_url_env": "IDELIUM_CLI_SMOKE_GO_BASE_URL",
       "tenant_context": false,
       "trust_path": "api-key"
@@ -167,36 +197,6 @@
       "target_base_url_env": "IDELIUM_CLI_SMOKE_GO_BASE_URL",
       "tenant_context": false,
       "trust_path": "api-key"
-    },
-    {
-      "aggregate": "execution-results",
-      "authentication_mode": "api-key",
-      "execution_mode": "result-reporting-write",
-      "method": "POST",
-      "operation_kind": "mutation",
-      "owner": "laravel",
-      "path": "/api/ideliumcl/step",
-      "requires_runtime_credential": true,
-      "route_id": "POST /api/ideliumcl/step",
-      "smoke_method": "POST",
-      "target_base_url_env": "IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL",
-      "tenant_context": false,
-      "trust_path": "api-key"
-    },
-    {
-      "aggregate": "execution-results",
-      "authentication_mode": "api-key",
-      "execution_mode": "result-reporting-write",
-      "method": "PUT",
-      "operation_kind": "mutation",
-      "owner": "laravel",
-      "path": "/api/ideliumcl/step",
-      "requires_runtime_credential": true,
-      "route_id": "PUT /api/ideliumcl/step",
-      "smoke_method": "PUT",
-      "target_base_url_env": "IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL",
-      "tenant_context": false,
-      "trust_path": "api-key"
     }
   ],
   "schema_version": 1,
@@ -206,8 +206,7 @@
       "result-reporting-write": 6
     },
     "owner_counts": {
-      "go": 11,
-      "laravel": 2
+      "go": 13
     },
     "route_count": 13
   },

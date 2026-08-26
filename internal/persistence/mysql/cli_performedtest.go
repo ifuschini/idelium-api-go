@@ -129,6 +129,8 @@ func tenantRowExists(ctx context.Context, transaction *sql.Tx, tableName string,
 		query = "SELECT EXISTS (SELECT 1 FROM test_cycles WHERE id = ? AND idCostumer = ?)"
 	case "tests":
 		query = "SELECT EXISTS (SELECT 1 FROM tests WHERE id = ? AND idCostumer = ?)"
+	case "steps":
+		query = "SELECT EXISTS (SELECT 1 FROM steps WHERE id = ? AND idCostumer = ?)"
 	default:
 		return false, fmt.Errorf("unsupported tenant lookup table")
 	}

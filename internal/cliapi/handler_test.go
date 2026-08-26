@@ -117,6 +117,41 @@ func (repository *fakePerformedTestRepository) UpdatePerformedTest(ctx context.C
 	return command.TestID, nil
 }
 
+type fakePerformedStepRepository struct {
+	createCustomerID int64
+	createCommand    CreatePerformedStepRequest
+	createID         int64
+	createErr        error
+	updateCustomerID int64
+	updateCommand    UpdatePerformedStepRequest
+	updateID         int64
+	updateErr        error
+}
+
+func (repository *fakePerformedStepRepository) CreatePerformedStep(ctx context.Context, customerID int64, command CreatePerformedStepRequest) (int64, error) {
+	repository.createCustomerID = customerID
+	repository.createCommand = command
+	if repository.createErr != nil {
+		return 0, repository.createErr
+	}
+	if repository.createID != 0 {
+		return repository.createID, nil
+	}
+	return 901, nil
+}
+
+func (repository *fakePerformedStepRepository) UpdatePerformedStep(ctx context.Context, customerID int64, command UpdatePerformedStepRequest) (int64, error) {
+	repository.updateCustomerID = customerID
+	repository.updateCommand = command
+	if repository.updateErr != nil {
+		return 0, repository.updateErr
+	}
+	if repository.updateID != 0 {
+		return repository.updateID, nil
+	}
+	return command.StepID, nil
+}
+
 type fakeStepRepository struct {
 	customerID int64
 	stepID     int64
@@ -565,6 +600,84 @@ func TestHandlerRejectsNonArrayPostmanData(t *testing.T) {
 	}
 }
 
+func TestHandlerCreatesTenantScopedPerformedStepWithRedactedData(t *testing.T) {
+	repository := &fakePerformedStepRepository{createID: 77}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedSteps = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(
+		http.MethodPost,
+		"/ideliumcl/step",
+		`{"testCycleId":44,"testId":55,"stepId":12,"name":"open page","status":1,"screenshots":"[]","data":"{\"headers\":{\"Authorization\":\"Bearer unsafe-token\"},\"result\":\"ok\"}","type":"selenium"}`,
+		42,
+	)
+
+	handler.CreatePerformedStep(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"idStep":77}` {
+		t.Fatalf("unexpected create body: %s", response.Body.String())
+	}
+	if repository.createCustomerID != 42 ||
+		repository.createCommand.TestCycleID != 44 ||
+		repository.createCommand.TestID != 55 ||
+		repository.createCommand.StepID != 12 ||
+		repository.createCommand.Type != "selenium" {
+		t.Fatalf("repository was not called with tenant-scoped step command: %#v", repository)
+	}
+	if strings.Contains(repository.createCommand.Data, "unsafe-token") ||
+		!strings.Contains(repository.createCommand.Data, "[REDACTED]") ||
+		!strings.Contains(repository.createCommand.Data, "ok") {
+		t.Fatalf("step data was not redacted safely: %s", repository.createCommand.Data)
+	}
+}
+
+func TestHandlerValidatesPerformedStepTypeAndJSON(t *testing.T) {
+	repository := &fakePerformedStepRepository{}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedSteps = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(
+		http.MethodPost,
+		"/ideliumcl/step",
+		`{"testCycleId":44,"testId":55,"stepId":12,"name":"open page","status":1,"screenshots":"[]","data":"not-json","type":"shell"}`,
+		42,
+	)
+
+	handler.CreatePerformedStep(response, request)
+
+	if response.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected status 422, got %d: %s", response.Code, response.Body.String())
+	}
+	if repository.createCustomerID != 0 {
+		t.Fatalf("repository should not be called for invalid performed-step payload: %#v", repository)
+	}
+}
+
+func TestHandlerUpdatesTenantScopedPerformedStepScreenshots(t *testing.T) {
+	repository := &fakePerformedStepRepository{updateID: 77}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedSteps = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(http.MethodPut, "/ideliumcl/step", `{"stepId":77,"screenshots":"[\"screen.png\"]"}`, 42)
+
+	handler.UpdatePerformedStep(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if strings.TrimSpace(response.Body.String()) != `{"idStep":77}` {
+		t.Fatalf("unexpected update body: %s", response.Body.String())
+	}
+	if repository.updateCustomerID != 42 ||
+		repository.updateCommand.StepID != 77 ||
+		repository.updateCommand.Screenshots != `["screen.png"]` {
+		t.Fatalf("repository was not called with tenant-scoped step update command: %#v", repository)
+	}
+}
+
 func TestHandlerReturnsInvalidIDForMalformedStepIdentifier(t *testing.T) {
 	repository := &fakeStepRepository{}
 	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, repository, &fakePluginRepository{}, &bytes.Buffer{})
@@ -872,7 +985,7 @@ func testHandler(
 	plugins PluginRepository,
 	logBuffer *bytes.Buffer,
 ) *Handler {
-	return NewHandler(testCycles, &fakePerformedCycleRepository{}, tests, &fakePerformedTestRepository{}, steps, plugins, &fakeEnvironmentRepository{}, slog.New(slog.NewTextHandler(logBuffer, nil)))
+	return NewHandler(testCycles, &fakePerformedCycleRepository{}, tests, &fakePerformedTestRepository{}, &fakePerformedStepRepository{}, steps, plugins, &fakeEnvironmentRepository{}, slog.New(slog.NewTextHandler(logBuffer, nil)))
 }
 
 func requestWithTenant(target string, pathID string, customerID int64) *http.Request {

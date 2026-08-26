@@ -40,7 +40,7 @@ class OwnershipMatrixTest(unittest.TestCase):
         self.assertTrue(all(not aggregate["dual_writes_allowed"] for aggregate in mutating))
         go_mutating = [aggregate for aggregate in mutating if aggregate["mutation_owner"] == "go"]
         self.assertEqual(
-            ["cli-performed-cycles", "cli-performed-tests"],
+            ["cli-performed-cycles", "cli-performed-steps", "cli-performed-tests"],
             [aggregate["aggregate"] for aggregate in go_mutating],
         )
 

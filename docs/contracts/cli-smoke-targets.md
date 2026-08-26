@@ -19,7 +19,7 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | Metric | Value |
 | --- | --- |
 | Routes | 13 |
-| Owners | go: 11, laravel: 2 |
+| Owners | go: 13 |
 | Execution modes | configuration-read: 7, result-reporting-write: 6 |
 
 ## Routes
@@ -30,6 +30,8 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | `GET` | `/api/ideliumcl/environments/{idProject}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `environments` |
 | `GET` | `/api/ideliumcl/plugin/{idPlugin}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `plugins` |
 | `GET` | `/api/ideliumcl/plugins/{idProject}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `plugins` |
+| `POST` | `/api/ideliumcl/step` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `result-reporting-write` | no | `cli-performed-steps` |
+| `PUT` | `/api/ideliumcl/step` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `result-reporting-write` | no | `cli-performed-steps` |
 | `GET` | `/api/ideliumcl/step/{idStep}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `steps` |
 | `POST` | `/api/ideliumcl/test` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `result-reporting-write` | no | `cli-performed-tests` |
 | `PUT` | `/api/ideliumcl/test` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `result-reporting-write` | no | `cli-performed-tests` |
@@ -37,8 +39,6 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | `POST` | `/api/ideliumcl/testcycle` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `result-reporting-write` | no | `cli-performed-cycles` |
 | `PUT` | `/api/ideliumcl/testcycle` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `result-reporting-write` | no | `cli-performed-cycles` |
 | `GET` | `/api/ideliumcl/testcycle/{idTestCycle}` | `go` | `IDELIUM_CLI_SMOKE_GO_BASE_URL` | `configuration-read` | no | `test-cycles` |
-| `POST` | `/api/ideliumcl/step` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
-| `PUT` | `/api/ideliumcl/step` | `laravel` | `IDELIUM_CLI_SMOKE_LARAVEL_BASE_URL` | `result-reporting-write` | no | `execution-results` |
 
 ## Compatibility and rollback
 
