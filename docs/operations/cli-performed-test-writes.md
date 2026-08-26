@@ -67,6 +67,10 @@ session identifiers, passwords, secrets, tokens, API keys, and CSRF markers are
 replaced with `[REDACTED]`. Request names, methods, URLs, response codes, timing,
 and non-sensitive diagnostics remain available for Idelium Web result views.
 
+See [Postman Execution Detail Persistence](postman-execution-detail-persistence.md)
+for the stable request-level fields consumed by the Web UI and the redaction
+boundary applied before persistence.
+
 ## Rollback
 
 Rollback is route-level and does not require a database migration:

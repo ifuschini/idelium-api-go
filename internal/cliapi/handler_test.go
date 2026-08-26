@@ -614,6 +614,49 @@ func TestHandlerUpdatesTenantScopedPerformedTestWithRedactedPostmanData(t *testi
 	}
 }
 
+func TestHandlerPreservesPostmanRequestLevelDetailsWithPayloadRedaction(t *testing.T) {
+	repository := &fakePerformedTestRepository{updateID: 55}
+	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})
+	handler.performedTests = repository
+	response := httptest.NewRecorder()
+	request := requestWithTenantBody(
+		http.MethodPut,
+		"/ideliumcl/test",
+		`{"testId":55,"status":2,"postmanData":[{"name":"Create user","method":"POST","url":"https://api.example.test/users","time":123,"assertions":[{"name":"status is 201","passed":true},{"name":"body contains id","passed":false,"error":"missing id"}],"request":{"headers":{"Content-Type":"application/json","Authorization":"Bearer unsafe-token"},"payload":{"username":"demo","password":"unsafe-password"}},"response":{"status":201,"headers":{"Content-Type":"application/json","Set-Cookie":"session=unsafe"},"payload":{"id":42,"token":"unsafe-response-token"}}}]}`,
+		42,
+	)
+
+	handler.UpdatePerformedTest(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", response.Code, response.Body.String())
+	}
+	if repository.updateCommand.PostmanData == nil {
+		t.Fatalf("expected redacted Postman execution details to be captured")
+	}
+	postmanData := *repository.updateCommand.PostmanData
+	for _, expected := range []string{
+		`"name":"Create user"`,
+		`"method":"POST"`,
+		`"url":"https://api.example.test/users"`,
+		`"time":123`,
+		`"status is 201"`,
+		`"missing id"`,
+		`"username":"demo"`,
+		`"id":42`,
+		`"[REDACTED]"`,
+	} {
+		if !strings.Contains(postmanData, expected) {
+			t.Fatalf("postmanData %s did not contain %s", postmanData, expected)
+		}
+	}
+	for _, forbidden := range []string{"unsafe-token", "unsafe-password", "unsafe-response-token", "session=unsafe"} {
+		if strings.Contains(postmanData, forbidden) {
+			t.Fatalf("postmanData leaked sensitive value %q: %s", forbidden, postmanData)
+		}
+	}
+}
+
 func TestHandlerAllowsNullPostmanDataOnPerformedTestUpdate(t *testing.T) {
 	repository := &fakePerformedTestRepository{updateID: 55}
 	handler := testHandler(&fakeTestCycleRepository{}, &fakeTestRepository{}, &fakeStepRepository{}, &fakePluginRepository{}, &bytes.Buffer{})

@@ -710,8 +710,35 @@ paths:
                 postmanData:
                   nullable: true
                   type: array
+                  description: >-
+                    Optional Postman execution detail rows captured by the CLI.
+                    The Go API preserves request names, methods, URLs, assertion
+                    summaries, timing, response metadata, and non-sensitive
+                    payload summaries while redacting sensitive keys before
+                    persistence.
                   items:
                     type: object
+                    additionalProperties: true
+                    properties:
+                      name:
+                        type: string
+                      method:
+                        type: string
+                      url:
+                        type: string
+                      time:
+                        type: integer
+                      request:
+                        type: object
+                        additionalProperties: true
+                      response:
+                        type: object
+                        additionalProperties: true
+                      assertions:
+                        type: array
+                        items:
+                          type: object
+                          additionalProperties: true
       responses:
         "200":
           description: Performed test updated.
