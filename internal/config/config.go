@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/idelium/idelium-api-go/internal/artifacts"
 )
 
 // Config contains validated runtime configuration.
@@ -14,6 +16,7 @@ type Config struct {
 	Environment string
 	HTTP        HTTPConfig
 	Database    DatabaseConfig
+	Artifacts   artifacts.Policy
 }
 
 // HTTPConfig contains bounded HTTP server settings.
@@ -80,6 +83,7 @@ func Load() (Config, error) {
 			MaxIdleConnections:    intOrDefault("IDELIUM_DB_MAX_IDLE_CONNECTIONS", 10),
 			ConnectionMaxLifetime: durationOrDefault("IDELIUM_DB_CONNECTION_MAX_LIFETIME", 5*time.Minute),
 		},
+		Artifacts: artifactPolicyFromEnvironment(),
 	}
 
 	if err := config.validate(); err != nil {
@@ -136,8 +140,21 @@ func (config Config) validate() error {
 		config.Database.TLSMode != "preferred" {
 		return errors.New("IDELIUM_DB_TLS_MODE must be false, true, or preferred")
 	}
+	if config.Artifacts.MaxArtifactBytes <= 0 || config.Artifacts.InlineArtifactMaxBytes <= 0 ||
+		config.Artifacts.CollectionMaxItems <= 0 || config.Artifacts.DefaultRetentionDays <= 0 {
+		return errors.New("artifact size, count, and retention limits must be positive")
+	}
 
 	return nil
+}
+
+func artifactPolicyFromEnvironment() artifacts.Policy {
+	defaults := artifacts.DefaultPolicy()
+	defaults.MaxArtifactBytes = int64(intOrDefault("IDELIUM_ARTIFACT_MAX_SIZE_BYTES", int(defaults.MaxArtifactBytes)))
+	defaults.InlineArtifactMaxBytes = int64(intOrDefault("IDELIUM_ARTIFACT_INLINE_MAX_BYTES", int(defaults.InlineArtifactMaxBytes)))
+	defaults.CollectionMaxItems = intOrDefault("IDELIUM_ARTIFACT_COLLECTION_MAX_ITEMS", defaults.CollectionMaxItems)
+	defaults.DefaultRetentionDays = intOrDefault("IDELIUM_ARTIFACT_RETENTION_DAYS", defaults.DefaultRetentionDays)
+	return defaults
 }
 
 func readSecret(filePath string, fallback string) (string, error) {

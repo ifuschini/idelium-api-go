@@ -100,6 +100,37 @@ func TestLoadPrefersIdeliumDatabaseVariables(t *testing.T) {
 	}
 }
 
+func TestLoadReadsArtifactPolicyOverrides(t *testing.T) {
+	clearConfigurationEnvironment(t)
+	t.Setenv("IDELIUM_DB_PASSWORD", "safe-test-password")
+	t.Setenv("IDELIUM_ARTIFACT_MAX_SIZE_BYTES", "1048576")
+	t.Setenv("IDELIUM_ARTIFACT_INLINE_MAX_BYTES", "4096")
+	t.Setenv("IDELIUM_ARTIFACT_COLLECTION_MAX_ITEMS", "12")
+	t.Setenv("IDELIUM_ARTIFACT_RETENTION_DAYS", "7")
+
+	loaded, err := Load()
+	if err != nil {
+		t.Fatalf("Load() returned an error: %v", err)
+	}
+	if loaded.Artifacts.MaxArtifactBytes != 1048576 ||
+		loaded.Artifacts.InlineArtifactMaxBytes != 4096 ||
+		loaded.Artifacts.CollectionMaxItems != 12 ||
+		loaded.Artifacts.DefaultRetentionDays != 7 {
+		t.Fatalf("unexpected artifact policy: %#v", loaded.Artifacts)
+	}
+}
+
+func TestLoadRejectsInvalidArtifactPolicy(t *testing.T) {
+	clearConfigurationEnvironment(t)
+	t.Setenv("IDELIUM_DB_PASSWORD", "safe-test-password")
+	t.Setenv("IDELIUM_ARTIFACT_MAX_SIZE_BYTES", "0")
+
+	_, err := Load()
+	if err == nil {
+		t.Fatal("Load() accepted an invalid artifact size limit")
+	}
+}
+
 func TestLoadRejectsRetiredAuthBridgeConfigurationSafely(t *testing.T) {
 	clearConfigurationEnvironment(t)
 	t.Setenv("IDELIUM_DB_PASSWORD", "safe-test-password")
@@ -154,6 +185,10 @@ func clearConfigurationEnvironment(t *testing.T) {
 		"IDELIUM_AUTH_BRIDGE_SECRET",
 		"IDELIUM_BROWSER_AUTH_BRIDGE_URL",
 		"IDELIUM_LARAVEL_AUTH_INTROSPECTION_URL",
+		"IDELIUM_ARTIFACT_MAX_SIZE_BYTES",
+		"IDELIUM_ARTIFACT_INLINE_MAX_BYTES",
+		"IDELIUM_ARTIFACT_COLLECTION_MAX_ITEMS",
+		"IDELIUM_ARTIFACT_RETENTION_DAYS",
 	} {
 		t.Setenv(name, "")
 	}
