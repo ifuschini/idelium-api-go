@@ -1,0 +1,78 @@
+{
+  "backup": {
+    "required_before_window": true,
+    "restore_test_required": true,
+    "scope": [
+      "application database snapshot",
+      "object-storage artifacts and retention metadata",
+      "current Laravel API image digest",
+      "candidate Go API image digest",
+      "gateway route ownership configuration"
+    ]
+  },
+  "blockers": [
+    {
+      "gate": "route_cutover",
+      "status": "blocked"
+    },
+    {
+      "gate": "laravel_readonly_maintenance",
+      "status": "blocked"
+    },
+    {
+      "gate": "docker_default_image_switch",
+      "status": "blocked"
+    },
+    {
+      "gate": "rollback_rehearsal",
+      "status": "blocked"
+    }
+  ],
+  "gate_statuses": {
+    "docker_default_image_switch": "blocked",
+    "laravel_readonly_maintenance": "blocked",
+    "rollback_rehearsal": "blocked",
+    "route_cutover": "blocked",
+    "schema_freeze": "frozen"
+  },
+  "handover_id": "final-operations-handover",
+  "operations": {
+    "controls": [
+      "gateway-mutation-block",
+      "queue-drain",
+      "scheduled-job-pause",
+      "go-route-verification",
+      "operator-broadcast"
+    ],
+    "maintenance_max_minutes": 60,
+    "rollback_steps": [
+      "freeze-forward-rollout",
+      "gateway-switchback",
+      "restore-laravel-api-image",
+      "resume-laravel-processing",
+      "smoke-and-observe",
+      "record-rehearsal-evidence"
+    ]
+  },
+  "production_enabled": false,
+  "recovery": {
+    "database_restore_required_for_route_rollback": false,
+    "max_recovery_minutes": 30,
+    "reverse_application_replay_allowed": false,
+    "route_switchback_owner": "laravel"
+  },
+  "redaction": "The handover pack records only gate states, control names, route counts, and image reference policies. It contains no credentials, cookies, authorization headers, or payload data.",
+  "release": {
+    "docker_default_target": "idelium/api-go",
+    "image_reference_policy": "pin-by-immutable-digest",
+    "readiness_path": "/readyz",
+    "smoke_required": [
+      "docker-quickstart",
+      "web-smoke",
+      "cli-smoke",
+      "route-cutover-check"
+    ]
+  },
+  "schema_version": 1,
+  "status": "blocked"
+}

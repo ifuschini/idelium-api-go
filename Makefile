@@ -1,6 +1,6 @@
 GO ?= go
 
-.PHONY: baseline-migration-check build cli-smoke contract-test docker-default-image-switch-check format format-check integration-test laravel-readonly-maintenance-check laravel-schema-freeze-check openapi-check rollback-rehearsal-check smoke-targets-check staging-cutover-check test test-race vet verify
+.PHONY: baseline-migration-check build cli-smoke contract-test docker-default-image-switch-check format format-check integration-test laravel-readonly-maintenance-check laravel-schema-freeze-check openapi-check operations-handover-check rollback-rehearsal-check smoke-targets-check staging-cutover-check test test-race vet verify
 
 baseline-migration-check:
 	python3 scripts/build_go_baseline_migration.py \
@@ -21,6 +21,9 @@ docker-default-image-switch-check:
 
 rollback-rehearsal-check:
 	python3 scripts/build_rollback_rehearsal.py --check
+
+operations-handover-check:
+	python3 scripts/build_operations_handover.py --check
 
 build:
 	$(GO) build ./...
@@ -67,4 +70,4 @@ integration-test:
 vet:
 	$(GO) vet ./...
 
-verify: format-check vet test test-race contract-test baseline-migration-check laravel-schema-freeze-check openapi-check smoke-targets-check staging-cutover-check laravel-readonly-maintenance-check docker-default-image-switch-check rollback-rehearsal-check build
+verify: format-check vet test test-race contract-test baseline-migration-check laravel-schema-freeze-check openapi-check smoke-targets-check staging-cutover-check laravel-readonly-maintenance-check docker-default-image-switch-check rollback-rehearsal-check operations-handover-check build
