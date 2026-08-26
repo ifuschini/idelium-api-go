@@ -1,0 +1,192 @@
+{
+  "schemaVersion": "idelium.web-result-display-parity.v1",
+  "sourceRuntime": "go",
+  "status": "active",
+  "routeOwnership": {
+    "resultWrites": "Laravel remains the fallback owner until Wave 5 write-route cutover is complete.",
+    "resultExploration": "Laravel remains the fallback owner until Wave 7 display-route cutover is complete.",
+    "trafficMoved": false
+  },
+  "redaction": "Fixtures contain only synthetic identifiers, safe URLs, aggregate timing, status, and response summaries. They must not contain credentials, cookies, authorization headers, session IDs, or payload bodies.",
+  "requiredWebViews": [
+    "test-running-tab",
+    "test-results-tab",
+    "cycle-list-selection",
+    "run-list-selection",
+    "test-list-selection",
+    "step-by-step-results",
+    "step-timing-timeline",
+    "environment-and-target-summary",
+    "postman-request-detail-modal",
+    "safe-diagnostics"
+  ],
+  "fixtures": [
+    {
+      "id": "go-produced-browser-run",
+      "description": "A browser execution with passed and failed step details, timing gaps, and environment/platform metadata.",
+      "execution": {
+        "cycle": {
+          "id": 501,
+          "name": "Idelium demo browser coverage",
+          "status": "failed",
+          "startedAt": "2026-08-01T10:00:00Z",
+          "finishedAt": "2026-08-01T10:00:18Z",
+          "durationMs": 18750
+        },
+        "environment": {
+          "id": 1,
+          "name": "demo"
+        },
+        "target": {
+          "platform": "local",
+          "browser": "chrome",
+          "browserVersion": "150.0",
+          "operatingSystem": "macOS",
+          "operatingSystemVersion": "15",
+          "device": "desktop"
+        },
+        "tests": [
+          {
+            "id": 701,
+            "name": "Idelium demo full component coverage",
+            "status": "failed",
+            "durationMs": 18750,
+            "steps": [
+              {
+                "id": 9001,
+                "order": 1,
+                "name": "Open Idelium demo page",
+                "type": "selenium",
+                "status": "passed",
+                "startedAt": "2026-08-01T10:00:00Z",
+                "finishedAt": "2026-08-01T10:00:02Z",
+                "durationMs": 2100,
+                "gapAfterPreviousMs": 0,
+                "diagnostics": [],
+                "artifacts": []
+              },
+              {
+                "id": 9002,
+                "order": 2,
+                "name": "Verify API regression row exists",
+                "type": "selenium",
+                "status": "failed",
+                "startedAt": "2026-08-01T10:00:04Z",
+                "finishedAt": "2026-08-01T10:00:18Z",
+                "durationMs": 14650,
+                "gapAfterPreviousMs": 1900,
+                "diagnostics": [
+                  {
+                    "code": "ELEMENT_NOT_CLICKABLE",
+                    "message": "Element click was intercepted before the target became clickable.",
+                    "category": "selector"
+                  }
+                ],
+                "artifacts": [
+                  {
+                    "type": "screenshot",
+                    "contentType": "image/png",
+                    "sizeBytes": 51200,
+                    "state": "available"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "webAssertions": [
+        "The Test Results tab shows one failed run and the selected run is visually highlighted.",
+        "The execution summary shows environment demo, browser chrome, browser version 150.0, operating system macOS 15, and device desktop.",
+        "The step-by-step panel lists both steps in execution order with status badges.",
+        "The timing chart shows durationMs and gapAfterPreviousMs for each step.",
+        "The failed step shows a safe diagnostic code and message without raw stack traces or payload values."
+      ]
+    },
+    {
+      "id": "go-produced-postman-run",
+      "description": "A Postman execution with request-level status, assertions, timing, and response summaries.",
+      "execution": {
+        "cycle": {
+          "id": 502,
+          "name": "Postman Echo API regression",
+          "status": "passed",
+          "startedAt": "2026-08-01T11:00:00Z",
+          "finishedAt": "2026-08-01T11:00:06Z",
+          "durationMs": 6400
+        },
+        "environment": {
+          "id": 1,
+          "name": "demo"
+        },
+        "target": {
+          "platform": "api",
+          "browser": null,
+          "browserVersion": null,
+          "operatingSystem": null,
+          "operatingSystemVersion": null,
+          "device": "api-runtime"
+        },
+        "tests": [
+          {
+            "id": 702,
+            "name": "Postman Echo collection",
+            "status": "passed",
+            "durationMs": 6400,
+            "steps": [
+              {
+                "id": 9101,
+                "order": 1,
+                "name": "Run full Postman Echo API collection",
+                "type": "postman",
+                "status": "passed",
+                "startedAt": "2026-08-01T11:00:00Z",
+                "finishedAt": "2026-08-01T11:00:06Z",
+                "durationMs": 6400,
+                "gapAfterPreviousMs": 0,
+                "postmanRequests": [
+                  {
+                    "name": "DigestAuth Request",
+                    "method": "GET",
+                    "url": "https://postman-echo.com/digest-auth",
+                    "status": 401,
+                    "durationMs": 238,
+                    "assertionsPassed": 2,
+                    "assertionsTotal": 2,
+                    "responseSummary": {
+                      "contentType": "application/json",
+                      "sizeBytes": 946,
+                      "bodyPreview": "[REDACTED BODY]"
+                    }
+                  },
+                  {
+                    "name": "POST Raw Text",
+                    "method": "POST",
+                    "url": "https://postman-echo.com/post",
+                    "status": 200,
+                    "durationMs": 137,
+                    "assertionsPassed": 4,
+                    "assertionsTotal": 4,
+                    "responseSummary": {
+                      "contentType": "application/json",
+                      "sizeBytes": 1225,
+                      "bodyPreview": "[REDACTED BODY]"
+                    }
+                  }
+                ],
+                "diagnostics": [],
+                "artifacts": []
+              }
+            ]
+          }
+        ]
+      },
+      "webAssertions": [
+        "The Postman step is collapsed by default and exposes a More details action.",
+        "The Postman detail modal shows request name, method, URL, status, duration, assertion counts, and response summary.",
+        "Response previews are redacted unless an explicit safe response body contract is present.",
+        "The run remains passed when every Postman request assertion passes, including expected 401 responses."
+      ]
+    }
+  ]
+}
