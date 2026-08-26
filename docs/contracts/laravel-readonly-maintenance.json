@@ -1,0 +1,71 @@
+{
+  "blockers": [
+    {
+      "control": "route-cutover",
+      "count": 136,
+      "reason": "Routes without Go implementation or fail-closed gates remain on Laravel."
+    }
+  ],
+  "controls": [
+    {
+      "description": "Block Laravel-owned mutation traffic at the gateway during the approved window.",
+      "name": "gateway-mutation-block",
+      "owner": "gateway",
+      "state": "planned"
+    },
+    {
+      "description": "Drain Laravel queues before entering read-only and keep workers stopped during the window.",
+      "name": "queue-drain",
+      "owner": "laravel-operations",
+      "state": "planned"
+    },
+    {
+      "description": "Pause Laravel scheduled jobs that can mutate data until archival is complete or rollback starts.",
+      "name": "scheduled-job-pause",
+      "owner": "laravel-operations",
+      "state": "planned"
+    },
+    {
+      "description": "Verify Go-owned and Go fail-closed routes before read-only maintenance begins.",
+      "name": "go-route-verification",
+      "owner": "idelium-api-go",
+      "state": "planned"
+    },
+    {
+      "description": "Announce the time-boxed maintenance window and expected read-only behavior.",
+      "name": "operator-broadcast",
+      "owner": "release-management",
+      "state": "planned"
+    }
+  ],
+  "exit_criteria": [
+    "No Laravel schema freeze violations exist.",
+    "No unresolved route cutover blockers exist.",
+    "Laravel queues are drained and workers are stopped.",
+    "Go-owned routes pass the staging smoke plan.",
+    "Rollback owner and gateway switchback command are confirmed."
+  ],
+  "maintenance_id": "laravel-readonly-maintenance",
+  "preconditions": {
+    "go_fail_closed_routes": 15,
+    "go_owned_routes": 17,
+    "laravel_blocker_routes": 136,
+    "route_cutover_status": "blocked",
+    "schema_freeze_status": "frozen"
+  },
+  "production_enabled": false,
+  "redaction": "The maintenance plan records only aggregate status and control names. It contains no credentials, cookies, authorization headers, or payload data.",
+  "rollback": {
+    "dual_writes_allowed": false,
+    "requires_database_restore": false,
+    "strategy": "Remove the gateway mutation block, resume Laravel workers and scheduled jobs, and route traffic back to Laravel before retrying the handover."
+  },
+  "schema_version": 1,
+  "status": "blocked",
+  "timebox": {
+    "default_state": "not-scheduled",
+    "max_duration_minutes": 60,
+    "requires_approved_end": true,
+    "requires_approved_start": true
+  }
+}
