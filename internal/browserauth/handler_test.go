@@ -23,12 +23,19 @@ type usersStub struct {
 func (s usersStub) FindByEmail(context.Context, string) (User, error) { return s.user, s.err }
 
 type sessionsStub struct {
-	created   Session
-	createErr error
-	deleted   string
-	deleteErr error
-	user      User
-	getErr    error
+	created        Session
+	createErr      error
+	deleted        string
+	deleteErr      error
+	user           User
+	getErr         error
+	projects       []Project
+	customers      []Customer
+	customerExists bool
+	switched       TenantSwitch
+	recorded       AuditEvent
+	switchErr      error
+	recordErr      error
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -38,6 +45,21 @@ func (s *sessionsStub) Create(_ context.Context, session Session) error {
 func (s *sessionsStub) Delete(_ context.Context, id string) error { s.deleted = id; return s.deleteErr }
 func (s *sessionsStub) Get(_ context.Context, _ string, _ time.Time) (User, error) {
 	return s.user, s.getErr
+}
+func (s *sessionsStub) ListProjects(_ context.Context, _ int64) ([]Project, error) {
+	return s.projects, nil
+}
+func (s *sessionsStub) ListCustomers(context.Context) ([]Customer, error) { return s.customers, nil }
+func (s *sessionsStub) CustomerExists(context.Context, int64) (bool, error) {
+	return s.customerExists, nil
+}
+func (s *sessionsStub) SwitchTenant(_ context.Context, tenantSwitch TenantSwitch) error {
+	s.switched = tenantSwitch
+	return s.switchErr
+}
+func (s *sessionsStub) RecordTenantSwitch(_ context.Context, event AuditEvent) error {
+	s.recorded = event
+	return s.recordErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -155,6 +177,71 @@ func TestCurrentUserAndCapabilitiesRequireAnActiveSession(t *testing.T) {
 	handler.CurrentUser(unauthorized, httptest.NewRequest(http.MethodGet, "/user", nil))
 	if unauthorized.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", unauthorized.Code)
+	}
+}
+
+func TestHeaderAndSidebarUseActiveTenantAndRole(t *testing.T) {
+	sessions := &sessionsStub{
+		user:      User{ID: 7, TenantID: 11, ActiveTenantID: 42, Name: "Browser user", Email: "browser@example.test", Role: 1},
+		projects:  []Project{{ID: 3, Name: "Project", IDCostumer: 42}},
+		customers: []Customer{{ID: 42, Costumer: "ACME"}},
+	}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	request := httptest.NewRequest(http.MethodGet, "/menu/header", nil)
+	request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	response := httptest.NewRecorder()
+	handler.Header(response, request)
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"projects"`) || !strings.Contains(response.Body.String(), `"costumers"`) || !strings.Contains(response.Body.String(), `"activeTenantId":42`) {
+		t.Fatalf("unexpected header response: %d %s", response.Code, response.Body.String())
+	}
+
+	sidebarRequest := httptest.NewRequest(http.MethodGet, "/menu/sidebar", nil)
+	sidebarRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	sidebarResponse := httptest.NewRecorder()
+	handler.Sidebar(sidebarResponse, sidebarRequest)
+	if sidebarResponse.Code != http.StatusOK || !strings.Contains(sidebarResponse.Body.String(), `"costumers"`) || !strings.Contains(sidebarResponse.Body.String(), `"platforms"`) {
+		t.Fatalf("unexpected sidebar response: %d %s", sidebarResponse.Code, sidebarResponse.Body.String())
+	}
+}
+
+func TestChangeCustomerValidatesAndRecordsAudit(t *testing.T) {
+	sessions := &sessionsStub{
+		user:           User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 1},
+		customerExists: true,
+	}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	handler.now = func() time.Time { return time.Date(2026, time.August, 27, 12, 0, 0, 0, time.UTC) }
+
+	request := httptest.NewRequest(http.MethodPut, "/menu/header/42", strings.NewReader(`{"reason":"support","expiresAt":"2026-08-27T13:00:00Z"}`))
+	request.SetPathValue("idCostumer", "42")
+	request.RemoteAddr = "203.0.113.10:1234"
+	request.Header.Set("X-Correlation-ID", "11111111-1111-4111-8111-111111111111")
+	request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	response := httptest.NewRecorder()
+	handler.ChangeCustomer(response, request)
+	if response.Code != http.StatusOK || sessions.switched.ActiveTenant != 42 || sessions.recorded.AfterValues["sessionToken"] != "[REDACTED]" {
+		t.Fatalf("unexpected tenant switch: status=%d body=%s switch=%#v audit=%#v", response.Code, response.Body.String(), sessions.switched, sessions.recorded)
+	}
+
+	missing := &sessionsStub{user: User{ID: 7, TenantID: 11, Role: 1}}
+	missingHandler := NewHandler(usersStub{}, missing, testLogger())
+	missingRequest := httptest.NewRequest(http.MethodPut, "/menu/header/999", strings.NewReader(`{"reason":"support","expiresAt":"2026-08-27T13:00:00Z"}`))
+	missingRequest.SetPathValue("idCostumer", "999")
+	missingRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	missingResponse := httptest.NewRecorder()
+	missingHandler.ChangeCustomer(missingResponse, missingRequest)
+	if missingResponse.Code != http.StatusNotFound {
+		t.Fatalf("expected missing target 404, got %d", missingResponse.Code)
+	}
+
+	forbiddenHandler := NewHandler(usersStub{}, &sessionsStub{user: User{ID: 8, TenantID: 11, Role: 2}}, testLogger())
+	forbiddenRequest := httptest.NewRequest(http.MethodPut, "/menu/header/42", strings.NewReader(`{"reason":"support","expiresAt":"2026-08-27T13:00:00Z"}`))
+	forbiddenRequest.SetPathValue("idCostumer", "42")
+	forbiddenRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	forbiddenResponse := httptest.NewRecorder()
+	forbiddenHandler.ChangeCustomer(forbiddenResponse, forbiddenRequest)
+	if forbiddenResponse.Code != http.StatusForbidden {
+		t.Fatalf("expected forbidden tenant switch, got %d", forbiddenResponse.Code)
 	}
 }
 

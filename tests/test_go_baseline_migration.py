@@ -34,8 +34,8 @@ class GoBaselineMigrationTest(unittest.TestCase):
         self.assertTrue(policy["laravel_remains_schema_owner"])
         self.assertFalse(policy["go_baseline_application_enabled"])
         self.assertFalse(policy["dual_writes_allowed"])
-        self.assertEqual(68, self.manifest["migration_count"])
-        self.assertEqual(68, len(self.manifest["migrations"]))
+        self.assertEqual(69, self.manifest["migration_count"])
+        self.assertEqual(69, len(self.manifest["migrations"]))
         serialized = json.dumps(self.manifest).lower()
         for unsafe_marker in ("password=", "authorization:", "cookie:", "bearer "):
             self.assertNotIn(unsafe_marker, serialized)

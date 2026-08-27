@@ -36,7 +36,7 @@ func TestMarkReviewedBaselineAppliedIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("MarkReviewedBaselineApplied() returned an error: %v", err)
 	}
-	if result.Applied != 68 || result.Skipped != 0 {
+	if result.Applied != 69 || result.Skipped != 0 {
 		t.Fatalf("unexpected first bridge result: %#v", result)
 	}
 
@@ -47,7 +47,7 @@ func TestMarkReviewedBaselineAppliedIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("idempotent MarkReviewedBaselineApplied() returned an error: %v", err)
 	}
-	if result.Applied != 0 || result.Skipped != 68 {
+	if result.Applied != 0 || result.Skipped != 69 {
 		t.Fatalf("unexpected idempotent bridge result: %#v", result)
 	}
 
@@ -55,7 +55,7 @@ func TestMarkReviewedBaselineAppliedIntegration(t *testing.T) {
 	if err := database.QueryRowContext(ctx, "SELECT COUNT(*) FROM migrations WHERE batch = 67").Scan(&count); err != nil {
 		t.Fatalf("count bridge migration markers: %v", err)
 	}
-	if count != 68 {
+	if count != 69 {
 		t.Fatalf("unexpected bridge marker count %d", count)
 	}
 }

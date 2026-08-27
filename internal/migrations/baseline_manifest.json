@@ -1,5 +1,5 @@
 {
-  "aggregate_sha256": "fce30c061633192969cd77a1336cf8946a835859e33fe66cdfcee053e17f6fae",
+  "aggregate_sha256": "f54df2c9f302d89231b127deaef226e4f37cd0e1058c7db4f3ed218f3c886698",
   "baseline_id": "go-baseline-2026-08-25",
   "generated_on": "2026-08-25",
   "handover_policy": {
@@ -8,7 +8,7 @@
     "laravel_remains_schema_owner": true,
     "rollback": "Do not apply this baseline until bridge, empty-install, upgrade, and rollback rehearsal tickets pass."
   },
-  "migration_count": 68,
+  "migration_count": 69,
   "migrations": [
     {
       "bytes": 835,
@@ -417,6 +417,12 @@
       "file": "2026_08_27_130000_create_go_browser_sessions_table.php",
       "name": "2026_08_27_130000_create_go_browser_sessions_table",
       "sha256": "2d6fb7a4fd32b19dab388b4f551ab1fce93d6e57585034273866a193e774afb7"
+    },
+    {
+      "bytes": 1236,
+      "file": "2026_08_27_140000_add_active_tenant_to_go_browser_sessions_table.php",
+      "name": "2026_08_27_140000_add_active_tenant_to_go_browser_sessions_table",
+      "sha256": "a1e5d2d1fa47107fba38794a59d968867228e547924f78843a784d89f74d15ca"
     }
   ],
   "redaction": "Migration source hashes and file sizes are recorded; no tenant data, credentials, or payload values are included.",

@@ -14,7 +14,7 @@ func TestReviewedBaselineManifestIsSafeAndConsistent(t *testing.T) {
 	if manifest.BaselineID != "go-baseline-2026-08-25" {
 		t.Fatalf("unexpected baseline ID %q", manifest.BaselineID)
 	}
-	if manifest.MigrationCount != 68 {
+	if manifest.MigrationCount != 69 {
 		t.Fatalf("unexpected migration count %d", manifest.MigrationCount)
 	}
 	if !manifest.HandoverPolicy.LaravelRemainsSchemaOwner {
@@ -47,7 +47,7 @@ func TestReviewedBaselinePlanDoesNotExposePerMigrationDetails(t *testing.T) {
 	if plan.BaselineID == "" || plan.AggregateSHA256 == "" {
 		t.Fatalf("plan lost baseline identity: %#v", plan)
 	}
-	if plan.MigrationCount != 68 {
+	if plan.MigrationCount != 69 {
 		t.Fatalf("unexpected plan migration count %d", plan.MigrationCount)
 	}
 	if plan.GoBaselineApplicationEnabled {

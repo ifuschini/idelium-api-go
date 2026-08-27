@@ -106,6 +106,21 @@ func (fakeBrowserAuthRepository) Delete(context.Context, string) error {
 func (fakeBrowserAuthRepository) Get(context.Context, string, time.Time) (browserauth.User, error) {
 	return browserauth.User{}, browserauth.ErrNotFound
 }
+func (fakeBrowserAuthRepository) ListProjects(context.Context, int64) ([]browserauth.Project, error) {
+	return nil, nil
+}
+func (fakeBrowserAuthRepository) ListCustomers(context.Context) ([]browserauth.Customer, error) {
+	return nil, nil
+}
+func (fakeBrowserAuthRepository) CustomerExists(context.Context, int64) (bool, error) {
+	return false, nil
+}
+func (fakeBrowserAuthRepository) SwitchTenant(context.Context, browserauth.TenantSwitch) error {
+	return nil
+}
+func (fakeBrowserAuthRepository) RecordTenantSwitch(context.Context, browserauth.AuditEvent) error {
+	return nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {

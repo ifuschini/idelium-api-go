@@ -50,6 +50,9 @@ func NewRouter(
 	router.Post("/logout", browserAuthHandler.Logout)
 	router.Get("/user", browserAuthHandler.CurrentUser)
 	router.Get("/me/capabilities", browserAuthHandler.Capabilities)
+	router.Get("/menu/header", browserAuthHandler.Header)
+	router.Put("/menu/header/{idCostumer}", browserAuthHandler.ChangeCustomer)
+	router.Get("/menu/sidebar", browserAuthHandler.Sidebar)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -55,11 +56,11 @@ func (r *BrowserAuthRepository) Delete(ctx context.Context, sessionID string) er
 
 func (r *BrowserAuthRepository) Get(ctx context.Context, sessionID string, now time.Time) (browserauth.User, error) {
 	var user browserauth.User
-	err := r.database.QueryRowContext(ctx, `SELECT u.id, u.idCostumer, u.name, u.email, u.role, u.password, u.status
+	err := r.database.QueryRowContext(ctx, `SELECT u.id, u.idCostumer, COALESCE(sessions.activeTenantId, sessions.idCostumer), u.name, u.email, u.role, u.password, u.status, sessions.impersonationReason, sessions.impersonationExpiresAt
 		FROM go_browser_sessions AS sessions
 		JOIN users AS u ON u.id = sessions.userId AND u.idCostumer = sessions.idCostumer
 		WHERE sessions.idHash = ? AND sessions.expiresAt > ? AND u.status = 'active'
-		LIMIT 1`, tokenHash(sessionID), now).Scan(&user.ID, &user.TenantID, &user.Name, &user.Email, &user.Role, &user.PasswordHash, &user.Status)
+		LIMIT 1`, tokenHash(sessionID), now).Scan(&user.ID, &user.TenantID, &user.ActiveTenantID, &user.Name, &user.Email, &user.Role, &user.PasswordHash, &user.Status, &user.ImpersonationReason, &user.ImpersonationExpiresAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return browserauth.User{}, browserauth.ErrNotFound
 	}
@@ -67,6 +68,95 @@ func (r *BrowserAuthRepository) Get(ctx context.Context, sessionID string, now t
 		return browserauth.User{}, safeDatabaseFailure("load browser session", err)
 	}
 	return user, nil
+}
+
+func (r *BrowserAuthRepository) ListProjects(ctx context.Context, tenantID int64) ([]browserauth.Project, error) {
+	rows, err := r.database.QueryContext(ctx, `SELECT id, name, description, created_at, updated_at, idCostumer FROM projects WHERE idCostumer = ? ORDER BY created_at ASC`, tenantID)
+	if err != nil {
+		return nil, safeDatabaseFailure("list browser header projects", err)
+	}
+	defer rows.Close()
+
+	projects := []browserauth.Project{}
+	for rows.Next() {
+		var project browserauth.Project
+		if err := rows.Scan(&project.ID, &project.Name, &project.Description, &project.CreatedAt, &project.UpdatedAt, &project.IDCostumer); err != nil {
+			return nil, safeDatabaseFailure("scan browser header projects", err)
+		}
+		projects = append(projects, project)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, safeDatabaseFailure("read browser header projects", err)
+	}
+	return projects, nil
+}
+
+func (r *BrowserAuthRepository) ListCustomers(ctx context.Context) ([]browserauth.Customer, error) {
+	rows, err := r.database.QueryContext(ctx, `SELECT id, costumer, description, licenseExpiration, created_at, updated_at FROM costumers ORDER BY created_at ASC`)
+	if err != nil {
+		return nil, safeDatabaseFailure("list browser header customers", err)
+	}
+	defer rows.Close()
+
+	customers := []browserauth.Customer{}
+	for rows.Next() {
+		var customer browserauth.Customer
+		if err := rows.Scan(&customer.ID, &customer.Costumer, &customer.Description, &customer.LicenseExpiration, &customer.CreatedAt, &customer.UpdatedAt); err != nil {
+			return nil, safeDatabaseFailure("scan browser header customers", err)
+		}
+		customers = append(customers, customer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, safeDatabaseFailure("read browser header customers", err)
+	}
+	return customers, nil
+}
+
+func (r *BrowserAuthRepository) CustomerExists(ctx context.Context, customerID int64) (bool, error) {
+	var exists int
+	err := r.database.QueryRowContext(ctx, `SELECT 1 FROM costumers WHERE id = ? LIMIT 1`, customerID).Scan(&exists)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, safeDatabaseFailure("lookup browser target customer", err)
+	}
+	return true, nil
+}
+
+func (r *BrowserAuthRepository) SwitchTenant(ctx context.Context, tenantSwitch browserauth.TenantSwitch) error {
+	result, err := r.database.ExecContext(ctx, `UPDATE go_browser_sessions
+		SET activeTenantId = ?, impersonationReason = ?, impersonationExpiresAt = ?, updated_at = ?
+		WHERE idHash = ? AND userId = ? AND idCostumer = ? AND expiresAt > ?`, tenantSwitch.ActiveTenant, tenantSwitch.Reason, tenantSwitch.ExpiresAt, tenantSwitch.Now, tokenHash(tenantSwitch.SessionID), tenantSwitch.UserID, tenantSwitch.ActorTenant, tenantSwitch.Now)
+	if err != nil {
+		return safeDatabaseFailure("switch browser tenant", err)
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return safeDatabaseFailure("count browser tenant switch", err)
+	}
+	if affected == 0 {
+		return browserauth.ErrNotFound
+	}
+	return nil
+}
+
+func (r *BrowserAuthRepository) RecordTenantSwitch(ctx context.Context, event browserauth.AuditEvent) error {
+	beforeValues, err := json.Marshal(event.BeforeValues)
+	if err != nil {
+		return fmt.Errorf("encode tenant switch audit before values: %w", err)
+	}
+	afterValues, err := json.Marshal(event.AfterValues)
+	if err != nil {
+		return fmt.Errorf("encode tenant switch audit after values: %w", err)
+	}
+	_, err = r.database.ExecContext(ctx, `INSERT INTO audit_events
+		(actorUserId, actorTenantId, activeTenantId, action, targetType, targetId, beforeValues, afterValues, result, sourceIp, correlationId, metadata)
+		VALUES (?, ?, ?, 'tenant.switch', 'costumer', ?, ?, ?, 'success', ?, ?, NULL)`, event.ActorUserID, event.ActorTenantID, event.ActiveTenantID, fmt.Sprint(event.TargetID), string(beforeValues), string(afterValues), event.SourceIP, event.CorrelationID)
+	if err != nil {
+		return safeDatabaseFailure("record tenant switch audit", err)
+	}
+	return nil
 }
 
 func tokenHash(value string) string {

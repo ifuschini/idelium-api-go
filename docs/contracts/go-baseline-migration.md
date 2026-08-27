@@ -12,8 +12,8 @@ install, upgrade, cutover, and rollback gates pass.
 - Generated on: `2026-08-25`
 - Source runtime: idelium-api Laravel migrations
 - Target runtime: idelium-api-go
-- Migration count: 68
-- Aggregate SHA-256: `fce30c061633192969cd77a1336cf8946a835859e33fe66cdfcee053e17f6fae`
+- Migration count: 69
+- Aggregate SHA-256: `f54df2c9f302d89231b127deaef226e4f37cd0e1058c7db4f3ed218f3c886698`
 - Review status: `review-required-before-apply`
 
 ## Handover policy
@@ -102,6 +102,7 @@ Migration source hashes and file sizes are recorded; no tenant data, credentials
 | 66 | `2026_08_07_100000_ensure_legacy_api_key_expiration_column.php` | `3c0fbebbe12776f9060024b6bfad47cd1f812893e1d8249a257b9e72253b4014` | 764 |
 | 67 | `2026_08_27_120000_add_idempotency_keys_to_performed_results.php` | `43e7a34c57c41db587efafc108919f902e98c2f6fd7e620c410c990436f57e1c` | 1020 |
 | 68 | `2026_08_27_130000_create_go_browser_sessions_table.php` | `2d6fb7a4fd32b19dab388b4f551ab1fce93d6e57585034273866a193e774afb7` | 991 |
+| 69 | `2026_08_27_140000_add_active_tenant_to_go_browser_sessions_table.php` | `a1e5d2d1fa47107fba38794a59d968867228e547924f78843a784d89f74d15ca` | 1236 |
 
 ## Regeneration
 

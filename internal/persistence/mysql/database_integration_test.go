@@ -150,7 +150,10 @@ func TestBrowserAuthRepositorySessionLookupIntegration(t *testing.T) {
 			idHash CHAR(64) NOT NULL UNIQUE,
 			userId BIGINT NOT NULL,
 			idCostumer BIGINT NOT NULL,
+			activeTenantId BIGINT NULL,
 			csrfTokenHash CHAR(64) NOT NULL,
+			impersonationReason VARCHAR(255) NULL,
+			impersonationExpiresAt TIMESTAMP NULL,
 			expiresAt TIMESTAMP NOT NULL,
 			created_at TIMESTAMP NULL,
 			updated_at TIMESTAMP NULL
@@ -192,6 +195,132 @@ func TestBrowserAuthRepositorySessionLookupIntegration(t *testing.T) {
 		if !errors.Is(err, browserauth.ErrNotFound) {
 			t.Fatalf("expected %s to be hidden, got %v", sessionID, err)
 		}
+	}
+}
+
+func TestBrowserAuthRepositoryTenantSwitchIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	now := time.Date(2026, time.August, 27, 12, 0, 0, 0, time.UTC)
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS audit_events",
+		"DROP TABLE IF EXISTS go_browser_sessions",
+		"DROP TABLE IF EXISTS projects",
+		"DROP TABLE IF EXISTS users",
+		"DROP TABLE IF EXISTS costumers",
+		`CREATE TABLE costumers (
+			id BIGINT PRIMARY KEY,
+			costumer VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NULL,
+			licenseExpiration TIMESTAMP NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE users (
+			id BIGINT PRIMARY KEY,
+			idCostumer BIGINT NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			email VARCHAR(255) NOT NULL,
+			role BIGINT NOT NULL,
+			password VARCHAR(255) NOT NULL,
+			status VARCHAR(32) NOT NULL
+		)`,
+		`CREATE TABLE projects (
+			id BIGINT PRIMARY KEY,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NULL,
+			idCostumer BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE go_browser_sessions (
+			idHash CHAR(64) NOT NULL UNIQUE,
+			userId BIGINT NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			activeTenantId BIGINT NULL,
+			csrfTokenHash CHAR(64) NOT NULL,
+			impersonationReason VARCHAR(255) NULL,
+			impersonationExpiresAt TIMESTAMP NULL,
+			expiresAt TIMESTAMP NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE audit_events (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			actorUserId BIGINT NULL,
+			actorTenantId BIGINT NULL,
+			activeTenantId BIGINT NOT NULL,
+			action VARCHAR(128) NOT NULL,
+			targetType VARCHAR(128) NOT NULL,
+			targetId VARCHAR(128) NULL,
+			beforeValues JSON NULL,
+			afterValues JSON NULL,
+			result VARCHAR(32) NOT NULL,
+			sourceIp VARCHAR(64) NULL,
+			correlationId CHAR(36) NOT NULL,
+			metadata JSON NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`INSERT INTO costumers (id, costumer, description, licenseExpiration, created_at, updated_at) VALUES
+			(11, 'ACTOR', 'Actor tenant', NULL, '2026-08-27 10:00:00', NULL),
+			(42, 'TARGET', 'Target tenant', NULL, '2026-08-27 11:00:00', NULL)`,
+		`INSERT INTO users (id, idCostumer, name, email, role, password, status) VALUES
+			(7, 11, 'Super Admin', 'admin@example.test', 1, '$2y$10$legacyhash', 'active')`,
+		`INSERT INTO projects (id, name, description, idCostumer, created_at, updated_at) VALUES
+			(3, 'Target project', 'tenant scoped', 42, '2026-08-27 11:00:00', NULL)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare tenant switch fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewBrowserAuthRepository(database)
+	if err := repository.Create(ctx, browserauth.Session{ID: "switch-session", UserID: 7, TenantID: 11, CSRFToken: "csrf", ExpiresAt: now.Add(time.Hour)}); err != nil {
+		t.Fatalf("Create() returned an error: %v", err)
+	}
+	exists, err := repository.CustomerExists(ctx, 42)
+	if err != nil || !exists {
+		t.Fatalf("CustomerExists() = %v, %v", exists, err)
+	}
+	if err := repository.SwitchTenant(ctx, browserauth.TenantSwitch{SessionID: "switch-session", UserID: 7, ActorTenant: 11, ActiveTenant: 42, Reason: "support", ExpiresAt: now.Add(time.Hour), Now: now}); err != nil {
+		t.Fatalf("SwitchTenant() returned an error: %v", err)
+	}
+	user, err := repository.Get(ctx, "switch-session", now)
+	if err != nil {
+		t.Fatalf("Get(switched) returned an error: %v", err)
+	}
+	if user.ActiveTenantID != 42 || user.ImpersonationReason == nil || *user.ImpersonationReason != "support" {
+		t.Fatalf("unexpected switched session user: %#v", user)
+	}
+	projects, err := repository.ListProjects(ctx, 42)
+	if err != nil || len(projects) != 1 || projects[0].IDCostumer != 42 {
+		t.Fatalf("unexpected switched tenant projects: %#v, %v", projects, err)
+	}
+	if err := repository.RecordTenantSwitch(ctx, browserauth.AuditEvent{
+		ActorUserID:    7,
+		ActorTenantID:  11,
+		ActiveTenantID: 42,
+		TargetID:       42,
+		SourceIP:       "203.0.113.10",
+		CorrelationID:  "11111111-1111-4111-8111-111111111111",
+		BeforeValues:   map[string]any{"activeTenantId": int64(11)},
+		AfterValues:    map[string]any{"activeTenantId": int64(42), "sessionToken": "[REDACTED]"},
+	}); err != nil {
+		t.Fatalf("RecordTenantSwitch() returned an error: %v", err)
+	}
+	var afterValues string
+	if err := database.QueryRowContext(ctx, "SELECT afterValues FROM audit_events WHERE action = 'tenant.switch'").Scan(&afterValues); err != nil {
+		t.Fatalf("read audit event: %v", err)
+	}
+	if !strings.Contains(afterValues, "[REDACTED]") || strings.Contains(afterValues, "switch-session") {
+		t.Fatalf("audit event exposed session data: %s", afterValues)
+	}
+	if err := repository.SwitchTenant(ctx, browserauth.TenantSwitch{SessionID: "switch-session", UserID: 999, ActorTenant: 11, ActiveTenant: 42, Reason: "support", ExpiresAt: now.Add(time.Hour), Now: now}); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-user switch to be hidden, got %v", err)
 	}
 }
 
