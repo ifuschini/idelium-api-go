@@ -15,6 +15,7 @@ const maxExecutionContextBytes = 64 << 10
 // CreatePerformedCycleRequest is the Laravel-compatible CLI performed-cycle creation command.
 type CreatePerformedCycleRequest struct {
 	TestCycleID              int64
+	IdempotencyKey           string
 	ExecutionContext         *string
 	ExecutionContextProvided bool
 }
@@ -81,7 +82,12 @@ func decodeCreatePerformedCycle(writer http.ResponseWriter, request *http.Reques
 		return CreatePerformedCycleRequest{}, false
 	}
 
-	command := CreatePerformedCycleRequest{TestCycleID: testCycleID}
+	key, ok := idempotencyKey(request)
+	if !ok {
+		writeValidationError(writer, request, "Idempotency-Key must be between 8 and 128 URL-safe characters.")
+		return CreatePerformedCycleRequest{}, false
+	}
+	command := CreatePerformedCycleRequest{TestCycleID: testCycleID, IdempotencyKey: key}
 	rawExecutionContext, exists := fields["executionContext"]
 	if !exists || bytes.Equal(bytes.TrimSpace(rawExecutionContext), []byte("null")) {
 		return command, true

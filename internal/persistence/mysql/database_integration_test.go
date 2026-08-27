@@ -487,7 +487,9 @@ func TestCLIPerformedCycleRepositoryIntegration(t *testing.T) {
 			status INT NOT NULL,
 			created_at TIMESTAMP NULL,
 			updated_at TIMESTAMP NULL,
-			idCostumer INT NOT NULL
+			idCostumer INT NOT NULL,
+			idempotencyKey VARCHAR(128) NULL,
+			UNIQUE KEY performed_test_cycles_tenant_idempotency_unique (idCostumer, idempotencyKey)
 		)`,
 		`INSERT INTO test_cycles
 			(id, name, description, config, idProject, created_at, updated_at, idCostumer)
@@ -521,6 +523,19 @@ func TestCLIPerformedCycleRepositoryIntegration(t *testing.T) {
 	}
 	if storedCustomerID != 42 || storedStatus != 0 {
 		t.Fatalf("created performed cycle was not tenant-scoped with default status: customer=%d status=%d", storedCustomerID, storedStatus)
+	}
+
+	firstID, err := repository.CreatePerformedCycle(ctx, 42, cliapi.CreatePerformedCycleRequest{TestCycleID: 7, IdempotencyKey: "cycle-retry-0001"})
+	if err != nil {
+		t.Fatalf("create idempotent performed cycle: %v", err)
+	}
+	replayedID, err := repository.CreatePerformedCycle(ctx, 42, cliapi.CreatePerformedCycleRequest{TestCycleID: 7, IdempotencyKey: "cycle-retry-0001"})
+	if err != nil || replayedID != firstID {
+		t.Fatalf("expected idempotent replay id %d, got %d with error %v", firstID, replayedID, err)
+	}
+	foreignID, err := repository.CreatePerformedCycle(ctx, 99, cliapi.CreatePerformedCycleRequest{TestCycleID: 8, IdempotencyKey: "cycle-retry-0001"})
+	if err != nil || foreignID == firstID {
+		t.Fatalf("expected tenant-isolated idempotency key, got id %d with error %v", foreignID, err)
 	}
 
 	_, err = repository.CreatePerformedCycle(ctx, 42, cliapi.CreatePerformedCycleRequest{TestCycleID: 8})

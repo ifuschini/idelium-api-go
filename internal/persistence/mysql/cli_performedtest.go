@@ -39,16 +39,13 @@ func (repository *CLIPerformedTestRepository) CreatePerformedTest(ctx context.Co
 		return 0, cliapi.ErrNotFound
 	}
 
-	result, err := transaction.ExecContext(
-		ctx,
-		`INSERT INTO performed_tests
-			(testCycleDoneId, testId, name, status, idCostumer, created_at, updated_at)
-		 VALUES (?, ?, ?, 0, ?, NOW(), NOW())`,
-		command.TestCycleID,
-		command.TestID,
-		command.Name,
-		customerID,
-	)
+	query := `INSERT INTO performed_tests (testCycleDoneId, testId, name, status, idCostumer, created_at, updated_at) VALUES (?, ?, ?, 0, ?, NOW(), NOW())`
+	arguments := []any{command.TestCycleID, command.TestID, command.Name, customerID}
+	if command.IdempotencyKey != "" {
+		query = `INSERT INTO performed_tests (testCycleDoneId, testId, name, status, idCostumer, idempotencyKey, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)`
+		arguments = append(arguments, command.IdempotencyKey)
+	}
+	result, err := transaction.ExecContext(ctx, query, arguments...)
 	if err != nil {
 		return 0, fmt.Errorf("insert CLI performed test: %w", safeDatabaseFailure("insert CLI performed test", err))
 	}

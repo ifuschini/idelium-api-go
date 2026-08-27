@@ -19,9 +19,10 @@ const invalidDetailsMessage = "Invalid details"
 
 // CreatePerformedTestRequest is the Laravel-compatible CLI performed-test creation command.
 type CreatePerformedTestRequest struct {
-	TestCycleID int64
-	TestID      int64
-	Name        string
+	TestCycleID    int64
+	TestID         int64
+	Name           string
+	IdempotencyKey string
 }
 
 // UpdatePerformedTestRequest is the Laravel-compatible CLI performed-test update command.
@@ -160,7 +161,28 @@ func decodeCreatePerformedTest(writer http.ResponseWriter, request *http.Request
 		writeValidationError(writer, request, "name is required and must be a non-empty string.")
 		return CreatePerformedTestRequest{}, false
 	}
-	return CreatePerformedTestRequest{TestCycleID: testCycleID, TestID: testID, Name: name}, true
+	key, ok := idempotencyKey(request)
+	if !ok {
+		writeValidationError(writer, request, "Idempotency-Key must be between 8 and 128 URL-safe characters.")
+		return CreatePerformedTestRequest{}, false
+	}
+	return CreatePerformedTestRequest{TestCycleID: testCycleID, TestID: testID, Name: name, IdempotencyKey: key}, true
+}
+
+func idempotencyKey(request *http.Request) (string, bool) {
+	key := request.Header.Get("Idempotency-Key")
+	if key == "" {
+		return "", true
+	}
+	if len(key) < 8 || len(key) > 128 {
+		return "", false
+	}
+	for _, character := range key {
+		if !(character >= 'a' && character <= 'z' || character >= 'A' && character <= 'Z' || character >= '0' && character <= '9' || character == '-' || character == '_') {
+			return "", false
+		}
+	}
+	return key, true
 }
 
 func decodeUpdatePerformedTest(writer http.ResponseWriter, request *http.Request) (UpdatePerformedTestRequest, bool) {

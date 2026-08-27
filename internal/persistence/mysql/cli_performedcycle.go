@@ -50,6 +50,9 @@ func (repository *CLIPerformedCycleRepository) CreatePerformedCycle(ctx context.
 }
 
 func (repository *CLIPerformedCycleRepository) insertPerformedCycle(ctx context.Context, transaction *sql.Tx, customerID int64, command cliapi.CreatePerformedCycleRequest) (sql.Result, error) {
+	if command.IdempotencyKey != "" {
+		return transaction.ExecContext(ctx, `INSERT INTO performed_test_cycles (testCycleId, date, status, idCostumer, idempotencyKey, created_at, updated_at) VALUES (?, NOW(), 0, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)`, command.TestCycleID, customerID, command.IdempotencyKey)
+	}
 	if command.ExecutionContext != nil {
 		column, found, err := optionalPerformedCycleExecutionContextColumn(ctx, transaction)
 		if err != nil {

@@ -43,21 +43,13 @@ func (repository *CLIPerformedStepRepository) CreatePerformedStep(ctx context.Co
 		return 0, cliapi.ErrNotFound
 	}
 
-	result, err := transaction.ExecContext(
-		ctx,
-		`INSERT INTO performed_steps
-			(testCycleDoneId, testDoneId, stepId, status, name, screenshots, type, data, idCostumer, created_at, updated_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-		command.TestCycleID,
-		command.TestID,
-		command.StepID,
-		command.Status,
-		command.Name,
-		command.Screenshots,
-		command.Type,
-		command.Data,
-		customerID,
-	)
+	query := `INSERT INTO performed_steps (testCycleDoneId, testDoneId, stepId, status, name, screenshots, type, data, idCostumer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`
+	arguments := []any{command.TestCycleID, command.TestID, command.StepID, command.Status, command.Name, command.Screenshots, command.Type, command.Data, customerID}
+	if command.IdempotencyKey != "" {
+		query = `INSERT INTO performed_steps (testCycleDoneId, testDoneId, stepId, status, name, screenshots, type, data, idCostumer, idempotencyKey, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)`
+		arguments = append(arguments, command.IdempotencyKey)
+	}
+	result, err := transaction.ExecContext(ctx, query, arguments...)
 	if err != nil {
 		return 0, fmt.Errorf("insert CLI performed step: %w", safeDatabaseFailure("insert CLI performed step", err))
 	}

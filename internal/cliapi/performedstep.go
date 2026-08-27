@@ -17,14 +17,15 @@ var allowedPerformedStepTypes = map[string]struct{}{
 
 // CreatePerformedStepRequest is the Laravel-compatible CLI performed-step creation command.
 type CreatePerformedStepRequest struct {
-	TestCycleID int64
-	TestID      int64
-	StepID      int64
-	Name        string
-	Status      int
-	Screenshots string
-	Data        string
-	Type        string
+	TestCycleID    int64
+	TestID         int64
+	StepID         int64
+	Name           string
+	Status         int
+	Screenshots    string
+	Data           string
+	Type           string
+	IdempotencyKey string
 }
 
 // UpdatePerformedStepRequest is the Laravel-compatible CLI performed-step screenshot update command.
@@ -174,14 +175,20 @@ func decodeCreatePerformedStep(writer http.ResponseWriter, request *http.Request
 		writeValidationError(writer, request, "type must be selenium, seleniumOrAppium, postman, or dsl.")
 		return CreatePerformedStepRequest{}, false
 	}
+	key, ok := idempotencyKey(request)
+	if !ok {
+		writeValidationError(writer, request, "Idempotency-Key must be between 8 and 128 URL-safe characters.")
+		return CreatePerformedStepRequest{}, false
+	}
 	return CreatePerformedStepRequest{
-		TestCycleID: testCycleID,
-		TestID:      testID,
-		StepID:      stepID,
-		Name:        name,
-		Status:      int(status),
-		Screenshots: screenshots,
-		Data:        redactedData,
-		Type:        stepType,
+		TestCycleID:    testCycleID,
+		TestID:         testID,
+		StepID:         stepID,
+		Name:           name,
+		Status:         int(status),
+		Screenshots:    screenshots,
+		Data:           redactedData,
+		Type:           stepType,
+		IdempotencyKey: key,
 	}, true
 }
