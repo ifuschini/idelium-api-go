@@ -61,6 +61,7 @@ func run(logger *slog.Logger) error {
 			mysqlpersistence.NewCLIStepRepository(database),
 			mysqlpersistence.NewCLIPluginRepository(database),
 			mysqlpersistence.NewCLIEnvironmentRepository(database),
+			mysqlpersistence.NewBrowserAuthRepository(database),
 		),
 	)
 	listener, err := net.Listen("tcp", runtimeConfig.HTTP.Address)

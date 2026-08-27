@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/idelium/idelium-api-go/internal/auth"
+	"github.com/idelium/idelium-api-go/internal/browserauth"
 	"github.com/idelium/idelium-api-go/internal/buildinfo"
 	"github.com/idelium/idelium-api-go/internal/cliapi"
 	"github.com/idelium/idelium-api-go/internal/platforms"
@@ -91,6 +92,16 @@ func (fakeCatalogRepository) ListLaunchTargets(context.Context, int64) ([]platfo
 }
 
 type fakeLegacyKeyRepository struct{}
+
+type fakeBrowserAuthRepository struct{}
+
+func (fakeBrowserAuthRepository) FindByEmail(context.Context, string) (browserauth.User, error) {
+	return browserauth.User{}, browserauth.ErrNotFound
+}
+func (fakeBrowserAuthRepository) Create(context.Context, browserauth.Session) error { return nil }
+func (fakeBrowserAuthRepository) Delete(context.Context, string) error {
+	return browserauth.ErrNotFound
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {
@@ -271,6 +282,7 @@ func testRouter(logger *slog.Logger) http.Handler {
 		fakeStepRepository{},
 		fakePluginRepository{},
 		fakeEnvironmentRepository{},
+		fakeBrowserAuthRepository{},
 	)
 }
 

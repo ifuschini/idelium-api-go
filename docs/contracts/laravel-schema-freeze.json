@@ -1,12 +1,12 @@
 {
   "baseline_id": "go-baseline-2026-08-25",
   "current": {
-    "aggregate_sha256": "7d37bf8e716cd62affe16c8f74b3f52fa02c8e284af5eb202e04465353b1bf5a",
-    "migration_count": 66
+    "aggregate_sha256": "fce30c061633192969cd77a1336cf8946a835859e33fe66cdfcee053e17f6fae",
+    "migration_count": 68
   },
   "expected": {
-    "aggregate_sha256": "7d37bf8e716cd62affe16c8f74b3f52fa02c8e284af5eb202e04465353b1bf5a",
-    "migration_count": 66
+    "aggregate_sha256": "fce30c061633192969cd77a1336cf8946a835859e33fe66cdfcee053e17f6fae",
+    "migration_count": 68
   },
   "freeze_id": "laravel-schema-freeze-2026-08-26",
   "policy": {

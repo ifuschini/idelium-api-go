@@ -1,5 +1,5 @@
 {
-  "aggregate_sha256": "7d37bf8e716cd62affe16c8f74b3f52fa02c8e284af5eb202e04465353b1bf5a",
+  "aggregate_sha256": "fce30c061633192969cd77a1336cf8946a835859e33fe66cdfcee053e17f6fae",
   "baseline_id": "go-baseline-2026-08-25",
   "generated_on": "2026-08-25",
   "handover_policy": {
@@ -8,7 +8,7 @@
     "laravel_remains_schema_owner": true,
     "rollback": "Do not apply this baseline until bridge, empty-install, upgrade, and rollback rehearsal tickets pass."
   },
-  "migration_count": 66,
+  "migration_count": 68,
   "migrations": [
     {
       "bytes": 835,
@@ -405,6 +405,18 @@
       "file": "2026_08_07_100000_ensure_legacy_api_key_expiration_column.php",
       "name": "2026_08_07_100000_ensure_legacy_api_key_expiration_column",
       "sha256": "3c0fbebbe12776f9060024b6bfad47cd1f812893e1d8249a257b9e72253b4014"
+    },
+    {
+      "bytes": 1020,
+      "file": "2026_08_27_120000_add_idempotency_keys_to_performed_results.php",
+      "name": "2026_08_27_120000_add_idempotency_keys_to_performed_results",
+      "sha256": "43e7a34c57c41db587efafc108919f902e98c2f6fd7e620c410c990436f57e1c"
+    },
+    {
+      "bytes": 991,
+      "file": "2026_08_27_130000_create_go_browser_sessions_table.php",
+      "name": "2026_08_27_130000_create_go_browser_sessions_table",
+      "sha256": "2d6fb7a4fd32b19dab388b4f551ab1fce93d6e57585034273866a193e774afb7"
     }
   ],
   "redaction": "Migration source hashes and file sizes are recorded; no tenant data, credentials, or payload values are included.",

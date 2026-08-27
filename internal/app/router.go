@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/idelium/idelium-api-go/internal/auth"
+	"github.com/idelium/idelium-api-go/internal/browserauth"
 	"github.com/idelium/idelium-api-go/internal/buildinfo"
 	"github.com/idelium/idelium-api-go/internal/cliapi"
 	"github.com/idelium/idelium-api-go/internal/health"
@@ -32,6 +33,7 @@ func NewRouter(
 	stepRepository cliapi.StepRepository,
 	pluginRepository cliapi.PluginRepository,
 	environmentRepository cliapi.EnvironmentRepository,
+	browserAuthRepository browserauth.Repository,
 ) http.Handler {
 	router := chi.NewRouter()
 	router.Use(httpx.CorrelationID)
@@ -42,6 +44,10 @@ func NewRouter(
 	healthHandler := health.NewHandler(checker, info)
 	router.Get("/health/live", healthHandler.Live)
 	router.Get("/health/ready", healthHandler.Ready)
+	browserAuthHandler := browserauth.NewHandler(browserAuthRepository, browserAuthRepository, logger)
+	router.Get("/sanctum/csrf-cookie", browserAuthHandler.CSRF)
+	router.Post("/login", browserAuthHandler.Login)
+	router.Post("/logout", browserAuthHandler.Logout)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)
