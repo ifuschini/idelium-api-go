@@ -324,6 +324,101 @@ func TestBrowserAuthRepositoryTenantSwitchIntegration(t *testing.T) {
 	}
 }
 
+func TestBrowserAuthRepositoryAccountsIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS users",
+		"DROP TABLE IF EXISTS roles",
+		"DROP TABLE IF EXISTS costumers",
+		`CREATE TABLE roles (
+			id BIGINT PRIMARY KEY,
+			name VARCHAR(255) NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE costumers (
+			id BIGINT PRIMARY KEY,
+			costumer VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NULL,
+			licenseExpiration TIMESTAMP NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE users (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			idCostumer BIGINT NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			email VARCHAR(255) NOT NULL UNIQUE,
+			role BIGINT NOT NULL,
+			password VARCHAR(255) NOT NULL,
+			status VARCHAR(32) NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`INSERT INTO roles (id, name, created_at, updated_at) VALUES
+			(1, 'superadmin', NULL, NULL),
+			(2, 'admin', NULL, NULL),
+			(3, 'user', NULL, NULL)`,
+		`INSERT INTO costumers (id, costumer, description, licenseExpiration, created_at, updated_at) VALUES
+			(11, 'ACME', 'Own tenant', NULL, NULL, NULL),
+			(42, 'OTHER', 'Foreign tenant', NULL, NULL, NULL)`,
+		`INSERT INTO users (id, idCostumer, name, email, role, password, status, created_at, updated_at) VALUES
+			(7, 11, 'Tenant Admin', 'admin@example.test', 2, '$2y$10$legacyhash', 'active', NULL, NULL),
+			(8, 11, 'Tenant User', 'user@example.test', 3, '$2y$10$legacyhash', 'active', NULL, NULL),
+			(9, 42, 'Foreign User', 'foreign@example.test', 3, '$2y$10$legacyhash', 'active', NULL, NULL),
+			(10, 11, 'Super Admin', 'super@example.test', 1, '$2y$10$legacyhash', 'active', NULL, NULL)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare account fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewBrowserAuthRepository(database)
+	request := httptest.NewRequest(http.MethodGet, "/admin/accounts?page=1&pageSize=25", nil)
+	actor := browserauth.User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 2}
+	page, err := repository.ListAccounts(request, actor, browserauth.AccountQuery{ActorTenantID: 11, ActorRole: 2, Page: 1, PageSize: 25, Paged: true, Sort: "email", Direction: "asc"})
+	if err != nil {
+		t.Fatalf("ListAccounts() returned an error: %v", err)
+	}
+	if page.Meta.Total != 2 {
+		t.Fatalf("expected role 2 to see only tenant non-superadmin accounts, got %#v", page)
+	}
+	for _, account := range page.Data {
+		if account.IDCostumer != 11 || account.Role == 1 {
+			t.Fatalf("account scope leaked: %#v", page.Data)
+		}
+	}
+
+	if err := repository.CreateAccount(request, actor, browserauth.AccountCreate{Name: "Created User", Email: "created@example.test", Password: "StrongPassword123!", Role: 3, IDCostumer: 11}); err != nil {
+		t.Fatalf("CreateAccount() returned an error: %v", err)
+	}
+	if err := repository.CreateAccount(request, actor, browserauth.AccountCreate{Name: "Foreign User", Email: "created-foreign@example.test", Password: "StrongPassword123!", Role: 3, IDCostumer: 42}); !errors.Is(err, browserauth.ErrForbidden) {
+		t.Fatalf("expected cross-tenant create to be forbidden, got %v", err)
+	}
+	var createdID int64
+	var passwordHash string
+	if err := database.QueryRowContext(ctx, "SELECT id, password FROM users WHERE email = 'created@example.test'").Scan(&createdID, &passwordHash); err != nil {
+		t.Fatalf("read created account: %v", err)
+	}
+	if passwordHash == "StrongPassword123!" || !strings.HasPrefix(passwordHash, "$2") {
+		t.Fatalf("password was not bcrypt hashed: %s", passwordHash)
+	}
+	if err := repository.UpdateAccount(request, actor, browserauth.AccountUpdate{ID: createdID, Name: "Updated User", Password: "AnotherStrong123!"}); err != nil {
+		t.Fatalf("UpdateAccount() returned an error: %v", err)
+	}
+	if err := repository.DeleteAccount(request, actor, 9); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-tenant delete to be hidden, got %v", err)
+	}
+	if err := repository.DeleteAccount(request, actor, createdID); err != nil {
+		t.Fatalf("DeleteAccount() returned an error: %v", err)
+	}
+}
+
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

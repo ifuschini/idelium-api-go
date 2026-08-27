@@ -121,6 +121,27 @@ func (fakeBrowserAuthRepository) SwitchTenant(context.Context, browserauth.Tenan
 func (fakeBrowserAuthRepository) RecordTenantSwitch(context.Context, browserauth.AuditEvent) error {
 	return nil
 }
+func (fakeBrowserAuthRepository) ListRoles(*http.Request, browserauth.User) ([]browserauth.Role, bool, error) {
+	return nil, false, nil
+}
+func (fakeBrowserAuthRepository) Profile(*http.Request, browserauth.User) (browserauth.Profile, error) {
+	return browserauth.Profile{}, nil
+}
+func (fakeBrowserAuthRepository) UpdateProfilePassword(*http.Request, browserauth.User, string) (browserauth.Profile, error) {
+	return browserauth.Profile{}, nil
+}
+func (fakeBrowserAuthRepository) ListAccounts(*http.Request, browserauth.User, browserauth.AccountQuery) (browserauth.AccountPage, error) {
+	return browserauth.AccountPage{}, nil
+}
+func (fakeBrowserAuthRepository) CreateAccount(*http.Request, browserauth.User, browserauth.AccountCreate) error {
+	return nil
+}
+func (fakeBrowserAuthRepository) UpdateAccount(*http.Request, browserauth.User, browserauth.AccountUpdate) error {
+	return nil
+}
+func (fakeBrowserAuthRepository) DeleteAccount(*http.Request, browserauth.User, int64) error {
+	return nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {

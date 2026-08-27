@@ -60,6 +60,7 @@ type SessionRepository interface {
 	CustomerExists(context.Context, int64) (bool, error)
 	SwitchTenant(context.Context, TenantSwitch) error
 	RecordTenantSwitch(context.Context, AuditEvent) error
+	AdminRepository
 }
 type Repository interface {
 	UserRepository
@@ -346,6 +347,9 @@ func (h *Handler) unauthorized(w http.ResponseWriter) {
 func (h *Handler) forbidden(w http.ResponseWriter) {
 	writeJSON(w, http.StatusForbidden, map[string]string{"message": "This action is unauthorized."})
 }
+func (h *Handler) notFound(w http.ResponseWriter) {
+	writeJSON(w, http.StatusNotFound, map[string]string{"message": "Not found."})
+}
 func expireCookie(w http.ResponseWriter, name string, httpOnly bool) {
 	http.SetCookie(w, &http.Cookie{Name: name, Value: "", Path: "/", MaxAge: -1, Secure: true, HttpOnly: httpOnly, SameSite: http.SameSiteLaxMode})
 }
@@ -367,6 +371,11 @@ func (u User) activeTenant() int64 {
 		return u.ActiveTenantID
 	}
 	return u.TenantID
+}
+
+// ActiveTenant returns the tenant currently selected for browser-scoped actions.
+func (u User) ActiveTenant() int64 {
+	return u.activeTenant()
 }
 
 func tenantContext(user User) map[string]any {

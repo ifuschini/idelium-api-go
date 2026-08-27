@@ -1,10 +1,10 @@
 # Go browser-auth cutover
 
-Issues #159 through #161 introduce the Go-native implementation for the
-browser-auth bootstrap, current-user, menu, and tenant-switch endpoints. The
-gateway remains Laravel-owned until the dependent browser routes are migrated,
-so a browser never receives a Go session that a Laravel-owned protected route
-could misinterpret.
+Issues #159 through #162 introduce the Go-native implementation for the
+browser-auth bootstrap, current-user, menu, tenant-switch, account, role, and
+profile endpoints. The gateway remains Laravel-owned until the dependent browser
+routes are migrated, so a browser never receives a Go session that a
+Laravel-owned protected route could misinterpret.
 
 ## Contract
 
@@ -20,6 +20,13 @@ The Go runtime exposes these paths without the gateway `/api` prefix:
 | `GET /api/menu/header` | `/menu/header` | Active-tenant projects, superadmin customer choices, and tenant context |
 | `GET /api/menu/sidebar` | `/menu/sidebar` | Role-aware legacy navigation entries |
 | `PUT /api/menu/header/{idCostumer}` | `/menu/header/{idCostumer}` | Superadmin tenant switch with reason, expiry, and audit event |
+| `GET /api/admin/roles` | `/admin/roles` | Role list filtered by the authenticated user's legacy role |
+| `GET /api/admin/profile` | `/admin/profile` | Authenticated profile projection without password data |
+| `PUT /api/admin/profile` | `/admin/profile` | Password update with Idelium password policy and bcrypt hashing |
+| `GET /api/admin/accounts` | `/admin/accounts` | Tenant-scoped account grid/list without password data |
+| `POST /api/admin/accounts` | `/admin/accounts` | Tenant-scoped account creation with password policy and bcrypt hashing |
+| `PUT /api/admin/accounts/{idUser}` | `/admin/accounts/{idUser}` | Tenant-scoped account name/password update |
+| `DELETE /api/admin/accounts/{idUser}` | `/admin/accounts/{idUser}` | Tenant-scoped account deletion |
 
 The session cookie is `HttpOnly`, `Secure`, `SameSite=Lax`, and expires after
 120 minutes. The CSRF cookie is readable by the existing Web client and is
@@ -33,6 +40,10 @@ hide expired, disabled, missing, and cross-tenant sessions as unauthenticated,
 and clear Go-owned cookies when a stored session can no longer authenticate.
 Tenant switches require role 1, a reason, a future expiry, and an existing target
 tenant, then append a redacted `tenant.switch` audit event.
+Account administration requires the `accounts.manage` capability. Role 1 can
+manage all accounts; role 2 can manage only non-superadmin accounts in the active
+tenant; role 3 receives a forbidden response. Passwords are never returned,
+stored in plaintext, or logged.
 
 ## Cutover and rollback
 

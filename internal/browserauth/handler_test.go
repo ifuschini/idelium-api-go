@@ -23,19 +23,26 @@ type usersStub struct {
 func (s usersStub) FindByEmail(context.Context, string) (User, error) { return s.user, s.err }
 
 type sessionsStub struct {
-	created        Session
-	createErr      error
-	deleted        string
-	deleteErr      error
-	user           User
-	getErr         error
-	projects       []Project
-	customers      []Customer
-	customerExists bool
-	switched       TenantSwitch
-	recorded       AuditEvent
-	switchErr      error
-	recordErr      error
+	created          Session
+	createErr        error
+	deleted          string
+	deleteErr        error
+	user             User
+	getErr           error
+	projects         []Project
+	customers        []Customer
+	customerExists   bool
+	switched         TenantSwitch
+	recorded         AuditEvent
+	switchErr        error
+	recordErr        error
+	roles            []Role
+	profile          Profile
+	accounts         AccountPage
+	createdAccount   AccountCreate
+	updatedAccount   AccountUpdate
+	deletedAccountID int64
+	accountErr       error
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -60,6 +67,30 @@ func (s *sessionsStub) SwitchTenant(_ context.Context, tenantSwitch TenantSwitch
 func (s *sessionsStub) RecordTenantSwitch(_ context.Context, event AuditEvent) error {
 	s.recorded = event
 	return s.recordErr
+}
+func (s *sessionsStub) ListRoles(_ *http.Request, actor User) ([]Role, bool, error) {
+	return s.roles, actor.Role > 2, s.accountErr
+}
+func (s *sessionsStub) Profile(*http.Request, User) (Profile, error) {
+	return s.profile, s.accountErr
+}
+func (s *sessionsStub) UpdateProfilePassword(*http.Request, User, string) (Profile, error) {
+	return s.profile, s.accountErr
+}
+func (s *sessionsStub) ListAccounts(*http.Request, User, AccountQuery) (AccountPage, error) {
+	return s.accounts, s.accountErr
+}
+func (s *sessionsStub) CreateAccount(_ *http.Request, _ User, account AccountCreate) error {
+	s.createdAccount = account
+	return s.accountErr
+}
+func (s *sessionsStub) UpdateAccount(_ *http.Request, _ User, account AccountUpdate) error {
+	s.updatedAccount = account
+	return s.accountErr
+}
+func (s *sessionsStub) DeleteAccount(_ *http.Request, _ User, accountID int64) error {
+	s.deletedAccountID = accountID
+	return s.accountErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -242,6 +273,63 @@ func TestChangeCustomerValidatesAndRecordsAudit(t *testing.T) {
 	forbiddenHandler.ChangeCustomer(forbiddenResponse, forbiddenRequest)
 	if forbiddenResponse.Code != http.StatusForbidden {
 		t.Fatalf("expected forbidden tenant switch, got %d", forbiddenResponse.Code)
+	}
+}
+
+func TestBrowserAdminRolesProfileAndAccounts(t *testing.T) {
+	sessions := &sessionsStub{
+		user:     User{ID: 7, TenantID: 11, Role: 2},
+		roles:    []Role{{ID: 2, Name: "admin"}, {ID: 3, Name: "user"}},
+		profile:  Profile{Email: "admin@example.test", Name: "Admin", CompanyName: "ACME", RoleName: "admin"},
+		accounts: AccountPage{Data: []Account{{ID: 8, Email: "user@example.test", Name: "User", Role: 3, IDCostumer: 11, Costumer: "ACME", RoleName: "user"}}},
+	}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+
+	rolesRequest := httptest.NewRequest(http.MethodGet, "/admin/roles", nil)
+	rolesRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	rolesResponse := httptest.NewRecorder()
+	handler.Roles(rolesResponse, rolesRequest)
+	if rolesResponse.Code != http.StatusOK || strings.Contains(rolesResponse.Body.String(), `"password"`) || !strings.Contains(rolesResponse.Body.String(), `"admin"`) {
+		t.Fatalf("unexpected roles response: %d %s", rolesResponse.Code, rolesResponse.Body.String())
+	}
+
+	profileRequest := httptest.NewRequest(http.MethodGet, "/admin/profile", nil)
+	profileRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	profileResponse := httptest.NewRecorder()
+	handler.Profile(profileResponse, profileRequest)
+	if profileResponse.Code != http.StatusOK || !strings.Contains(profileResponse.Body.String(), `"companyName":"ACME"`) || strings.Contains(profileResponse.Body.String(), "password") {
+		t.Fatalf("unexpected profile response: %d %s", profileResponse.Code, profileResponse.Body.String())
+	}
+
+	accountsRequest := httptest.NewRequest(http.MethodGet, "/admin/accounts?page=1&pageSize=25", nil)
+	accountsRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	accountsResponse := httptest.NewRecorder()
+	handler.Accounts(accountsResponse, accountsRequest)
+	if accountsResponse.Code != http.StatusOK || !strings.Contains(accountsResponse.Body.String(), `"user@example.test"`) || strings.Contains(accountsResponse.Body.String(), "password") {
+		t.Fatalf("unexpected accounts response: %d %s", accountsResponse.Code, accountsResponse.Body.String())
+	}
+}
+
+func TestBrowserAdminRejectsWeakPasswordsAndForbiddenAccounts(t *testing.T) {
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, Role: 2}}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+
+	request := httptest.NewRequest(http.MethodPost, "/admin/accounts", strings.NewReader(`{"name":"User","email":"user@example.test","password":"password","role":3}`))
+	request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	response := httptest.NewRecorder()
+	handler.CreateAccount(response, request)
+	if response.Code != http.StatusUnprocessableEntity || !strings.Contains(response.Body.String(), "too common") {
+		t.Fatalf("expected password policy rejection, got %d %s", response.Code, response.Body.String())
+	}
+
+	forbidden := &sessionsStub{user: User{ID: 7, TenantID: 11, Role: 3}}
+	forbiddenHandler := NewHandler(usersStub{}, forbidden, testLogger())
+	forbiddenRequest := httptest.NewRequest(http.MethodGet, "/admin/accounts", nil)
+	forbiddenRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	forbiddenResponse := httptest.NewRecorder()
+	forbiddenHandler.Accounts(forbiddenResponse, forbiddenRequest)
+	if forbiddenResponse.Code != http.StatusForbidden {
+		t.Fatalf("expected forbidden accounts list, got %d", forbiddenResponse.Code)
 	}
 }
 
