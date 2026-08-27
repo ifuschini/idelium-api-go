@@ -553,6 +553,50 @@ func (r *BrowserAuthRepository) UpdateTest(request *http.Request, actor browsera
 	return tx.Commit()
 }
 
+func (r *BrowserAuthRepository) ImportTest(request *http.Request, actor browserauth.User, input browserauth.TestImport) error {
+	ctx := request.Context()
+	var imported []map[string]any
+	if err := json.Unmarshal([]byte(input.Import), &imported); err != nil || len(imported) == 0 {
+		return browserauth.ErrNotFound
+	}
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return safeDatabaseFailure("start browser test import", err)
+	}
+	defer tx.Rollback()
+	if err := ensureProjectTx(ctx, tx, actor.ActiveTenant(), input.IDProject); err != nil {
+		return err
+	}
+	now := time.Now().UTC()
+	importedTestConfig := make([]map[string]any, 0, len(imported))
+	for _, importedStep := range imported {
+		stepName, _ := importedStep["name"].(string)
+		trimmedName := strings.TrimSpace(stepName)
+		config, err := json.Marshal(importedStep)
+		if err != nil {
+			return fmt.Errorf("encode browser imported step config: %w", err)
+		}
+		result, err := tx.ExecContext(ctx, `INSERT INTO steps (name, description, config, idProject, idCostumer, `+"`order`"+`, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, strings.ReplaceAll(trimmedName, " ", "_"), trimmedName, string(config), input.IDProject, actor.ActiveTenant(), 9999999, now, now)
+		if err != nil {
+			return safeDatabaseFailure("create browser imported step", err)
+		}
+		stepID, err := result.LastInsertId()
+		if err != nil {
+			return safeDatabaseFailure("read created browser imported step id", err)
+		}
+		importedTestConfig = append(importedTestConfig, map[string]any{"id": stepID, "name": strings.ReplaceAll(trimmedName, " ", "_"), "description": trimmedName})
+	}
+	testConfig, err := json.Marshal(importedTestConfig)
+	if err != nil {
+		return fmt.Errorf("encode browser imported test config: %w", err)
+	}
+	_, err = tx.ExecContext(ctx, `INSERT INTO tests (name, description, config, idProject, idCostumer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`, input.Name, input.Description, string(testConfig), input.IDProject, actor.ActiveTenant(), now, now)
+	if err != nil {
+		return safeDatabaseFailure("create browser imported test", err)
+	}
+	return tx.Commit()
+}
+
 func (r *BrowserAuthRepository) accountTarget(request *http.Request, actor browserauth.User, accountID int64) (browserauth.Account, error) {
 	where, args := accountScope(actor)
 	where += ` AND users.id = ?`

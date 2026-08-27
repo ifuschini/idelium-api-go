@@ -7,12 +7,12 @@ Laravel-owned until the dependent browser routes are migrated, so a browser
 never receives a Go session that a Laravel-owned protected route could
 misinterpret.
 
-Issues #136 and #137 add the first browser-authoring slices on top of those
+Issues #136 through #138 add the first browser-authoring slices on top of those
 sessions: test reads and writes, step membership through the test `config`
-payload, test-cycle reads and writes, and step ordering for a tenant-owned
-project. The routes stay compatible with the existing Laravel Web client while
-enforcing the active Go session tenant on every project, test, test-cycle, and
-step lookup.
+payload, Postman/Idelium import into steps and tests, test-cycle reads and
+writes, and step ordering for a tenant-owned project. The routes stay compatible
+with the existing Laravel Web client while enforcing the active Go session
+tenant on every project, test, test-cycle, and step lookup.
 
 ## Contract
 
@@ -43,6 +43,7 @@ The Go runtime exposes these paths without the gateway `/api` prefix:
 | `POST /api/admin/tests` | `/admin/tests` | Tenant-scoped test creation with a step-membership config and asset-version snapshot |
 | `GET /api/admin/tests/{idProject}/{test}` | `/admin/tests/{idProject}/{test}` | Tenant-scoped test detail including config |
 | `PUT /api/admin/tests/{idProject}/{test}` | `/admin/tests/{idProject}/{test}` | Tenant-scoped test config update with an asset-version snapshot |
+| `POST /api/admin/importtest` | `/admin/importtest` | Transactional tenant-scoped import of Idelium/Postman steps into a generated test |
 | `GET /api/admin/testcycles/{idProject}` | `/admin/testcycles/{idProject}` | Tenant-scoped test-cycle grid/list for a project |
 | `POST /api/admin/testcycles` | `/admin/testcycles` | Tenant-scoped test-cycle creation with an asset-version snapshot |
 | `GET /api/admin/testcycles/{idProject}/{testcycle}` | `/admin/testcycles/{idProject}/{testcycle}` | Tenant-scoped test-cycle detail |
@@ -69,26 +70,31 @@ Customer administration requires the `customers.manage` capability, available to
 role 1 only. Customer list responses do not expose legacy API keys; creation
 generates a fresh opaque key and sets a one-year license expiration for
 compatibility with the Laravel controller.
-Test, test-cycle, and step-order routes require an authenticated Go browser
-session, resolve the active tenant from that session, and constrain all reads
-and writes by `idCostumer` and `idProject`. Cross-tenant projects, tests, test
-cycles, and steps are returned as missing resources. Test and test-cycle create
-and update writes append redacted `asset_versions` snapshots; raw session
+Test, import, test-cycle, and step-order routes require an authenticated Go
+browser session, resolve the active tenant from that session, and constrain all
+reads and writes by `idCostumer` and `idProject`. Cross-tenant projects, tests,
+test cycles, and steps are returned as missing resources. Test and test-cycle
+create and update writes append redacted `asset_versions` snapshots; raw session
 cookies, CSRF values, API keys, and password material are never included in
-those snapshots.
+those snapshots. Imports validate that the submitted `import` field is a
+non-empty JSON array of Idelium steps, that every imported step has a name and
+executable actions, and that Postman-marked steps contain a
+`postman_collection` action with a collection payload. The import transaction
+creates all generated steps with the legacy high sort order and commits the
+generated test only after every step insert succeeds.
 
 ## Cutover and rollback
 
 Before moving any route to Go, deploy the additive Laravel migration and verify
-the unmodified Web login, reload, logout, expiry, test list/create/show/update,
-test-cycle list/create/show/update, and step-order flows against a Go-only
-staging route map. Move login, logout, CSRF, current-user, capabilities, and
-the Go-native authenticated consumers in one gateway release; there are no dual
-writes.
+the unmodified Web login, reload, logout, expiry, import, test list/create/show/
+update, test-cycle list/create/show/update, and step-order flows against a
+Go-only staging route map. Move login, logout, CSRF, current-user,
+capabilities, and the Go-native authenticated consumers in one gateway release;
+there are no dual writes.
 
 Rollback switches those route owners back to Laravel. Go sessions intentionally
 do not deserialize in Laravel, so rollback invalidates Go sessions and requires
-users to sign in again. Test create/update, test-cycle create/update, and step
-reordering use the existing Laravel tables, so rollback does not require a
-database restore; new `asset_versions` rows are append-only audit/history
-records. No credential sharing or auth bridge is required.
+users to sign in again. Imports, test create/update, test-cycle create/update,
+and step reordering use the existing Laravel tables, so rollback does not
+require a database restore; new `asset_versions` rows are append-only
+audit/history records. No credential sharing or auth bridge is required.

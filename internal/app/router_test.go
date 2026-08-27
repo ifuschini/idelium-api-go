@@ -184,6 +184,9 @@ func (fakeBrowserAuthRepository) GetTest(*http.Request, browserauth.User, int64,
 func (fakeBrowserAuthRepository) UpdateTest(*http.Request, browserauth.User, browserauth.TestUpdate) error {
 	return nil
 }
+func (fakeBrowserAuthRepository) ImportTest(*http.Request, browserauth.User, browserauth.TestImport) error {
+	return nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {

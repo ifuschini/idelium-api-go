@@ -73,6 +73,7 @@ func NewRouter(
 	router.Get("/admin/tests/{idProject}/{test}", browserAuthHandler.ShowTest)
 	router.Put("/admin/tests/{idProject}/{test}", browserAuthHandler.UpdateTest)
 	router.Post("/admin/tests", browserAuthHandler.CreateTest)
+	router.Post("/admin/importtest", browserAuthHandler.ImportTest)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)

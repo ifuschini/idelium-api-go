@@ -57,6 +57,7 @@ type sessionsStub struct {
 	testDetail        TestDetail
 	createdTest       TestCreate
 	updatedTest       TestUpdate
+	importedTest      TestImport
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -154,6 +155,10 @@ func (s *sessionsStub) GetTest(*http.Request, User, int64, int64) (TestDetail, e
 }
 func (s *sessionsStub) UpdateTest(_ *http.Request, _ User, input TestUpdate) error {
 	s.updatedTest = input
+	return s.accountErr
+}
+func (s *sessionsStub) ImportTest(_ *http.Request, _ User, input TestImport) error {
+	s.importedTest = input
 	return s.accountErr
 }
 
@@ -538,6 +543,35 @@ func TestTestAdministrationPreservesStepMembershipConfig(t *testing.T) {
 	handler.UpdateTest(updateResponse, updateRequest)
 	if updateResponse.Code != http.StatusOK || sessions.updatedTest.ID != 12 || sessions.updatedTest.IDProject != 3 || !strings.Contains(sessions.updatedTest.Config, "10") {
 		t.Fatalf("unexpected test update: %d %#v", updateResponse.Code, sessions.updatedTest)
+	}
+}
+
+func TestPostmanImportCreatesTestFromValidatedImportedSteps(t *testing.T) {
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3}}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	payload := `{"name":"Imported","description":"Postman flow","idProject":3,"import":"[{\"name\":\"Open Home\",\"editorType\":\"postman\",\"steps\":[{\"stepType\":\"postman_collection\",\"collection\":{\"info\":{\"name\":\"Demo\"},\"item\":[]}}]}]"}`
+	request := httptest.NewRequest(http.MethodPost, "/admin/importtest", strings.NewReader(payload))
+	request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	response := httptest.NewRecorder()
+	handler.ImportTest(response, request)
+	if response.Code != http.StatusOK || strings.TrimSpace(response.Body.String()) != `{"status":"ok"}` || sessions.importedTest.Name != "Imported" || sessions.importedTest.IDProject != 3 {
+		t.Fatalf("unexpected import response: %d %s %#v", response.Code, response.Body.String(), sessions.importedTest)
+	}
+
+	missingCollection := httptest.NewRequest(http.MethodPost, "/admin/importtest", strings.NewReader(`{"name":"Imported","description":"Postman flow","idProject":3,"import":"[{\"name\":\"Open Home\",\"editorType\":\"postman\",\"steps\":[{\"stepType\":\"postman_collection\"}]}]"}`))
+	missingCollection.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	missingCollectionResponse := httptest.NewRecorder()
+	handler.ImportTest(missingCollectionResponse, missingCollection)
+	if missingCollectionResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(missingCollectionResponse.Body.String(), "postman_collection") {
+		t.Fatalf("expected postman validation failure, got %d %s", missingCollectionResponse.Code, missingCollectionResponse.Body.String())
+	}
+
+	emptyImport := httptest.NewRequest(http.MethodPost, "/admin/importtest", strings.NewReader(`{"name":"Imported","description":"Postman flow","idProject":3,"import":"[]"}`))
+	emptyImport.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	emptyImportResponse := httptest.NewRecorder()
+	handler.ImportTest(emptyImportResponse, emptyImport)
+	if emptyImportResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(emptyImportResponse.Body.String(), "non-empty JSON array") {
+		t.Fatalf("expected empty import validation failure, got %d %s", emptyImportResponse.Code, emptyImportResponse.Body.String())
 	}
 }
 

@@ -637,6 +637,25 @@ func TestBrowserAuthRepositoryTestCyclesAndStepOrderingIntegration(t *testing.T)
 	if err := database.QueryRowContext(ctx, "SELECT COUNT(*) FROM asset_versions WHERE assetType = 'test' AND reason = 'asset.updated'").Scan(&versions); err != nil || versions != 1 {
 		t.Fatalf("expected updated test asset version, count=%d err=%v", versions, err)
 	}
+
+	importPayload := `[
+		{"name":"Open Home","steps":[{"stepType":"browser_click"}]},
+		{"name":"Run Postman","steps":[{"stepType":"postman_collection","collection":{"info":{"name":"Demo"},"item":[]}}]}
+	]`
+	if err := repository.ImportTest(request, actor, browserauth.TestImport{Name: "Imported", Description: "Imported flow", Import: importPayload, IDProject: 3}); err != nil {
+		t.Fatalf("ImportTest() returned an error: %v", err)
+	}
+	var importedSteps int
+	if err := database.QueryRowContext(ctx, "SELECT COUNT(*) FROM steps WHERE idProject = 3 AND idCostumer = 11 AND `order` = 9999999").Scan(&importedSteps); err != nil || importedSteps != 2 {
+		t.Fatalf("expected imported steps, count=%d err=%v", importedSteps, err)
+	}
+	var importedConfig string
+	if err := database.QueryRowContext(ctx, "SELECT config FROM tests WHERE name = 'Imported' AND idProject = 3 AND idCostumer = 11").Scan(&importedConfig); err != nil || !strings.Contains(importedConfig, "Open_Home") || !strings.Contains(importedConfig, "Run_Postman") {
+		t.Fatalf("unexpected imported test config: %s err=%v", importedConfig, err)
+	}
+	if err := repository.ImportTest(request, actor, browserauth.TestImport{Name: "Foreign", Description: "Blocked", Import: importPayload, IDProject: 4}); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected foreign import project to be hidden, got %v", err)
+	}
 }
 
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {

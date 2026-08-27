@@ -102,6 +102,7 @@ type AdminRepository interface {
 	CreateTest(request *http.Request, actor User, input TestCreate) error
 	GetTest(request *http.Request, actor User, projectID int64, testID int64) (TestDetail, error)
 	UpdateTest(request *http.Request, actor User, input TestUpdate) error
+	ImportTest(request *http.Request, actor User, input TestImport) error
 }
 
 type CustomerQuery struct {
@@ -208,6 +209,13 @@ type TestUpdate struct {
 	ID        int64
 	IDProject int64
 	Config    string
+}
+
+type TestImport struct {
+	Name        string
+	Description string
+	Import      string
+	IDProject   int64
 }
 
 type StepReorder struct {
@@ -744,6 +752,37 @@ func (h *Handler) UpdateTest(writer http.ResponseWriter, request *http.Request) 
 	h.Tests(writer, request)
 }
 
+func (h *Handler) ImportTest(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	var input struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Import      string `json:"import"`
+		IDProject   int64  `json:"idProject"`
+	}
+	if err := decodeJSON(writer, request, &input); err != nil || strings.TrimSpace(input.Name) == "" || strings.TrimSpace(input.Description) == "" || strings.TrimSpace(input.Import) == "" || input.IDProject <= 0 {
+		validationErrors(writer, map[string][]string{"name": {"The name field is required."}, "description": {"The description field is required."}, "import": {"The import field is required."}, "idProject": {"The id project field is required."}})
+		return
+	}
+	if err := validateImportedSteps(input.Import); err != nil {
+		validationError(writer, "import", err.Error())
+		return
+	}
+	err := h.sessions.ImportTest(request, user, TestImport{Name: strings.TrimSpace(input.Name), Description: strings.TrimSpace(input.Description), Import: input.Import, IDProject: input.IDProject})
+	if errors.Is(err, ErrNotFound) {
+		validationError(writer, "idProject", "The selected id project is invalid.")
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "import browser test", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]string{"status": "ok"})
+}
+
 func (h *Handler) requireCapability(writer http.ResponseWriter, request *http.Request, capability string) (User, bool) {
 	user, ok := h.authenticatedUser(writer, request)
 	if !ok {
@@ -799,6 +838,73 @@ func parseCustomerQuery(request *http.Request) CustomerQuery {
 		direction = "asc"
 	}
 	return CustomerQuery{Page: page, PageSize: pageSize, Paged: pageSet || pageSizeSet, Search: strings.TrimSpace(request.URL.Query().Get("search")), Sort: sort, Direction: direction}
+}
+
+func validateImportedSteps(rawImport string) error {
+	var steps []map[string]any
+	if err := json.Unmarshal([]byte(rawImport), &steps); err != nil || len(steps) == 0 {
+		return errors.New("The import field must contain a non-empty JSON array of Idelium steps.")
+	}
+	for _, step := range steps {
+		name, ok := step["name"].(string)
+		if !ok || strings.TrimSpace(name) == "" {
+			return errors.New("Every imported step must have a non-empty name.")
+		}
+		actions, ok := step["steps"].([]any)
+		if !ok || len(actions) == 0 {
+			return errors.New("Every imported Idelium step must include at least one executable action.")
+		}
+		for _, action := range actions {
+			actionObject, ok := action.(map[string]any)
+			if !ok {
+				return errors.New("Every imported action must include a stepType.")
+			}
+			stepType, ok := actionObject["stepType"].(string)
+			if !ok || strings.TrimSpace(stepType) == "" {
+				return errors.New("Every imported action must include a stepType.")
+			}
+		}
+		if isPostmanPayload(step) && !containsExecutablePostmanCollection(step) {
+			return errors.New("Every imported Postman step must include a postman_collection action with a collection payload.")
+		}
+	}
+	return nil
+}
+
+func containsExecutablePostmanCollection(step map[string]any) bool {
+	actions, _ := step["steps"].([]any)
+	for _, action := range actions {
+		actionObject, ok := action.(map[string]any)
+		if !ok || !isPostmanPayload(actionObject) {
+			continue
+		}
+		if isPostmanCollectionPayload(actionObject["collection"]) {
+			return true
+		}
+	}
+	return false
+}
+
+func isPostmanPayload(payload map[string]any) bool {
+	for _, field := range []string{"editorType", "runtime", "stepType", "type", "actionType"} {
+		if value, ok := payload[field].(string); ok && strings.Contains(strings.ToLower(value), "postman") {
+			return true
+		}
+	}
+	return false
+}
+
+func isPostmanCollectionPayload(payload any) bool {
+	object, ok := payload.(map[string]any)
+	if !ok {
+		return false
+	}
+	if nested, ok := object["collection"].(map[string]any); ok {
+		return isPostmanCollectionPayload(nested)
+	}
+	_, hasInfo := object["info"].(map[string]any)
+	_, hasItems := object["item"].([]any)
+	return hasInfo && hasItems
 }
 
 func parseResourceQuery(request *http.Request, projectID int64, defaultSort string) ResourceQuery {
