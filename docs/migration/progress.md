@@ -49,6 +49,7 @@ while [`epics.md`](epics.md) is the versioned backlog source.
 
 | Ticket | Result | Verification |
 | --- | --- | --- |
+| [#158](https://github.com/ifuschini/idelium-api-go/issues/158) | Superseded the temporary Laravel browser-auth introspection bridge. | The reviewed Go-native browser-auth strategy rejects retired bridge configuration, documents credential retirement and route-level rollback, and keeps browser-session routes on Laravel until native session, tenant, and authorization compatibility work is complete. |
 | [#72](https://github.com/ifuschini/idelium-api-go/issues/72) | Exported and classified all 171 routes registered by Laravel. | Generated JSON and Markdown inventories; exporter unit and integrity tests. |
 | [#73](https://github.com/ifuschini/idelium-api-go/issues/73) | Mapped Web, CLI, runner, Docker, and wiki consumers to the Laravel inventory. | Generated route-level map, unresolved-reference register, and integrity tests. |
 | [#74](https://github.com/ifuschini/idelium-api-go/issues/74) | Classified all Laravel routes into one of five canonical migration trust paths. | Generated classifications, exhaustive category assertions, and safe handling for unknown modes. |
