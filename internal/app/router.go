@@ -48,6 +48,8 @@ func NewRouter(
 	router.Get("/sanctum/csrf-cookie", browserAuthHandler.CSRF)
 	router.Post("/login", browserAuthHandler.Login)
 	router.Post("/logout", browserAuthHandler.Logout)
+	router.Get("/user", browserAuthHandler.CurrentUser)
+	router.Get("/me/capabilities", browserAuthHandler.Capabilities)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)

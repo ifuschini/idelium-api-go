@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/idelium/idelium-api-go/internal/browserauth"
 )
@@ -50,6 +51,22 @@ func (r *BrowserAuthRepository) Delete(ctx context.Context, sessionID string) er
 		return browserauth.ErrNotFound
 	}
 	return nil
+}
+
+func (r *BrowserAuthRepository) Get(ctx context.Context, sessionID string, now time.Time) (browserauth.User, error) {
+	var user browserauth.User
+	err := r.database.QueryRowContext(ctx, `SELECT u.id, u.idCostumer, u.name, u.email, u.role, u.password, u.status
+		FROM go_browser_sessions AS sessions
+		JOIN users AS u ON u.id = sessions.userId AND u.idCostumer = sessions.idCostumer
+		WHERE sessions.idHash = ? AND sessions.expiresAt > ? AND u.status = 'active'
+		LIMIT 1`, tokenHash(sessionID), now).Scan(&user.ID, &user.TenantID, &user.Name, &user.Email, &user.Role, &user.PasswordHash, &user.Status)
+	if errors.Is(err, sql.ErrNoRows) {
+		return browserauth.User{}, browserauth.ErrNotFound
+	}
+	if err != nil {
+		return browserauth.User{}, safeDatabaseFailure("load browser session", err)
+	}
+	return user, nil
 }
 
 func tokenHash(value string) string {

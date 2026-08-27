@@ -27,6 +27,8 @@ type sessionsStub struct {
 	createErr error
 	deleted   string
 	deleteErr error
+	user      User
+	getErr    error
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -34,6 +36,9 @@ func (s *sessionsStub) Create(_ context.Context, session Session) error {
 	return s.createErr
 }
 func (s *sessionsStub) Delete(_ context.Context, id string) error { s.deleted = id; return s.deleteErr }
+func (s *sessionsStub) Get(_ context.Context, _ string, _ time.Time) (User, error) {
+	return s.user, s.getErr
+}
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
 	hash, err := bcrypt.GenerateFromPassword([]byte("SensitivePassword123!"), bcrypt.MinCost)
@@ -126,6 +131,30 @@ func TestCSRFIssuesFrontendCompatibleCookie(t *testing.T) {
 	cookies := response.Result().Cookies()
 	if len(cookies) != 1 || cookies[0].Name != csrfCookieName || cookies[0].HttpOnly || !cookies[0].Secure {
 		t.Fatalf("unexpected csrf cookie: %#v", cookies)
+	}
+}
+
+func TestCurrentUserAndCapabilitiesRequireAnActiveSession(t *testing.T) {
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, Name: "Browser user", Email: "browser@example.test", Role: 3}}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	request := httptest.NewRequest(http.MethodGet, "/user", nil)
+	request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	response := httptest.NewRecorder()
+	handler.CurrentUser(response, request)
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"email":"browser@example.test"`) || strings.Contains(response.Body.String(), "password") {
+		t.Fatalf("unexpected current user response: %d %s", response.Code, response.Body.String())
+	}
+	capabilitiesRequest := httptest.NewRequest(http.MethodGet, "/me/capabilities", nil)
+	capabilitiesRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	capabilitiesResponse := httptest.NewRecorder()
+	handler.Capabilities(capabilitiesResponse, capabilitiesRequest)
+	if capabilitiesResponse.Code != http.StatusOK || !strings.Contains(capabilitiesResponse.Body.String(), `"version":"2026-07-28"`) || !strings.Contains(capabilitiesResponse.Body.String(), `"projects.read"`) {
+		t.Fatalf("unexpected capabilities response: %d %s", capabilitiesResponse.Code, capabilitiesResponse.Body.String())
+	}
+	unauthorized := httptest.NewRecorder()
+	handler.CurrentUser(unauthorized, httptest.NewRequest(http.MethodGet, "/user", nil))
+	if unauthorized.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", unauthorized.Code)
 	}
 }
 

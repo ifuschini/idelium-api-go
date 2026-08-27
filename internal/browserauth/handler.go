@@ -49,6 +49,7 @@ type UserRepository interface {
 type SessionRepository interface {
 	Create(context.Context, Session) error
 	Delete(context.Context, string) error
+	Get(context.Context, string, time.Time) (User, error)
 }
 type Repository interface {
 	UserRepository
@@ -129,6 +130,57 @@ func (h *Handler) Logout(writer http.ResponseWriter, request *http.Request) {
 	expireCookie(writer, sessionCookieName, true)
 	expireCookie(writer, csrfCookieName, false)
 	writer.WriteHeader(http.StatusNoContent)
+}
+
+// CurrentUser returns the legacy minimal identity projection for an active Go session.
+func (h *Handler) CurrentUser(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"id": user.ID, "name": user.Name, "email": user.Email, "role": user.Role})
+}
+
+// Capabilities returns the versioned capability set associated with the session user.
+func (h *Handler) Capabilities(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"version": "2026-07-28", "capabilities": capabilitiesForRole(user.Role)})
+}
+
+func (h *Handler) authenticatedUser(writer http.ResponseWriter, request *http.Request) (User, bool) {
+	cookie, err := request.Cookie(sessionCookieName)
+	if err != nil || cookie.Value == "" {
+		h.unauthorized(writer)
+		return User{}, false
+	}
+	user, err := h.sessions.Get(request.Context(), cookie.Value, h.now().UTC())
+	if errors.Is(err, ErrNotFound) {
+		expireCookie(writer, sessionCookieName, true)
+		expireCookie(writer, csrfCookieName, false)
+		h.unauthorized(writer)
+		return User{}, false
+	}
+	if err != nil {
+		h.internalError(writer, request, "load browser session", err)
+		return User{}, false
+	}
+	return user, true
+}
+
+func capabilitiesForRole(role int64) []string {
+	switch role {
+	case 1:
+		return []string{"tenant.switch", "accounts.manage", "customers.manage", "api_keys.manage", "agents.manage", "agents.read", "audit_events.read", "artifacts.manage", "artifacts.read", "integrations.manage", "integrations.read", "identity.manage", "identity.read", "projects.manage", "resources.manage", "resources.read", "runs.launch", "profile.manage"}
+	case 2:
+		return []string{"accounts.manage", "api_keys.manage", "agents.manage", "agents.read", "audit_events.read", "artifacts.manage", "artifacts.read", "integrations.manage", "integrations.read", "identity.manage", "identity.read", "projects.manage", "resources.manage", "resources.read", "runs.launch", "profile.manage"}
+	case 3:
+		return []string{"artifacts.read", "agents.read", "integrations.read", "identity.read", "projects.read", "resources.read", "runs.launch", "profile.manage"}
+	default:
+		return []string{}
+	}
 }
 
 func (h *Handler) invalidLogin(w http.ResponseWriter) {

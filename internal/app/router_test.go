@@ -103,6 +103,10 @@ func (fakeBrowserAuthRepository) Delete(context.Context, string) error {
 	return browserauth.ErrNotFound
 }
 
+func (fakeBrowserAuthRepository) Get(context.Context, string, time.Time) (browserauth.User, error) {
+	return browserauth.User{}, browserauth.ErrNotFound
+}
+
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {
 		return auth.Customer{}, auth.ErrInvalidLegacyKey

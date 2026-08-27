@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/idelium/idelium-api-go/internal/auth"
+	"github.com/idelium/idelium-api-go/internal/browserauth"
 	"github.com/idelium/idelium-api-go/internal/buildinfo"
 	"github.com/idelium/idelium-api-go/internal/cliapi"
 	"github.com/idelium/idelium-api-go/internal/config"
@@ -121,6 +122,76 @@ func TestDatabaseAuthenticationFailureIsRedactedIntegration(t *testing.T) {
 	}
 	if strings.Contains(err.Error(), databaseConfig.Password) || strings.Contains(err.Error(), databaseConfig.User) {
 		t.Fatalf("database authentication failure exposed credentials: %v", err)
+	}
+}
+
+func TestBrowserAuthRepositorySessionLookupIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	now := time.Date(2026, time.August, 27, 12, 0, 0, 0, time.UTC)
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS go_browser_sessions",
+		"DROP TABLE IF EXISTS users",
+		`CREATE TABLE users (
+			id BIGINT PRIMARY KEY,
+			idCostumer BIGINT NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			email VARCHAR(255) NOT NULL,
+			role BIGINT NOT NULL,
+			password VARCHAR(255) NOT NULL,
+			status VARCHAR(32) NOT NULL
+		)`,
+		`CREATE TABLE go_browser_sessions (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			idHash CHAR(64) NOT NULL UNIQUE,
+			userId BIGINT NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			csrfTokenHash CHAR(64) NOT NULL,
+			expiresAt TIMESTAMP NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`INSERT INTO users (id, idCostumer, name, email, role, password, status) VALUES
+			(7, 42, 'Browser User', 'browser@example.test', 3, '$2y$10$legacyhash', 'active'),
+			(8, 99, 'Other Tenant', 'other@example.test', 3, '$2y$10$legacyhash', 'active'),
+			(9, 42, 'Disabled User', 'disabled@example.test', 3, '$2y$10$legacyhash', 'disabled')`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare browser auth fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewBrowserAuthRepository(database)
+	if err := repository.Create(ctx, browserauth.Session{ID: "active-session", UserID: 7, TenantID: 42, CSRFToken: "active-csrf", ExpiresAt: now.Add(time.Hour)}); err != nil {
+		t.Fatalf("Create(active) returned an error: %v", err)
+	}
+	if err := repository.Create(ctx, browserauth.Session{ID: "expired-session", UserID: 7, TenantID: 42, CSRFToken: "expired-csrf", ExpiresAt: now.Add(-time.Minute)}); err != nil {
+		t.Fatalf("Create(expired) returned an error: %v", err)
+	}
+	if err := repository.Create(ctx, browserauth.Session{ID: "cross-tenant-session", UserID: 8, TenantID: 42, CSRFToken: "cross-csrf", ExpiresAt: now.Add(time.Hour)}); err != nil {
+		t.Fatalf("Create(cross tenant) returned an error: %v", err)
+	}
+	if err := repository.Create(ctx, browserauth.Session{ID: "disabled-session", UserID: 9, TenantID: 42, CSRFToken: "disabled-csrf", ExpiresAt: now.Add(time.Hour)}); err != nil {
+		t.Fatalf("Create(disabled) returned an error: %v", err)
+	}
+
+	user, err := repository.Get(ctx, "active-session", now)
+	if err != nil {
+		t.Fatalf("Get(active) returned an error: %v", err)
+	}
+	if user.ID != 7 || user.TenantID != 42 || user.Email != "browser@example.test" || user.Status != "active" {
+		t.Fatalf("unexpected session user: %#v", user)
+	}
+
+	for _, sessionID := range []string{"expired-session", "cross-tenant-session", "disabled-session", "missing-session"} {
+		_, err := repository.Get(ctx, sessionID, now)
+		if !errors.Is(err, browserauth.ErrNotFound) {
+			t.Fatalf("expected %s to be hidden, got %v", sessionID, err)
+		}
 	}
 }
 

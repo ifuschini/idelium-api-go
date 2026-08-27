@@ -42,7 +42,7 @@ func TestVerifyLaravelUpgradeFailsWhenBaselineMarkerIsMissing(t *testing.T) {
 	if verification.Status != "failed" {
 		t.Fatalf("expected failed status for missing migration markers: %#v", verification)
 	}
-	if len(verification.MissingMigrations) != 66 {
+	if len(verification.MissingMigrations) != 68 {
 		t.Fatalf("unexpected missing migration count: %#v", verification)
 	}
 }

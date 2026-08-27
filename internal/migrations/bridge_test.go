@@ -31,7 +31,7 @@ func TestReviewedBaselineBridgePlanListsSafeMigrationMarkers(t *testing.T) {
 	if plan.BaselineID != "go-baseline-2026-08-25" {
 		t.Fatalf("unexpected baseline ID %q", plan.BaselineID)
 	}
-	if plan.MigrationCount != 66 || len(plan.Migrations) != 66 {
+	if plan.MigrationCount != 68 || len(plan.Migrations) != 68 {
 		t.Fatalf("unexpected migration count in plan: %#v", plan)
 	}
 	if plan.Batch != 67 || plan.Table != "migrations" {
@@ -59,10 +59,10 @@ func TestMarkReviewedBaselineAppliedIsIdempotent(t *testing.T) {
 		t.Fatalf("MarkReviewedBaselineApplied() returned an error: %v", err)
 	}
 
-	if result.Applied != 2 || result.Skipped != 64 {
+	if result.Applied != 2 || result.Skipped != 66 {
 		t.Fatalf("unexpected applied/skipped counters: %#v", result)
 	}
-	if len(execer.queries) != 66 {
+	if len(execer.queries) != 68 {
 		t.Fatalf("expected one statement per migration, got %d", len(execer.queries))
 	}
 	for _, query := range execer.queries {

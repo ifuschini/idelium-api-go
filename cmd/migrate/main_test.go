@@ -36,7 +36,7 @@ func TestMigratePlanPrintsReviewedBaseline(t *testing.T) {
 	if plan.BaselineID != "go-baseline-2026-08-25" {
 		t.Fatalf("unexpected baseline ID %q", plan.BaselineID)
 	}
-	if plan.MigrationCount != 66 {
+	if plan.MigrationCount != 68 {
 		t.Fatalf("unexpected migration count %d", plan.MigrationCount)
 	}
 	if plan.AggregateSHA256 == "" {
@@ -80,7 +80,7 @@ func TestMigrateBridgePlanPrintsSafeDryRun(t *testing.T) {
 	if err := json.Unmarshal(output, &plan); err != nil {
 		t.Fatalf("migrate bridge dry-run emitted invalid JSON %q: %v", output, err)
 	}
-	if plan.BaselineID != "go-baseline-2026-08-25" || plan.MigrationCount != 66 || plan.Batch != 67 {
+	if plan.BaselineID != "go-baseline-2026-08-25" || plan.MigrationCount != 68 || plan.Batch != 67 {
 		t.Fatalf("unexpected bridge plan: %#v", plan)
 	}
 	if plan.Table != "migrations" || !plan.RequiresExplicitRun {
