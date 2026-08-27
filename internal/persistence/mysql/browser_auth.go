@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
@@ -205,6 +206,93 @@ func (r *BrowserAuthRepository) DeleteAccount(request *http.Request, actor brows
 	return requireAffected(result)
 }
 
+func (r *BrowserAuthRepository) ListAdminCustomers(request *http.Request, query browserauth.CustomerQuery) (browserauth.CustomerPage, error) {
+	where := `WHERE 1 = 1`
+	args := []any{}
+	if query.Search != "" {
+		where += ` AND (costumer LIKE ? OR description LIKE ?)`
+		search := "%" + boundedSearch(query.Search) + "%"
+		args = append(args, search, search)
+	}
+	var total int64
+	if err := r.database.QueryRowContext(request.Context(), `SELECT COUNT(*) FROM costumers `+where, args...).Scan(&total); err != nil {
+		return browserauth.CustomerPage{}, safeDatabaseFailure("count browser customers", err)
+	}
+	sort := customerSortColumn(query.Sort)
+	direction := "ASC"
+	if query.Direction == "desc" {
+		direction = "DESC"
+	}
+	sqlQuery := `SELECT id, costumer, description, licenseExpiration, created_at, updated_at FROM costumers ` + where + ` ORDER BY ` + sort + ` ` + direction
+	if query.Paged {
+		sqlQuery += ` LIMIT ? OFFSET ?`
+		args = append(args, query.PageSize, (query.Page-1)*query.PageSize)
+	}
+	rows, err := r.database.QueryContext(request.Context(), sqlQuery, args...)
+	if err != nil {
+		return browserauth.CustomerPage{}, safeDatabaseFailure("list browser customers", err)
+	}
+	defer rows.Close()
+	customers := []browserauth.Customer{}
+	for rows.Next() {
+		var customer browserauth.Customer
+		if err := rows.Scan(&customer.ID, &customer.Costumer, &customer.Description, &customer.LicenseExpiration, &customer.CreatedAt, &customer.UpdatedAt); err != nil {
+			return browserauth.CustomerPage{}, safeDatabaseFailure("scan browser customer", err)
+		}
+		customers = append(customers, customer)
+	}
+	if err := rows.Err(); err != nil {
+		return browserauth.CustomerPage{}, safeDatabaseFailure("read browser customers", err)
+	}
+	page := browserauth.CustomerPage{Data: customers}
+	if query.Paged {
+		lastPage := int((total + int64(query.PageSize) - 1) / int64(query.PageSize))
+		if lastPage == 0 {
+			lastPage = 1
+		}
+		page.Meta = browserauth.PageMeta{Page: query.Page, PageSize: query.PageSize, Total: total, LastPage: lastPage, HasNextPage: query.Page < lastPage, HasPreviousPage: query.Page > 1, Sort: query.Sort, Direction: query.Direction, Stale: false, Partial: false}
+	}
+	return page, nil
+}
+
+func (r *BrowserAuthRepository) CreateCustomer(request *http.Request, customer browserauth.CustomerCreate) error {
+	apiKey, err := randomAPIKey()
+	if err != nil {
+		return err
+	}
+	_, err = r.database.ExecContext(request.Context(), `INSERT INTO costumers
+		(costumer, description, licenseExpiration, apiKey, apiKeyCreatedAt, logo, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, '[]', ?, ?)`,
+		strings.ToUpper(customer.Costumer),
+		strings.ToUpper(customer.Description),
+		customer.Now.AddDate(0, 0, 365),
+		apiKey,
+		customer.Now,
+		customer.Now,
+		customer.Now,
+	)
+	if err != nil {
+		return safeDatabaseFailure("create browser customer", err)
+	}
+	return nil
+}
+
+func (r *BrowserAuthRepository) UpdateCustomer(request *http.Request, customer browserauth.CustomerUpdate) error {
+	result, err := r.database.ExecContext(request.Context(), `UPDATE costumers SET costumer = ?, description = ?, updated_at = ? WHERE id = ?`, strings.ToUpper(customer.Costumer), strings.ToUpper(customer.Description), time.Now().UTC(), customer.ID)
+	if err != nil {
+		return safeDatabaseFailure("update browser customer", err)
+	}
+	return requireAffected(result)
+}
+
+func (r *BrowserAuthRepository) DeleteCustomer(request *http.Request, customerID int64) error {
+	result, err := r.database.ExecContext(request.Context(), `DELETE FROM costumers WHERE id = ?`, customerID)
+	if err != nil {
+		return safeDatabaseFailure("delete browser customer", err)
+	}
+	return requireAffected(result)
+}
+
 func (r *BrowserAuthRepository) accountTarget(request *http.Request, actor browserauth.User, accountID int64) (browserauth.Account, error) {
 	where, args := accountScope(actor)
 	where += ` AND users.id = ?`
@@ -258,6 +346,23 @@ func accountSortColumn(sort string) string {
 	}
 }
 
+func customerSortColumn(sort string) string {
+	switch sort {
+	case "id":
+		return "id"
+	case "costumer":
+		return "costumer"
+	case "description":
+		return "description"
+	case "licenseExpiration":
+		return "licenseExpiration"
+	case "updated_at":
+		return "updated_at"
+	default:
+		return "created_at"
+	}
+}
+
 func boundedSearch(search string) string {
 	search = strings.TrimSpace(search)
 	if len(search) > 200 {
@@ -294,6 +399,14 @@ func requireAffected(result sql.Result) error {
 		return browserauth.ErrNotFound
 	}
 	return nil
+}
+
+func randomAPIKey() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }
 
 func (r *BrowserAuthRepository) FindByEmail(ctx context.Context, email string) (browserauth.User, error) {

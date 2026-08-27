@@ -419,6 +419,66 @@ func TestBrowserAuthRepositoryAccountsIntegration(t *testing.T) {
 	}
 }
 
+func TestBrowserAuthRepositoryCustomersIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS costumers",
+		`CREATE TABLE costumers (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			costumer VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NULL,
+			licenseExpiration TIMESTAMP NULL,
+			apiKey VARCHAR(255) NULL,
+			apiKeyCreatedAt TIMESTAMP NULL,
+			logo TEXT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`INSERT INTO costumers (id, costumer, description, licenseExpiration, apiKey, apiKeyCreatedAt, logo, created_at, updated_at) VALUES
+			(11, 'ACME', 'Own tenant', NULL, 'secret-key', NULL, '[]', '2026-08-27 10:00:00', NULL)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare customer fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewBrowserAuthRepository(database)
+	request := httptest.NewRequest(http.MethodGet, "/admin/costumers?page=1&pageSize=25", nil)
+	page, err := repository.ListAdminCustomers(request, browserauth.CustomerQuery{Page: 1, PageSize: 25, Paged: true, Sort: "created_at", Direction: "asc"})
+	if err != nil {
+		t.Fatalf("ListAdminCustomers() returned an error: %v", err)
+	}
+	if page.Meta.Total != 1 || len(page.Data) != 1 || page.Data[0].Costumer != "ACME" {
+		t.Fatalf("unexpected customer page: %#v", page)
+	}
+
+	if err := repository.CreateCustomer(request, browserauth.CustomerCreate{Costumer: "new co", Description: "fresh", Now: time.Date(2026, time.August, 27, 12, 0, 0, 0, time.UTC)}); err != nil {
+		t.Fatalf("CreateCustomer() returned an error: %v", err)
+	}
+	var createdID int64
+	var createdName, apiKey string
+	if err := database.QueryRowContext(ctx, "SELECT id, costumer, apiKey FROM costumers WHERE costumer = 'NEW CO'").Scan(&createdID, &createdName, &apiKey); err != nil {
+		t.Fatalf("read created customer: %v", err)
+	}
+	if createdName != "NEW CO" || len(apiKey) < 32 {
+		t.Fatalf("unexpected created customer: %d %s %s", createdID, createdName, apiKey)
+	}
+	if err := repository.UpdateCustomer(request, browserauth.CustomerUpdate{ID: createdID, Costumer: "updated co", Description: "changed"}); err != nil {
+		t.Fatalf("UpdateCustomer() returned an error: %v", err)
+	}
+	if err := repository.DeleteCustomer(request, createdID); err != nil {
+		t.Fatalf("DeleteCustomer() returned an error: %v", err)
+	}
+	if err := repository.DeleteCustomer(request, createdID); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected missing customer delete to be hidden, got %v", err)
+	}
+}
+
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

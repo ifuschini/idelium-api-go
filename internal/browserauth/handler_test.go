@@ -23,26 +23,30 @@ type usersStub struct {
 func (s usersStub) FindByEmail(context.Context, string) (User, error) { return s.user, s.err }
 
 type sessionsStub struct {
-	created          Session
-	createErr        error
-	deleted          string
-	deleteErr        error
-	user             User
-	getErr           error
-	projects         []Project
-	customers        []Customer
-	customerExists   bool
-	switched         TenantSwitch
-	recorded         AuditEvent
-	switchErr        error
-	recordErr        error
-	roles            []Role
-	profile          Profile
-	accounts         AccountPage
-	createdAccount   AccountCreate
-	updatedAccount   AccountUpdate
-	deletedAccountID int64
-	accountErr       error
+	created           Session
+	createErr         error
+	deleted           string
+	deleteErr         error
+	user              User
+	getErr            error
+	projects          []Project
+	customers         []Customer
+	customerExists    bool
+	switched          TenantSwitch
+	recorded          AuditEvent
+	switchErr         error
+	recordErr         error
+	roles             []Role
+	profile           Profile
+	accounts          AccountPage
+	createdAccount    AccountCreate
+	updatedAccount    AccountUpdate
+	deletedAccountID  int64
+	accountErr        error
+	customerPage      CustomerPage
+	createdCustomer   CustomerCreate
+	updatedCustomer   CustomerUpdate
+	deletedCustomerID int64
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -90,6 +94,21 @@ func (s *sessionsStub) UpdateAccount(_ *http.Request, _ User, account AccountUpd
 }
 func (s *sessionsStub) DeleteAccount(_ *http.Request, _ User, accountID int64) error {
 	s.deletedAccountID = accountID
+	return s.accountErr
+}
+func (s *sessionsStub) ListAdminCustomers(*http.Request, CustomerQuery) (CustomerPage, error) {
+	return s.customerPage, s.accountErr
+}
+func (s *sessionsStub) CreateCustomer(_ *http.Request, customer CustomerCreate) error {
+	s.createdCustomer = customer
+	return s.accountErr
+}
+func (s *sessionsStub) UpdateCustomer(_ *http.Request, customer CustomerUpdate) error {
+	s.updatedCustomer = customer
+	return s.accountErr
+}
+func (s *sessionsStub) DeleteCustomer(_ *http.Request, customerID int64) error {
+	s.deletedCustomerID = customerID
 	return s.accountErr
 }
 
@@ -330,6 +349,40 @@ func TestBrowserAdminRejectsWeakPasswordsAndForbiddenAccounts(t *testing.T) {
 	forbiddenHandler.Accounts(forbiddenResponse, forbiddenRequest)
 	if forbiddenResponse.Code != http.StatusForbidden {
 		t.Fatalf("expected forbidden accounts list, got %d", forbiddenResponse.Code)
+	}
+}
+
+func TestCustomerAdministrationRequiresSuperAdminAndMutatesCustomers(t *testing.T) {
+	sessions := &sessionsStub{
+		user:         User{ID: 1, TenantID: 11, Role: 1},
+		customerPage: CustomerPage{Data: []Customer{{ID: 42, Costumer: "ACME"}}},
+	}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	request := httptest.NewRequest(http.MethodPost, "/admin/costumers", strings.NewReader(`{"costumer":"acme","description":"demo"}`))
+	request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	response := httptest.NewRecorder()
+	handler.CreateCustomer(response, request)
+	if response.Code != http.StatusOK || sessions.createdCustomer.Costumer != "acme" || !strings.Contains(response.Body.String(), `"ACME"`) {
+		t.Fatalf("unexpected customer create: %d %s %#v", response.Code, response.Body.String(), sessions.createdCustomer)
+	}
+
+	updateRequest := httptest.NewRequest(http.MethodPut, "/admin/costumers/42", strings.NewReader(`{"costumer":"new","description":"updated"}`))
+	updateRequest.SetPathValue("idCostumer", "42")
+	updateRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	updateResponse := httptest.NewRecorder()
+	handler.UpdateCustomer(updateResponse, updateRequest)
+	if updateResponse.Code != http.StatusOK || sessions.updatedCustomer.ID != 42 {
+		t.Fatalf("unexpected customer update: %d %#v", updateResponse.Code, sessions.updatedCustomer)
+	}
+
+	forbidden := &sessionsStub{user: User{ID: 2, TenantID: 11, Role: 2}}
+	forbiddenHandler := NewHandler(usersStub{}, forbidden, testLogger())
+	forbiddenRequest := httptest.NewRequest(http.MethodGet, "/admin/costumers", nil)
+	forbiddenRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	forbiddenResponse := httptest.NewRecorder()
+	forbiddenHandler.Customers(forbiddenResponse, forbiddenRequest)
+	if forbiddenResponse.Code != http.StatusForbidden {
+		t.Fatalf("expected role 2 customer administration to be forbidden, got %d", forbiddenResponse.Code)
 	}
 }
 

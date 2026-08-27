@@ -142,6 +142,18 @@ func (fakeBrowserAuthRepository) UpdateAccount(*http.Request, browserauth.User, 
 func (fakeBrowserAuthRepository) DeleteAccount(*http.Request, browserauth.User, int64) error {
 	return nil
 }
+func (fakeBrowserAuthRepository) ListAdminCustomers(*http.Request, browserauth.CustomerQuery) (browserauth.CustomerPage, error) {
+	return browserauth.CustomerPage{}, nil
+}
+func (fakeBrowserAuthRepository) CreateCustomer(*http.Request, browserauth.CustomerCreate) error {
+	return nil
+}
+func (fakeBrowserAuthRepository) UpdateCustomer(*http.Request, browserauth.CustomerUpdate) error {
+	return nil
+}
+func (fakeBrowserAuthRepository) DeleteCustomer(*http.Request, int64) error {
+	return nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {

@@ -1,10 +1,11 @@
 # Go browser-auth cutover
 
-Issues #159 through #162 introduce the Go-native implementation for the
-browser-auth bootstrap, current-user, menu, tenant-switch, account, role, and
-profile endpoints. The gateway remains Laravel-owned until the dependent browser
-routes are migrated, so a browser never receives a Go session that a
-Laravel-owned protected route could misinterpret.
+Issues #159 through #163 introduce the Go-native implementation for the
+browser-auth bootstrap, current-user, menu, tenant-switch, account, role,
+profile, and customer-administration endpoints. The gateway remains
+Laravel-owned until the dependent browser routes are migrated, so a browser
+never receives a Go session that a Laravel-owned protected route could
+misinterpret.
 
 ## Contract
 
@@ -27,6 +28,10 @@ The Go runtime exposes these paths without the gateway `/api` prefix:
 | `POST /api/admin/accounts` | `/admin/accounts` | Tenant-scoped account creation with password policy and bcrypt hashing |
 | `PUT /api/admin/accounts/{idUser}` | `/admin/accounts/{idUser}` | Tenant-scoped account name/password update |
 | `DELETE /api/admin/accounts/{idUser}` | `/admin/accounts/{idUser}` | Tenant-scoped account deletion |
+| `GET /api/admin/costumers` | `/admin/costumers` | Superadmin customer grid/list without API keys |
+| `POST /api/admin/costumers` | `/admin/costumers` | Superadmin customer creation with generated legacy API key |
+| `PUT /api/admin/costumers/{idCostumer}` | `/admin/costumers/{idCostumer}` | Superadmin customer name/description update |
+| `DELETE /api/admin/costumers/{idCostumer}` | `/admin/costumers/{idCostumer}` | Superadmin customer deletion |
 
 The session cookie is `HttpOnly`, `Secure`, `SameSite=Lax`, and expires after
 120 minutes. The CSRF cookie is readable by the existing Web client and is
@@ -44,6 +49,10 @@ Account administration requires the `accounts.manage` capability. Role 1 can
 manage all accounts; role 2 can manage only non-superadmin accounts in the active
 tenant; role 3 receives a forbidden response. Passwords are never returned,
 stored in plaintext, or logged.
+Customer administration requires the `customers.manage` capability, available to
+role 1 only. Customer list responses do not expose legacy API keys; creation
+generates a fresh opaque key and sets a one-year license expiration for
+compatibility with the Laravel controller.
 
 ## Cutover and rollback
 

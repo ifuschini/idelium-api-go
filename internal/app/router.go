@@ -60,6 +60,10 @@ func NewRouter(
 	router.Post("/admin/accounts", browserAuthHandler.CreateAccount)
 	router.Put("/admin/accounts/{idUser}", browserAuthHandler.UpdateAccount)
 	router.Delete("/admin/accounts/{idUser}", browserAuthHandler.DeleteAccount)
+	router.Get("/admin/costumers", browserAuthHandler.Customers)
+	router.Post("/admin/costumers", browserAuthHandler.CreateCustomer)
+	router.Put("/admin/costumers/{idCostumer}", browserAuthHandler.UpdateCustomer)
+	router.Delete("/admin/costumers/{idCostumer}", browserAuthHandler.DeleteCustomer)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)

@@ -88,6 +88,36 @@ type AdminRepository interface {
 	CreateAccount(request *http.Request, actor User, account AccountCreate) error
 	UpdateAccount(request *http.Request, actor User, account AccountUpdate) error
 	DeleteAccount(request *http.Request, actor User, accountID int64) error
+	ListAdminCustomers(request *http.Request, query CustomerQuery) (CustomerPage, error)
+	CreateCustomer(request *http.Request, customer CustomerCreate) error
+	UpdateCustomer(request *http.Request, customer CustomerUpdate) error
+	DeleteCustomer(request *http.Request, customerID int64) error
+}
+
+type CustomerQuery struct {
+	Page      int
+	PageSize  int
+	Paged     bool
+	Search    string
+	Sort      string
+	Direction string
+}
+
+type CustomerPage struct {
+	Data []Customer `json:"data"`
+	Meta PageMeta   `json:"meta"`
+}
+
+type CustomerCreate struct {
+	Costumer    string
+	Description string
+	Now         time.Time
+}
+
+type CustomerUpdate struct {
+	ID          int64
+	Costumer    string
+	Description string
 }
 
 func (h *Handler) Roles(writer http.ResponseWriter, request *http.Request) {
@@ -267,6 +297,92 @@ func (h *Handler) DeleteAccount(writer http.ResponseWriter, request *http.Reques
 	h.Accounts(writer, request)
 }
 
+func (h *Handler) Customers(writer http.ResponseWriter, request *http.Request) {
+	if _, ok := h.requireCapability(writer, request, "customers.manage"); !ok {
+		return
+	}
+	query := parseCustomerQuery(request)
+	page, err := h.sessions.ListAdminCustomers(request, query)
+	if err != nil {
+		h.internalError(writer, request, "list browser customers", err)
+		return
+	}
+	if !query.Paged {
+		writeJSON(writer, http.StatusOK, page.Data)
+		return
+	}
+	writeJSON(writer, http.StatusOK, page)
+}
+
+func (h *Handler) CreateCustomer(writer http.ResponseWriter, request *http.Request) {
+	if _, ok := h.requireCapability(writer, request, "customers.manage"); !ok {
+		return
+	}
+	var input struct {
+		Costumer    string `json:"costumer"`
+		Description string `json:"description"`
+	}
+	if err := decodeJSON(writer, request, &input); err != nil || strings.TrimSpace(input.Costumer) == "" {
+		validationError(writer, "costumer", "The costumer field is required.")
+		return
+	}
+	if err := h.sessions.CreateCustomer(request, CustomerCreate{Costumer: strings.TrimSpace(input.Costumer), Description: strings.TrimSpace(input.Description), Now: h.now().UTC()}); err != nil {
+		h.internalError(writer, request, "create browser customer", err)
+		return
+	}
+	h.Customers(writer, request)
+}
+
+func (h *Handler) UpdateCustomer(writer http.ResponseWriter, request *http.Request) {
+	if _, ok := h.requireCapability(writer, request, "customers.manage"); !ok {
+		return
+	}
+	customerID, err := parsePathID(request.PathValue("idCostumer"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	var input struct {
+		Costumer    string `json:"costumer"`
+		Description string `json:"description"`
+	}
+	if err := decodeJSON(writer, request, &input); err != nil || strings.TrimSpace(input.Costumer) == "" || strings.TrimSpace(input.Description) == "" {
+		validationErrors(writer, map[string][]string{"costumer": []string{"The costumer field is required."}, "description": []string{"The description field is required."}})
+		return
+	}
+	err = h.sessions.UpdateCustomer(request, CustomerUpdate{ID: customerID, Costumer: strings.TrimSpace(input.Costumer), Description: strings.TrimSpace(input.Description)})
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "update browser customer", err)
+		return
+	}
+	h.Customers(writer, request)
+}
+
+func (h *Handler) DeleteCustomer(writer http.ResponseWriter, request *http.Request) {
+	if _, ok := h.requireCapability(writer, request, "customers.manage"); !ok {
+		return
+	}
+	customerID, err := parsePathID(request.PathValue("idCostumer"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	err = h.sessions.DeleteCustomer(request, customerID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "delete browser customer", err)
+		return
+	}
+	h.Customers(writer, request)
+}
+
 func (h *Handler) requireCapability(writer http.ResponseWriter, request *http.Request, capability string) (User, bool) {
 	user, ok := h.authenticatedUser(writer, request)
 	if !ok {
@@ -305,6 +421,23 @@ func parseAccountQuery(request *http.Request, user User) AccountQuery {
 		Sort:          sort,
 		Direction:     direction,
 	}
+}
+
+func parseCustomerQuery(request *http.Request) CustomerQuery {
+	page, pageSet := positiveQueryInt(request, "page", 1)
+	pageSize, pageSizeSet := positiveQueryInt(request, "pageSize", 25)
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	sort := request.URL.Query().Get("sort")
+	if sort == "" {
+		sort = "created_at"
+	}
+	direction := strings.ToLower(request.URL.Query().Get("direction"))
+	if direction != "desc" {
+		direction = "asc"
+	}
+	return CustomerQuery{Page: page, PageSize: pageSize, Paged: pageSet || pageSizeSet, Search: strings.TrimSpace(request.URL.Query().Get("search")), Sort: sort, Direction: direction}
 }
 
 func accountValidation(name, email, password string, role int64) map[string][]string {
