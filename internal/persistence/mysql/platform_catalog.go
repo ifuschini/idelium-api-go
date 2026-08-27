@@ -742,7 +742,7 @@ func (repository *PlatformCatalogRepository) ListLaunchTargets(ctx context.Conte
 				p.osDescription, p.browserDescription, p.status, p.updated_at
 		 FROM platforms p
 		 LEFT JOIN types t ON t.id = p.type
-		 ORDER BY p.osDescription ASC, p.id ASC
+		 ORDER BY p.id ASC
 		 LIMIT 49`,
 	)
 	if err != nil {
