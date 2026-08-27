@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -655,6 +658,187 @@ func TestBrowserAuthRepositoryTestCyclesAndStepOrderingIntegration(t *testing.T)
 	}
 	if err := repository.ImportTest(request, actor, browserauth.TestImport{Name: "Foreign", Description: "Blocked", Import: importPayload, IDProject: 4}); !errors.Is(err, browserauth.ErrNotFound) {
 		t.Fatalf("expected foreign import project to be hidden, got %v", err)
+	}
+}
+
+func TestBrowserAuthoringWorkflowEndToEndIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS asset_versions",
+		"DROP TABLE IF EXISTS go_browser_sessions",
+		"DROP TABLE IF EXISTS steps",
+		"DROP TABLE IF EXISTS tests",
+		"DROP TABLE IF EXISTS test_cycles",
+		"DROP TABLE IF EXISTS projects",
+		"DROP TABLE IF EXISTS users",
+		`CREATE TABLE users (
+			id BIGINT PRIMARY KEY,
+			idCostumer BIGINT NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			email VARCHAR(255) NOT NULL,
+			role BIGINT NOT NULL,
+			password VARCHAR(255) NOT NULL,
+			status VARCHAR(32) NOT NULL
+		)`,
+		`CREATE TABLE go_browser_sessions (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			idHash CHAR(64) NOT NULL UNIQUE,
+			userId BIGINT NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			activeTenantId BIGINT NULL,
+			csrfTokenHash CHAR(64) NOT NULL,
+			impersonationReason VARCHAR(255) NULL,
+			impersonationExpiresAt TIMESTAMP NULL,
+			expiresAt TIMESTAMP NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE projects (
+			id BIGINT PRIMARY KEY,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE tests (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config JSON NOT NULL,
+			idProject BIGINT NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE test_cycles (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config TEXT NOT NULL,
+			idProject BIGINT NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE steps (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config JSON NOT NULL,
+			idProject BIGINT NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			` + "`order`" + ` BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE asset_versions (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			idCostumer BIGINT NOT NULL,
+			idProject BIGINT NOT NULL,
+			assetType VARCHAR(64) NOT NULL,
+			assetId BIGINT NOT NULL,
+			version INT NOT NULL,
+			actorUserId BIGINT NULL,
+			reason VARCHAR(255) NOT NULL,
+			snapshot JSON NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE KEY asset_versions_unique_version (idCostumer, assetType, assetId, version)
+		)`,
+		`INSERT INTO users (id, idCostumer, name, email, role, password, status) VALUES
+			(7, 11, 'Author', 'author@example.test', 3, '$2y$10$legacyhash', 'active')`,
+		`INSERT INTO projects (id, name, description, idCostumer, created_at, updated_at) VALUES
+			(3, 'Own project', 'Own', 11, NULL, NULL),
+			(4, 'Foreign project', 'Foreign', 42, NULL, NULL)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare browser authoring workflow fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewBrowserAuthRepository(database)
+	if err := repository.Create(ctx, browserauth.Session{ID: "authoring-session", UserID: 7, TenantID: 11, CSRFToken: "authoring-csrf", ExpiresAt: time.Now().Add(time.Hour)}); err != nil {
+		t.Fatalf("Create(authoring session) returned an error: %v", err)
+	}
+	handler := browserauth.NewHandler(repository, repository, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	withSession := func(request *http.Request) *http.Request {
+		request.AddCookie(&http.Cookie{Name: "idelium_session", Value: "authoring-session"})
+		return request
+	}
+
+	importBody := `{"name":"Imported","description":"Imported flow","idProject":3,"import":"[{\"name\":\"Open Home\",\"steps\":[{\"stepType\":\"browser_click\"}]},{\"name\":\"Run Postman\",\"editorType\":\"postman\",\"steps\":[{\"stepType\":\"postman_collection\",\"collection\":{\"info\":{\"name\":\"Demo\"},\"item\":[]}}]}]"}`
+	importResponse := httptest.NewRecorder()
+	handler.ImportTest(importResponse, withSession(httptest.NewRequest(http.MethodPost, "/admin/importtest", strings.NewReader(importBody))))
+	if importResponse.Code != http.StatusOK || strings.TrimSpace(importResponse.Body.String()) != `{"status":"ok"}` {
+		t.Fatalf("unexpected import response: %d %s", importResponse.Code, importResponse.Body.String())
+	}
+	var importedTestID int64
+	if err := database.QueryRowContext(ctx, "SELECT id FROM tests WHERE name = 'Imported' AND idCostumer = 11").Scan(&importedTestID); err != nil {
+		t.Fatalf("imported test was not stored: %v", err)
+	}
+
+	listTests := httptest.NewRequest(http.MethodGet, "/admin/tests/3?page=1&pageSize=25", nil)
+	listTests.SetPathValue("idProject", "3")
+	listTestsResponse := httptest.NewRecorder()
+	handler.Tests(listTestsResponse, withSession(listTests))
+	if listTestsResponse.Code != http.StatusOK || !strings.Contains(listTestsResponse.Body.String(), `"Imported"`) || strings.Contains(listTestsResponse.Body.String(), "idCostumer") {
+		t.Fatalf("unexpected test list response: %d %s", listTestsResponse.Code, listTestsResponse.Body.String())
+	}
+
+	updateTest := httptest.NewRequest(http.MethodPut, "/admin/tests/3/1", strings.NewReader(`{"config":"[{\"id\":1,\"name\":\"Run_Postman\"}]"}`))
+	updateTest.SetPathValue("idProject", "3")
+	updateTest.SetPathValue("test", strconv.FormatInt(importedTestID, 10))
+	updateTestResponse := httptest.NewRecorder()
+	handler.UpdateTest(updateTestResponse, withSession(updateTest))
+	if updateTestResponse.Code != http.StatusOK {
+		t.Fatalf("unexpected test update response: %d %s", updateTestResponse.Code, updateTestResponse.Body.String())
+	}
+
+	createCycle := httptest.NewRequest(http.MethodPost, "/admin/testcycles", strings.NewReader(`{"name":"Nightly","description":"Browser","config":"{\"tests\":[1]}","idProject":3}`))
+	createCycleResponse := httptest.NewRecorder()
+	handler.CreateTestCycle(createCycleResponse, withSession(createCycle))
+	if createCycleResponse.Code != http.StatusOK || !strings.Contains(createCycleResponse.Body.String(), `"Nightly"`) {
+		t.Fatalf("unexpected cycle create response: %d %s", createCycleResponse.Code, createCycleResponse.Body.String())
+	}
+
+	var importedStepIDs []int64
+	rows, err := database.QueryContext(ctx, "SELECT id FROM steps WHERE idProject = 3 AND idCostumer = 11 ORDER BY id ASC")
+	if err != nil {
+		t.Fatalf("list imported step ids: %v", err)
+	}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			rows.Close()
+			t.Fatalf("scan imported step id: %v", err)
+		}
+		importedStepIDs = append(importedStepIDs, id)
+	}
+	if err := rows.Close(); err != nil {
+		t.Fatalf("close imported step rows: %v", err)
+	}
+	if len(importedStepIDs) != 2 {
+		t.Fatalf("expected two imported steps, got %#v", importedStepIDs)
+	}
+	reorder := httptest.NewRequest(http.MethodPost, "/admin/steps/3/updateorder", strings.NewReader(fmt.Sprintf(`{"offset":10,"order":[{"id":%d},{"id":%d}]}`, importedStepIDs[1], importedStepIDs[0])))
+	reorder.SetPathValue("idProject", "3")
+	reorderResponse := httptest.NewRecorder()
+	handler.ReorderSteps(reorderResponse, withSession(reorder))
+	if reorderResponse.Code != http.StatusOK || !strings.Contains(reorderResponse.Body.String(), `"order":10`) {
+		t.Fatalf("unexpected step reorder response: %d %s", reorderResponse.Code, reorderResponse.Body.String())
+	}
+
+	foreignList := httptest.NewRequest(http.MethodGet, "/admin/tests/4", nil)
+	foreignList.SetPathValue("idProject", "4")
+	foreignResponse := httptest.NewRecorder()
+	handler.Tests(foreignResponse, withSession(foreignList))
+	if foreignResponse.Code != http.StatusNotFound {
+		t.Fatalf("expected foreign project to be hidden, got %d %s", foreignResponse.Code, foreignResponse.Body.String())
 	}
 }
 

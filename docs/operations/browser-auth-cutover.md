@@ -13,6 +13,8 @@ payload, Postman/Idelium import into steps and tests, test-cycle reads and
 writes, and step ordering for a tenant-owned project. The routes stay compatible
 with the existing Laravel Web client while enforcing the active Go session
 tenant on every project, test, test-cycle, and step lookup.
+Issue #140 adds the end-to-end MySQL-backed authoring workflow gate that
+exercises those routes through a real Go browser session before route cutover.
 
 ## Contract
 
@@ -88,9 +90,10 @@ generated test only after every step insert succeeds.
 Before moving any route to Go, deploy the additive Laravel migration and verify
 the unmodified Web login, reload, logout, expiry, import, test list/create/show/
 update, test-cycle list/create/show/update, and step-order flows against a
-Go-only staging route map. Move login, logout, CSRF, current-user,
-capabilities, and the Go-native authenticated consumers in one gateway release;
-there are no dual writes.
+Go-only staging route map. The `TestBrowserAuthoringWorkflowEndToEndIntegration`
+gate must pass against MySQL before promoting the route-owner change. Move
+login, logout, CSRF, current-user, capabilities, and the Go-native
+authenticated consumers in one gateway release; there are no dual writes.
 
 Rollback switches those route owners back to Laravel. Go sessions intentionally
 do not deserialize in Laravel, so rollback invalidates Go sessions and requires

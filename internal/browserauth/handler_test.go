@@ -325,6 +325,7 @@ func TestChangeCustomerValidatesAndRecordsAudit(t *testing.T) {
 
 	missing := &sessionsStub{user: User{ID: 7, TenantID: 11, Role: 1}}
 	missingHandler := NewHandler(usersStub{}, missing, testLogger())
+	missingHandler.now = func() time.Time { return time.Date(2026, time.August, 27, 12, 0, 0, 0, time.UTC) }
 	missingRequest := httptest.NewRequest(http.MethodPut, "/menu/header/999", strings.NewReader(`{"reason":"support","expiresAt":"2026-08-27T13:00:00Z"}`))
 	missingRequest.SetPathValue("idCostumer", "999")
 	missingRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
@@ -335,6 +336,7 @@ func TestChangeCustomerValidatesAndRecordsAudit(t *testing.T) {
 	}
 
 	forbiddenHandler := NewHandler(usersStub{}, &sessionsStub{user: User{ID: 8, TenantID: 11, Role: 2}}, testLogger())
+	forbiddenHandler.now = func() time.Time { return time.Date(2026, time.August, 27, 12, 0, 0, 0, time.UTC) }
 	forbiddenRequest := httptest.NewRequest(http.MethodPut, "/menu/header/42", strings.NewReader(`{"reason":"support","expiresAt":"2026-08-27T13:00:00Z"}`))
 	forbiddenRequest.SetPathValue("idCostumer", "42")
 	forbiddenRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
