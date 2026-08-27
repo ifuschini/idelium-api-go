@@ -64,6 +64,11 @@ func NewRouter(
 	router.Post("/admin/costumers", browserAuthHandler.CreateCustomer)
 	router.Put("/admin/costumers/{idCostumer}", browserAuthHandler.UpdateCustomer)
 	router.Delete("/admin/costumers/{idCostumer}", browserAuthHandler.DeleteCustomer)
+	router.Get("/admin/testcycles/{idProject}", browserAuthHandler.TestCycles)
+	router.Get("/admin/testcycles/{idProject}/{testcycle}", browserAuthHandler.ShowTestCycle)
+	router.Put("/admin/testcycles/{idProject}/{testcycle}", browserAuthHandler.UpdateTestCycle)
+	router.Post("/admin/testcycles", browserAuthHandler.CreateTestCycle)
+	router.Post("/admin/steps/{idProject}/updateorder", browserAuthHandler.ReorderSteps)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)

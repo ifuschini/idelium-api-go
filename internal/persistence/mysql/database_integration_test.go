@@ -479,6 +479,122 @@ func TestBrowserAuthRepositoryCustomersIntegration(t *testing.T) {
 	}
 }
 
+func TestBrowserAuthRepositoryTestCyclesAndStepOrderingIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS asset_versions",
+		"DROP TABLE IF EXISTS steps",
+		"DROP TABLE IF EXISTS test_cycles",
+		"DROP TABLE IF EXISTS projects",
+		`CREATE TABLE projects (
+			id BIGINT PRIMARY KEY,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE test_cycles (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config TEXT NOT NULL,
+			idProject BIGINT NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE steps (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config TEXT NOT NULL,
+			idProject BIGINT NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			` + "`order`" + ` BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE asset_versions (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			idCostumer BIGINT NOT NULL,
+			idProject BIGINT NOT NULL,
+			assetType VARCHAR(64) NOT NULL,
+			assetId BIGINT NOT NULL,
+			version INT NOT NULL,
+			actorUserId BIGINT NULL,
+			reason VARCHAR(255) NOT NULL,
+			snapshot JSON NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE KEY asset_versions_unique_version (idCostumer, assetType, assetId, version)
+		)`,
+		`INSERT INTO projects (id, name, description, idCostumer, created_at, updated_at) VALUES
+			(3, 'Own project', 'Own', 11, NULL, NULL),
+			(4, 'Foreign project', 'Foreign', 42, NULL, NULL)`,
+		`INSERT INTO test_cycles (id, name, description, config, idProject, idCostumer, created_at, updated_at) VALUES
+			(5, 'Nightly', 'Browser', '{}', 3, 11, NULL, NULL),
+			(6, 'Foreign', 'Hidden', '{}', 4, 42, NULL, NULL)`,
+		`INSERT INTO steps (id, name, description, config, idProject, idCostumer, ` + "`order`" + `, created_at, updated_at) VALUES
+			(9, 'First', 'First step', '{}', 3, 11, 10, NULL, NULL),
+			(10, 'Second', 'Second step', '{}', 3, 11, 20, NULL, NULL),
+			(11, 'Foreign', 'Hidden step', '{}', 4, 42, 30, NULL, NULL)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare authoring fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewBrowserAuthRepository(database)
+	actor := browserauth.User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3}
+	request := httptest.NewRequest(http.MethodGet, "/admin/testcycles/3?page=1&pageSize=25", nil)
+	page, err := repository.ListTestCycles(request, actor, browserauth.ResourceQuery{ProjectID: 3, Page: 1, PageSize: 25, Paged: true, Sort: "id", Direction: "asc"})
+	if err != nil {
+		t.Fatalf("ListTestCycles() returned an error: %v", err)
+	}
+	if page.Meta.Total != 1 || len(page.Data) != 1 || page.Data[0].ID != 5 {
+		t.Fatalf("unexpected test-cycle page: %#v", page)
+	}
+	if _, err := repository.ListTestCycles(request, actor, browserauth.ResourceQuery{ProjectID: 4, Page: 1, PageSize: 25, Paged: true, Sort: "id", Direction: "asc"}); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected foreign project to be hidden, got %v", err)
+	}
+	if err := repository.CreateTestCycle(request, actor, browserauth.TestCycleCreate{Name: "Smoke", Description: "Fast", Config: "{}", IDProject: 3}); err != nil {
+		t.Fatalf("CreateTestCycle() returned an error: %v", err)
+	}
+	var versions int
+	if err := database.QueryRowContext(ctx, "SELECT COUNT(*) FROM asset_versions WHERE assetType = 'test_cycle' AND reason = 'asset.created'").Scan(&versions); err != nil || versions != 1 {
+		t.Fatalf("expected created asset version, count=%d err=%v", versions, err)
+	}
+	detail, err := repository.GetTestCycle(request, actor, 3, 5)
+	if err != nil || detail.ID != 5 || detail.IDProject != 3 {
+		t.Fatalf("unexpected test-cycle detail: %#v err=%v", detail, err)
+	}
+	if _, err := repository.GetTestCycle(request, actor, 3, 6); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-tenant cycle to be hidden, got %v", err)
+	}
+	if err := repository.UpdateTestCycle(request, actor, browserauth.TestCycleUpdate{ID: 5, IDProject: 3, Description: "Updated", Config: "{\"tests\":[]}"}); err != nil {
+		t.Fatalf("UpdateTestCycle() returned an error: %v", err)
+	}
+	if err := repository.ReorderSteps(request, actor, browserauth.StepReorder{IDProject: 3, Offset: 25, Order: []browserauth.StepOrder{{ID: 10}, {ID: 999999}}}); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected failed reorder to return not found, got %v", err)
+	}
+	var firstOrder int64
+	if err := database.QueryRowContext(ctx, "SELECT `order` FROM steps WHERE id = 10").Scan(&firstOrder); err != nil || firstOrder != 20 {
+		t.Fatalf("failed reorder was not rolled back, order=%d err=%v", firstOrder, err)
+	}
+	if err := repository.ReorderSteps(request, actor, browserauth.StepReorder{IDProject: 3, Offset: 25, Order: []browserauth.StepOrder{{ID: 10}, {ID: 9}}}); err != nil {
+		t.Fatalf("ReorderSteps() returned an error: %v", err)
+	}
+	steps, err := repository.ListStepsForReorder(request, actor, browserauth.ResourceQuery{ProjectID: 3, Page: 1, PageSize: 25, Paged: true, Sort: "order", Direction: "asc"})
+	if err != nil || len(steps.Data) != 2 || steps.Data[0].ID != 10 || steps.Data[0].Order != 25 {
+		t.Fatalf("unexpected reordered steps: %#v err=%v", steps, err)
+	}
+}
+
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

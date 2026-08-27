@@ -7,6 +7,11 @@ Laravel-owned until the dependent browser routes are migrated, so a browser
 never receives a Go session that a Laravel-owned protected route could
 misinterpret.
 
+Issue #137 adds the first browser-authoring slice on top of those sessions:
+test-cycle reads and writes plus step ordering for a tenant-owned project. The
+routes stay compatible with the existing Laravel Web client while enforcing the
+active Go session tenant on every project, test-cycle, and step lookup.
+
 ## Contract
 
 The Go runtime exposes these paths without the gateway `/api` prefix:
@@ -32,6 +37,11 @@ The Go runtime exposes these paths without the gateway `/api` prefix:
 | `POST /api/admin/costumers` | `/admin/costumers` | Superadmin customer creation with generated legacy API key |
 | `PUT /api/admin/costumers/{idCostumer}` | `/admin/costumers/{idCostumer}` | Superadmin customer name/description update |
 | `DELETE /api/admin/costumers/{idCostumer}` | `/admin/costumers/{idCostumer}` | Superadmin customer deletion |
+| `GET /api/admin/testcycles/{idProject}` | `/admin/testcycles/{idProject}` | Tenant-scoped test-cycle grid/list for a project |
+| `POST /api/admin/testcycles` | `/admin/testcycles` | Tenant-scoped test-cycle creation with an asset-version snapshot |
+| `GET /api/admin/testcycles/{idProject}/{testcycle}` | `/admin/testcycles/{idProject}/{testcycle}` | Tenant-scoped test-cycle detail |
+| `PUT /api/admin/testcycles/{idProject}/{testcycle}` | `/admin/testcycles/{idProject}/{testcycle}` | Tenant-scoped test-cycle description/config update with an asset-version snapshot |
+| `POST /api/admin/steps/{idProject}/updateorder` | `/admin/steps/{idProject}/updateorder` | Transactional tenant-scoped step order update |
 
 The session cookie is `HttpOnly`, `Secure`, `SameSite=Lax`, and expires after
 120 minutes. The CSRF cookie is readable by the existing Web client and is
@@ -53,16 +63,24 @@ Customer administration requires the `customers.manage` capability, available to
 role 1 only. Customer list responses do not expose legacy API keys; creation
 generates a fresh opaque key and sets a one-year license expiration for
 compatibility with the Laravel controller.
+Test-cycle and step-order routes require an authenticated Go browser session,
+resolve the active tenant from that session, and constrain all reads and writes
+by `idCostumer` and `idProject`. Cross-tenant projects, test cycles, and steps
+are returned as missing resources. Test-cycle create and update writes append
+redacted `asset_versions` snapshots; raw session cookies, CSRF values, API keys,
+and password material are never included in those snapshots.
 
 ## Cutover and rollback
 
 Before moving any route to Go, deploy the additive Laravel migration and verify
-the unmodified Web login, reload, logout, and expiry flows against a Go-only
-staging route map. Move login, logout, CSRF, current-user, capabilities, and
-the next Go-native authenticated consumers in one gateway release; there are no
-dual writes.
+the unmodified Web login, reload, logout, expiry, test-cycle list/create/show/
+update, and step-order flows against a Go-only staging route map. Move login,
+logout, CSRF, current-user, capabilities, and the Go-native authenticated
+consumers in one gateway release; there are no dual writes.
 
 Rollback switches those route owners back to Laravel. Go sessions intentionally
 do not deserialize in Laravel, so rollback invalidates Go sessions and requires
-users to sign in again. No database restore, credential sharing, or auth bridge
-is required.
+users to sign in again. Test-cycle create/update and step reordering use the
+existing Laravel tables, so rollback does not require a database restore; new
+`asset_versions` rows are append-only audit/history records. No credential
+sharing or auth bridge is required.

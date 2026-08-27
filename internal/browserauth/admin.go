@@ -92,6 +92,12 @@ type AdminRepository interface {
 	CreateCustomer(request *http.Request, customer CustomerCreate) error
 	UpdateCustomer(request *http.Request, customer CustomerUpdate) error
 	DeleteCustomer(request *http.Request, customerID int64) error
+	ListTestCycles(request *http.Request, actor User, query ResourceQuery) (TestCyclePage, error)
+	CreateTestCycle(request *http.Request, actor User, input TestCycleCreate) error
+	GetTestCycle(request *http.Request, actor User, projectID int64, cycleID int64) (TestCycleDetail, error)
+	UpdateTestCycle(request *http.Request, actor User, input TestCycleUpdate) error
+	ReorderSteps(request *http.Request, actor User, input StepReorder) error
+	ListStepsForReorder(request *http.Request, actor User, query ResourceQuery) (StepPage, error)
 }
 
 type CustomerQuery struct {
@@ -118,6 +124,74 @@ type CustomerUpdate struct {
 	ID          int64
 	Costumer    string
 	Description string
+}
+
+type ResourceQuery struct {
+	ProjectID int64
+	Page      int
+	PageSize  int
+	Paged     bool
+	Search    string
+	Sort      string
+	Direction string
+	FilterIDs []int64
+}
+
+type TestCycle struct {
+	ID          int64      `json:"id"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	CreatedAt   *time.Time `json:"created_at,omitempty"`
+	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
+}
+
+type TestCyclePage struct {
+	Data []TestCycle `json:"data"`
+	Meta PageMeta    `json:"meta"`
+}
+
+type TestCycleDetail struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Config      string `json:"config"`
+	IDProject   int64  `json:"idProject"`
+}
+
+type TestCycleCreate struct {
+	Name        string
+	Description string
+	Config      string
+	IDProject   int64
+}
+
+type TestCycleUpdate struct {
+	ID          int64
+	IDProject   int64
+	Description string
+	Config      string
+}
+
+type StepReorder struct {
+	IDProject int64
+	Offset    int
+	Order     []StepOrder
+}
+
+type StepOrder struct {
+	ID int64 `json:"id"`
+}
+
+type StepListItem struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Order       int64  `json:"order"`
+}
+
+type StepPage struct {
+	Data []StepListItem `json:"data"`
+	Meta PageMeta       `json:"meta"`
 }
 
 func (h *Handler) Roles(writer http.ResponseWriter, request *http.Request) {
@@ -383,6 +457,151 @@ func (h *Handler) DeleteCustomer(writer http.ResponseWriter, request *http.Reque
 	h.Customers(writer, request)
 }
 
+func (h *Handler) TestCycles(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	query := parseResourceQuery(request, projectID, "id")
+	page, err := h.sessions.ListTestCycles(request, user, query)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "list browser test cycles", err)
+		return
+	}
+	if !query.Paged {
+		writeJSON(writer, http.StatusOK, page.Data)
+		return
+	}
+	writeJSON(writer, http.StatusOK, page)
+}
+
+func (h *Handler) CreateTestCycle(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	var input struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Config      string `json:"config"`
+		IDProject   int64  `json:"idProject"`
+	}
+	if err := decodeJSON(writer, request, &input); err != nil || strings.TrimSpace(input.Name) == "" || input.IDProject <= 0 {
+		validationErrors(writer, map[string][]string{"name": []string{"The name field is required."}, "idProject": []string{"The id project field is required."}})
+		return
+	}
+	err := h.sessions.CreateTestCycle(request, user, TestCycleCreate{Name: strings.TrimSpace(input.Name), Description: strings.TrimSpace(input.Description), Config: input.Config, IDProject: input.IDProject})
+	if errors.Is(err, ErrNotFound) {
+		validationError(writer, "idProject", "The selected id project is invalid.")
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "create browser test cycle", err)
+		return
+	}
+	request.SetPathValue("idProject", strconv.FormatInt(input.IDProject, 10))
+	h.TestCycles(writer, request)
+}
+
+func (h *Handler) ShowTestCycle(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	projectID, cycleID, ok := parseProjectResourcePath(writer, request, "testcycle")
+	if !ok {
+		return
+	}
+	cycle, err := h.sessions.GetTestCycle(request, user, projectID, cycleID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "load browser test cycle", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, cycle)
+}
+
+func (h *Handler) UpdateTestCycle(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	projectID, cycleID, ok := parseProjectResourcePath(writer, request, "testcycle")
+	if !ok {
+		return
+	}
+	var input struct {
+		Description string `json:"description"`
+		Config      string `json:"config"`
+	}
+	if err := decodeJSON(writer, request, &input); err != nil {
+		validationError(writer, "payload", "The request payload is invalid.")
+		return
+	}
+	err := h.sessions.UpdateTestCycle(request, user, TestCycleUpdate{ID: cycleID, IDProject: projectID, Description: input.Description, Config: input.Config})
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "update browser test cycle", err)
+		return
+	}
+	h.TestCycles(writer, request)
+}
+
+func (h *Handler) ReorderSteps(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	var input struct {
+		Offset int         `json:"offset"`
+		Order  []StepOrder `json:"order"`
+	}
+	if err := decodeJSON(writer, request, &input); err != nil || len(input.Order) == 0 || input.Offset < 0 {
+		validationError(writer, "order", "The order field is required.")
+		return
+	}
+	err = h.sessions.ReorderSteps(request, user, StepReorder{IDProject: projectID, Offset: input.Offset, Order: input.Order})
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "reorder browser steps", err)
+		return
+	}
+	query := parseResourceQuery(request, projectID, "order")
+	page, err := h.sessions.ListStepsForReorder(request, user, query)
+	if err != nil {
+		h.internalError(writer, request, "list reordered browser steps", err)
+		return
+	}
+	if !query.Paged {
+		writeJSON(writer, http.StatusOK, page.Data)
+		return
+	}
+	writeJSON(writer, http.StatusOK, page)
+}
+
 func (h *Handler) requireCapability(writer http.ResponseWriter, request *http.Request, capability string) (User, bool) {
 	user, ok := h.authenticatedUser(writer, request)
 	if !ok {
@@ -438,6 +657,46 @@ func parseCustomerQuery(request *http.Request) CustomerQuery {
 		direction = "asc"
 	}
 	return CustomerQuery{Page: page, PageSize: pageSize, Paged: pageSet || pageSizeSet, Search: strings.TrimSpace(request.URL.Query().Get("search")), Sort: sort, Direction: direction}
+}
+
+func parseResourceQuery(request *http.Request, projectID int64, defaultSort string) ResourceQuery {
+	page, pageSet := positiveQueryInt(request, "page", 1)
+	pageSize, pageSizeSet := positiveQueryInt(request, "pageSize", 25)
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	sort := request.URL.Query().Get("sort")
+	if sort == "" {
+		sort = defaultSort
+	}
+	direction := strings.ToLower(request.URL.Query().Get("direction"))
+	if direction != "desc" {
+		direction = "asc"
+	}
+	query := ResourceQuery{ProjectID: projectID, Page: page, PageSize: pageSize, Paged: pageSet || pageSizeSet, Search: strings.TrimSpace(request.URL.Query().Get("search")), Sort: sort, Direction: direction}
+	if ids := request.URL.Query().Get("filter[id]"); ids != "" {
+		for _, raw := range strings.Split(ids, ",") {
+			id, err := strconv.ParseInt(strings.TrimSpace(raw), 10, 64)
+			if err == nil && id > 0 {
+				query.FilterIDs = append(query.FilterIDs, id)
+			}
+		}
+	}
+	return query
+}
+
+func parseProjectResourcePath(writer http.ResponseWriter, request *http.Request, resourceName string) (int64, int64, bool) {
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		writeJSON(writer, http.StatusNotFound, map[string]string{"message": "Not found."})
+		return 0, 0, false
+	}
+	resourceID, err := parsePathID(request.PathValue(resourceName))
+	if err != nil {
+		writeJSON(writer, http.StatusNotFound, map[string]string{"message": "Not found."})
+		return 0, 0, false
+	}
+	return projectID, resourceID, true
 }
 
 func accountValidation(name, email, password string, role int64) map[string][]string {

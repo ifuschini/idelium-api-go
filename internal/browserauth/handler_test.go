@@ -47,6 +47,12 @@ type sessionsStub struct {
 	createdCustomer   CustomerCreate
 	updatedCustomer   CustomerUpdate
 	deletedCustomerID int64
+	testCyclePage     TestCyclePage
+	testCycleDetail   TestCycleDetail
+	createdTestCycle  TestCycleCreate
+	updatedTestCycle  TestCycleUpdate
+	reorderedSteps    StepReorder
+	stepPage          StepPage
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -110,6 +116,27 @@ func (s *sessionsStub) UpdateCustomer(_ *http.Request, customer CustomerUpdate) 
 func (s *sessionsStub) DeleteCustomer(_ *http.Request, customerID int64) error {
 	s.deletedCustomerID = customerID
 	return s.accountErr
+}
+func (s *sessionsStub) ListTestCycles(*http.Request, User, ResourceQuery) (TestCyclePage, error) {
+	return s.testCyclePage, s.accountErr
+}
+func (s *sessionsStub) CreateTestCycle(_ *http.Request, _ User, input TestCycleCreate) error {
+	s.createdTestCycle = input
+	return s.accountErr
+}
+func (s *sessionsStub) GetTestCycle(*http.Request, User, int64, int64) (TestCycleDetail, error) {
+	return s.testCycleDetail, s.accountErr
+}
+func (s *sessionsStub) UpdateTestCycle(_ *http.Request, _ User, input TestCycleUpdate) error {
+	s.updatedTestCycle = input
+	return s.accountErr
+}
+func (s *sessionsStub) ReorderSteps(_ *http.Request, _ User, input StepReorder) error {
+	s.reorderedSteps = input
+	return s.accountErr
+}
+func (s *sessionsStub) ListStepsForReorder(*http.Request, User, ResourceQuery) (StepPage, error) {
+	return s.stepPage, s.accountErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -383,6 +410,62 @@ func TestCustomerAdministrationRequiresSuperAdminAndMutatesCustomers(t *testing.
 	forbiddenHandler.Customers(forbiddenResponse, forbiddenRequest)
 	if forbiddenResponse.Code != http.StatusForbidden {
 		t.Fatalf("expected role 2 customer administration to be forbidden, got %d", forbiddenResponse.Code)
+	}
+}
+
+func TestTestCycleAdministrationAndStepReorder(t *testing.T) {
+	sessions := &sessionsStub{
+		user:            User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3},
+		testCyclePage:   TestCyclePage{Data: []TestCycle{{ID: 5, Name: "Nightly", Description: "Browser"}}},
+		testCycleDetail: TestCycleDetail{ID: 5, Name: "Nightly", Description: "Browser", Config: "{}", IDProject: 3},
+		stepPage:        StepPage{Data: []StepListItem{{ID: 9, Name: "Login", Description: "Open", Order: 25}}},
+	}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+
+	listRequest := httptest.NewRequest(http.MethodGet, "/admin/testcycles/3?page=1&pageSize=25", nil)
+	listRequest.SetPathValue("idProject", "3")
+	listRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	listResponse := httptest.NewRecorder()
+	handler.TestCycles(listResponse, listRequest)
+	if listResponse.Code != http.StatusOK || !strings.Contains(listResponse.Body.String(), `"Nightly"`) || strings.Contains(listResponse.Body.String(), "idCostumer") {
+		t.Fatalf("unexpected test cycle list: %d %s", listResponse.Code, listResponse.Body.String())
+	}
+
+	createRequest := httptest.NewRequest(http.MethodPost, "/admin/testcycles", strings.NewReader(`{"name":"Smoke","description":"Fast","config":"{}","idProject":3}`))
+	createRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	createResponse := httptest.NewRecorder()
+	handler.CreateTestCycle(createResponse, createRequest)
+	if createResponse.Code != http.StatusOK || sessions.createdTestCycle.Name != "Smoke" || sessions.createdTestCycle.IDProject != 3 {
+		t.Fatalf("unexpected test cycle create: %d %#v", createResponse.Code, sessions.createdTestCycle)
+	}
+
+	showRequest := httptest.NewRequest(http.MethodGet, "/admin/testcycles/3/5", nil)
+	showRequest.SetPathValue("idProject", "3")
+	showRequest.SetPathValue("testcycle", "5")
+	showRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	showResponse := httptest.NewRecorder()
+	handler.ShowTestCycle(showResponse, showRequest)
+	if showResponse.Code != http.StatusOK || !strings.Contains(showResponse.Body.String(), `"config":"{}"`) {
+		t.Fatalf("unexpected test cycle detail: %d %s", showResponse.Code, showResponse.Body.String())
+	}
+
+	updateRequest := httptest.NewRequest(http.MethodPut, "/admin/testcycles/3/5", strings.NewReader(`{"description":"Updated","config":"{\"tests\":[]}"}`))
+	updateRequest.SetPathValue("idProject", "3")
+	updateRequest.SetPathValue("testcycle", "5")
+	updateRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	updateResponse := httptest.NewRecorder()
+	handler.UpdateTestCycle(updateResponse, updateRequest)
+	if updateResponse.Code != http.StatusOK || sessions.updatedTestCycle.ID != 5 || sessions.updatedTestCycle.IDProject != 3 {
+		t.Fatalf("unexpected test cycle update: %d %#v", updateResponse.Code, sessions.updatedTestCycle)
+	}
+
+	reorderRequest := httptest.NewRequest(http.MethodPost, "/admin/steps/3/updateorder", strings.NewReader(`{"offset":25,"order":[{"id":9}]}`))
+	reorderRequest.SetPathValue("idProject", "3")
+	reorderRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	reorderResponse := httptest.NewRecorder()
+	handler.ReorderSteps(reorderResponse, reorderRequest)
+	if reorderResponse.Code != http.StatusOK || sessions.reorderedSteps.Offset != 25 || sessions.reorderedSteps.Order[0].ID != 9 {
+		t.Fatalf("unexpected step reorder: %d %#v", reorderResponse.Code, sessions.reorderedSteps)
 	}
 }
 

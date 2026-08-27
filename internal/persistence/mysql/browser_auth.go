@@ -293,6 +293,164 @@ func (r *BrowserAuthRepository) DeleteCustomer(request *http.Request, customerID
 	return requireAffected(result)
 }
 
+func (r *BrowserAuthRepository) ListTestCycles(request *http.Request, actor browserauth.User, query browserauth.ResourceQuery) (browserauth.TestCyclePage, error) {
+	if err := r.ensureProject(request.Context(), actor.ActiveTenant(), query.ProjectID); err != nil {
+		return browserauth.TestCyclePage{}, err
+	}
+	where, args := resourceWhere(actor.ActiveTenant(), query.ProjectID, query)
+	total, err := countRows(request.Context(), r.database, "test_cycles", where, args)
+	if err != nil {
+		return browserauth.TestCyclePage{}, err
+	}
+	sort := resourceSortColumn(query.Sort)
+	direction := resourceDirection(query.Direction)
+	sqlQuery := `SELECT id, name, description, created_at, updated_at FROM test_cycles ` + where + ` ORDER BY ` + sort + ` ` + direction
+	if query.Paged {
+		sqlQuery += ` LIMIT ? OFFSET ?`
+		args = append(args, query.PageSize, (query.Page-1)*query.PageSize)
+	}
+	rows, err := r.database.QueryContext(request.Context(), sqlQuery, args...)
+	if err != nil {
+		return browserauth.TestCyclePage{}, safeDatabaseFailure("list browser test cycles", err)
+	}
+	defer rows.Close()
+	items := []browserauth.TestCycle{}
+	for rows.Next() {
+		var item browserauth.TestCycle
+		if err := rows.Scan(&item.ID, &item.Name, &item.Description, &item.CreatedAt, &item.UpdatedAt); err != nil {
+			return browserauth.TestCyclePage{}, safeDatabaseFailure("scan browser test cycle", err)
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return browserauth.TestCyclePage{}, safeDatabaseFailure("read browser test cycles", err)
+	}
+	return browserauth.TestCyclePage{Data: items, Meta: pageMeta(query.Page, query.PageSize, total, query.Sort, query.Direction)}, nil
+}
+
+func (r *BrowserAuthRepository) CreateTestCycle(request *http.Request, actor browserauth.User, input browserauth.TestCycleCreate) error {
+	ctx := request.Context()
+	if err := r.ensureProject(ctx, actor.ActiveTenant(), input.IDProject); err != nil {
+		return err
+	}
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return safeDatabaseFailure("start browser test cycle create", err)
+	}
+	defer tx.Rollback()
+	now := time.Now().UTC()
+	result, err := tx.ExecContext(ctx, `INSERT INTO test_cycles (name, description, config, idProject, idCostumer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`, input.Name, input.Description, input.Config, input.IDProject, actor.ActiveTenant(), now, now)
+	if err != nil {
+		return safeDatabaseFailure("create browser test cycle", err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return safeDatabaseFailure("read created browser test cycle id", err)
+	}
+	if err := recordAssetVersion(ctx, tx, actor, "test_cycle", id, input.IDProject, "asset.created", map[string]any{"id": id, "name": input.Name, "description": input.Description, "config": input.Config, "idProject": input.IDProject, "idCostumer": actor.ActiveTenant()}); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r *BrowserAuthRepository) GetTestCycle(request *http.Request, actor browserauth.User, projectID int64, cycleID int64) (browserauth.TestCycleDetail, error) {
+	var cycle browserauth.TestCycleDetail
+	err := r.database.QueryRowContext(request.Context(), `SELECT test_cycles.id, test_cycles.name, test_cycles.description, test_cycles.config, test_cycles.idProject
+		FROM test_cycles
+		JOIN projects ON projects.id = test_cycles.idProject AND projects.idCostumer = test_cycles.idCostumer
+		WHERE test_cycles.id = ? AND test_cycles.idProject = ? AND test_cycles.idCostumer = ? LIMIT 1`, cycleID, projectID, actor.ActiveTenant()).Scan(&cycle.ID, &cycle.Name, &cycle.Description, &cycle.Config, &cycle.IDProject)
+	if errors.Is(err, sql.ErrNoRows) {
+		return browserauth.TestCycleDetail{}, browserauth.ErrNotFound
+	}
+	if err != nil {
+		return browserauth.TestCycleDetail{}, safeDatabaseFailure("load browser test cycle", err)
+	}
+	return cycle, nil
+}
+
+func (r *BrowserAuthRepository) UpdateTestCycle(request *http.Request, actor browserauth.User, input browserauth.TestCycleUpdate) error {
+	ctx := request.Context()
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return safeDatabaseFailure("start browser test cycle update", err)
+	}
+	defer tx.Rollback()
+	var name string
+	err = tx.QueryRowContext(ctx, `SELECT name FROM test_cycles WHERE id = ? AND idProject = ? AND idCostumer = ? LIMIT 1`, input.ID, input.IDProject, actor.ActiveTenant()).Scan(&name)
+	if errors.Is(err, sql.ErrNoRows) {
+		return browserauth.ErrNotFound
+	}
+	if err != nil {
+		return safeDatabaseFailure("load browser test cycle for update", err)
+	}
+	result, err := tx.ExecContext(ctx, `UPDATE test_cycles SET description = ?, config = ?, updated_at = ? WHERE id = ? AND idProject = ? AND idCostumer = ?`, input.Description, input.Config, time.Now().UTC(), input.ID, input.IDProject, actor.ActiveTenant())
+	if err != nil {
+		return safeDatabaseFailure("update browser test cycle", err)
+	}
+	if err := requireAffected(result); err != nil {
+		return err
+	}
+	if err := recordAssetVersion(ctx, tx, actor, "test_cycle", input.ID, input.IDProject, "asset.updated", map[string]any{"id": input.ID, "name": name, "description": input.Description, "config": input.Config, "idProject": input.IDProject, "idCostumer": actor.ActiveTenant()}); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r *BrowserAuthRepository) ReorderSteps(request *http.Request, actor browserauth.User, input browserauth.StepReorder) error {
+	ctx := request.Context()
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return safeDatabaseFailure("start browser step reorder", err)
+	}
+	defer tx.Rollback()
+	if err := ensureProjectTx(ctx, tx, actor.ActiveTenant(), input.IDProject); err != nil {
+		return err
+	}
+	for position, step := range input.Order {
+		result, err := tx.ExecContext(ctx, `UPDATE steps SET `+"`order`"+` = ?, updated_at = ? WHERE id = ? AND idProject = ? AND idCostumer = ?`, input.Offset+position, time.Now().UTC(), step.ID, input.IDProject, actor.ActiveTenant())
+		if err != nil {
+			return safeDatabaseFailure("reorder browser step", err)
+		}
+		if err := requireAffected(result); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+func (r *BrowserAuthRepository) ListStepsForReorder(request *http.Request, actor browserauth.User, query browserauth.ResourceQuery) (browserauth.StepPage, error) {
+	if err := r.ensureProject(request.Context(), actor.ActiveTenant(), query.ProjectID); err != nil {
+		return browserauth.StepPage{}, err
+	}
+	where, args := resourceWhere(actor.ActiveTenant(), query.ProjectID, query)
+	total, err := countRows(request.Context(), r.database, "steps", where, args)
+	if err != nil {
+		return browserauth.StepPage{}, err
+	}
+	sqlQuery := `SELECT id, name, description, ` + "`order`" + ` FROM steps ` + where + ` ORDER BY ` + resourceSortColumn(query.Sort) + ` ` + resourceDirection(query.Direction)
+	if query.Paged {
+		sqlQuery += ` LIMIT ? OFFSET ?`
+		args = append(args, query.PageSize, (query.Page-1)*query.PageSize)
+	}
+	rows, err := r.database.QueryContext(request.Context(), sqlQuery, args...)
+	if err != nil {
+		return browserauth.StepPage{}, safeDatabaseFailure("list browser steps after reorder", err)
+	}
+	defer rows.Close()
+	items := []browserauth.StepListItem{}
+	for rows.Next() {
+		var item browserauth.StepListItem
+		if err := rows.Scan(&item.ID, &item.Name, &item.Description, &item.Order); err != nil {
+			return browserauth.StepPage{}, safeDatabaseFailure("scan browser step after reorder", err)
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return browserauth.StepPage{}, safeDatabaseFailure("read browser steps after reorder", err)
+	}
+	return browserauth.StepPage{Data: items, Meta: pageMeta(query.Page, query.PageSize, total, query.Sort, query.Direction)}, nil
+}
+
 func (r *BrowserAuthRepository) accountTarget(request *http.Request, actor browserauth.User, accountID int64) (browserauth.Account, error) {
 	where, args := accountScope(actor)
 	where += ` AND users.id = ?`
@@ -361,6 +519,107 @@ func customerSortColumn(sort string) string {
 	default:
 		return "created_at"
 	}
+}
+
+func (r *BrowserAuthRepository) ensureProject(ctx context.Context, tenantID int64, projectID int64) error {
+	return ensureProjectTx(ctx, r.database, tenantID, projectID)
+}
+
+func ensureProjectTx(ctx context.Context, execer interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}, tenantID int64, projectID int64) error {
+	var exists int
+	err := execer.QueryRowContext(ctx, `SELECT 1 FROM projects WHERE id = ? AND idCostumer = ? LIMIT 1`, projectID, tenantID).Scan(&exists)
+	if errors.Is(err, sql.ErrNoRows) {
+		return browserauth.ErrNotFound
+	}
+	if err != nil {
+		return safeDatabaseFailure("check browser project ownership", err)
+	}
+	return nil
+}
+
+func resourceWhere(tenantID int64, projectID int64, query browserauth.ResourceQuery) (string, []any) {
+	where := `WHERE idCostumer = ? AND idProject = ?`
+	args := []any{tenantID, projectID}
+	if query.Search != "" {
+		where += ` AND (name LIKE ? OR description LIKE ?)`
+		search := "%" + boundedSearch(query.Search) + "%"
+		args = append(args, search, search)
+	}
+	if len(query.FilterIDs) > 0 {
+		placeholders := make([]string, 0, len(query.FilterIDs))
+		for _, id := range query.FilterIDs {
+			placeholders = append(placeholders, "?")
+			args = append(args, id)
+		}
+		where += ` AND id IN (` + strings.Join(placeholders, ",") + `)`
+	}
+	return where, args
+}
+
+func countRows(ctx context.Context, database *sql.DB, table string, where string, args []any) (int64, error) {
+	var total int64
+	err := database.QueryRowContext(ctx, `SELECT COUNT(*) FROM `+table+` `+where, args...).Scan(&total)
+	if err != nil {
+		return 0, safeDatabaseFailure("count browser resources", err)
+	}
+	return total, nil
+}
+
+func resourceSortColumn(sort string) string {
+	switch sort {
+	case "name":
+		return "name"
+	case "description":
+		return "description"
+	case "created_at":
+		return "created_at"
+	case "updated_at":
+		return "updated_at"
+	case "order":
+		return "`order`"
+	default:
+		return "id"
+	}
+}
+
+func resourceDirection(direction string) string {
+	if direction == "desc" {
+		return "DESC"
+	}
+	return "ASC"
+}
+
+func pageMeta(page int, pageSize int, total int64, sort string, direction string) browserauth.PageMeta {
+	lastPage := int((total + int64(pageSize) - 1) / int64(pageSize))
+	if lastPage == 0 {
+		lastPage = 1
+	}
+	return browserauth.PageMeta{Page: page, PageSize: pageSize, Total: total, LastPage: lastPage, HasNextPage: page < lastPage, HasPreviousPage: page > 1, Sort: sort, Direction: direction, Stale: false, Partial: false}
+}
+
+func recordAssetVersion(ctx context.Context, execer interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
+}, actor browserauth.User, assetType string, assetID int64, projectID int64, reason string, snapshot map[string]any) error {
+	var current sql.NullInt64
+	if err := execer.QueryRowContext(ctx, `SELECT MAX(version) FROM asset_versions WHERE idCostumer = ? AND assetType = ? AND assetId = ?`, actor.ActiveTenant(), assetType, assetID).Scan(&current); err != nil {
+		return safeDatabaseFailure("read browser asset version", err)
+	}
+	nextVersion := int64(1)
+	if current.Valid {
+		nextVersion = current.Int64 + 1
+	}
+	encoded, err := json.Marshal(snapshot)
+	if err != nil {
+		return fmt.Errorf("encode browser asset version snapshot: %w", err)
+	}
+	_, err = execer.ExecContext(ctx, `INSERT INTO asset_versions (idCostumer, idProject, assetType, assetId, version, actorUserId, reason, snapshot) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, actor.ActiveTenant(), projectID, assetType, assetID, nextVersion, actor.ID, reason, string(encoded))
+	if err != nil {
+		return safeDatabaseFailure("record browser asset version", err)
+	}
+	return nil
 }
 
 func boundedSearch(search string) string {
