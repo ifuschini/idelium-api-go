@@ -172,6 +172,18 @@ func (fakeBrowserAuthRepository) ReorderSteps(*http.Request, browserauth.User, b
 func (fakeBrowserAuthRepository) ListStepsForReorder(*http.Request, browserauth.User, browserauth.ResourceQuery) (browserauth.StepPage, error) {
 	return browserauth.StepPage{}, nil
 }
+func (fakeBrowserAuthRepository) ListTests(*http.Request, browserauth.User, browserauth.ResourceQuery) (browserauth.TestPage, error) {
+	return browserauth.TestPage{}, nil
+}
+func (fakeBrowserAuthRepository) CreateTest(*http.Request, browserauth.User, browserauth.TestCreate) error {
+	return nil
+}
+func (fakeBrowserAuthRepository) GetTest(*http.Request, browserauth.User, int64, int64) (browserauth.TestDetail, error) {
+	return browserauth.TestDetail{}, nil
+}
+func (fakeBrowserAuthRepository) UpdateTest(*http.Request, browserauth.User, browserauth.TestUpdate) error {
+	return nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {

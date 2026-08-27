@@ -53,6 +53,10 @@ type sessionsStub struct {
 	updatedTestCycle  TestCycleUpdate
 	reorderedSteps    StepReorder
 	stepPage          StepPage
+	testPage          TestPage
+	testDetail        TestDetail
+	createdTest       TestCreate
+	updatedTest       TestUpdate
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -137,6 +141,20 @@ func (s *sessionsStub) ReorderSteps(_ *http.Request, _ User, input StepReorder) 
 }
 func (s *sessionsStub) ListStepsForReorder(*http.Request, User, ResourceQuery) (StepPage, error) {
 	return s.stepPage, s.accountErr
+}
+func (s *sessionsStub) ListTests(*http.Request, User, ResourceQuery) (TestPage, error) {
+	return s.testPage, s.accountErr
+}
+func (s *sessionsStub) CreateTest(_ *http.Request, _ User, input TestCreate) error {
+	s.createdTest = input
+	return s.accountErr
+}
+func (s *sessionsStub) GetTest(*http.Request, User, int64, int64) (TestDetail, error) {
+	return s.testDetail, s.accountErr
+}
+func (s *sessionsStub) UpdateTest(_ *http.Request, _ User, input TestUpdate) error {
+	s.updatedTest = input
+	return s.accountErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -466,6 +484,60 @@ func TestTestCycleAdministrationAndStepReorder(t *testing.T) {
 	handler.ReorderSteps(reorderResponse, reorderRequest)
 	if reorderResponse.Code != http.StatusOK || sessions.reorderedSteps.Offset != 25 || sessions.reorderedSteps.Order[0].ID != 9 {
 		t.Fatalf("unexpected step reorder: %d %#v", reorderResponse.Code, sessions.reorderedSteps)
+	}
+}
+
+func TestTestAdministrationPreservesStepMembershipConfig(t *testing.T) {
+	sessions := &sessionsStub{
+		user:       User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3},
+		testPage:   TestPage{Data: []Test{{ID: 12, Name: "Checkout", Description: "Happy path"}}},
+		testDetail: TestDetail{ID: 12, Name: "Checkout", Description: "Happy path", Config: `{"steps":[9,10]}`, IDProject: 3},
+	}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+
+	listRequest := httptest.NewRequest(http.MethodGet, "/admin/tests/3?page=1&pageSize=25", nil)
+	listRequest.SetPathValue("idProject", "3")
+	listRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	listResponse := httptest.NewRecorder()
+	handler.Tests(listResponse, listRequest)
+	if listResponse.Code != http.StatusOK || !strings.Contains(listResponse.Body.String(), `"Checkout"`) || strings.Contains(listResponse.Body.String(), "idCostumer") {
+		t.Fatalf("unexpected test list: %d %s", listResponse.Code, listResponse.Body.String())
+	}
+
+	createRequest := httptest.NewRequest(http.MethodPost, "/admin/tests", strings.NewReader(`{"name":"Smoke","description":"Fast","config":"{\"steps\":[9]}","idProject":3}`))
+	createRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	createResponse := httptest.NewRecorder()
+	handler.CreateTest(createResponse, createRequest)
+	if createResponse.Code != http.StatusOK || sessions.createdTest.Name != "Smoke" || sessions.createdTest.IDProject != 3 || !strings.Contains(sessions.createdTest.Config, "steps") {
+		t.Fatalf("unexpected test create: %d %#v", createResponse.Code, sessions.createdTest)
+	}
+
+	invalidCreate := httptest.NewRequest(http.MethodPost, "/admin/tests", strings.NewReader(`{"name":"","description":"","config":"","idProject":0}`))
+	invalidCreate.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	invalidResponse := httptest.NewRecorder()
+	handler.CreateTest(invalidResponse, invalidCreate)
+	if invalidResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(invalidResponse.Body.String(), "config") {
+		t.Fatalf("expected validation failure, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
+	}
+
+	showRequest := httptest.NewRequest(http.MethodGet, "/admin/tests/3/12", nil)
+	showRequest.SetPathValue("idProject", "3")
+	showRequest.SetPathValue("test", "12")
+	showRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	showResponse := httptest.NewRecorder()
+	handler.ShowTest(showResponse, showRequest)
+	if showResponse.Code != http.StatusOK || !strings.Contains(showResponse.Body.String(), `"config":"{\"steps\":[9,10]}"`) {
+		t.Fatalf("unexpected test detail: %d %s", showResponse.Code, showResponse.Body.String())
+	}
+
+	updateRequest := httptest.NewRequest(http.MethodPut, "/admin/tests/3/12", strings.NewReader(`{"config":"{\"steps\":[10,9]}"}`))
+	updateRequest.SetPathValue("idProject", "3")
+	updateRequest.SetPathValue("test", "12")
+	updateRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	updateResponse := httptest.NewRecorder()
+	handler.UpdateTest(updateResponse, updateRequest)
+	if updateResponse.Code != http.StatusOK || sessions.updatedTest.ID != 12 || sessions.updatedTest.IDProject != 3 || !strings.Contains(sessions.updatedTest.Config, "10") {
+		t.Fatalf("unexpected test update: %d %#v", updateResponse.Code, sessions.updatedTest)
 	}
 }
 

@@ -98,6 +98,10 @@ type AdminRepository interface {
 	UpdateTestCycle(request *http.Request, actor User, input TestCycleUpdate) error
 	ReorderSteps(request *http.Request, actor User, input StepReorder) error
 	ListStepsForReorder(request *http.Request, actor User, query ResourceQuery) (StepPage, error)
+	ListTests(request *http.Request, actor User, query ResourceQuery) (TestPage, error)
+	CreateTest(request *http.Request, actor User, input TestCreate) error
+	GetTest(request *http.Request, actor User, projectID int64, testID int64) (TestDetail, error)
+	UpdateTest(request *http.Request, actor User, input TestUpdate) error
 }
 
 type CustomerQuery struct {
@@ -170,6 +174,40 @@ type TestCycleUpdate struct {
 	IDProject   int64
 	Description string
 	Config      string
+}
+
+type Test struct {
+	ID          int64      `json:"id"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	CreatedAt   *time.Time `json:"created_at,omitempty"`
+	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
+}
+
+type TestPage struct {
+	Data []Test   `json:"data"`
+	Meta PageMeta `json:"meta"`
+}
+
+type TestDetail struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Config      string `json:"config"`
+	IDProject   int64  `json:"idProject"`
+}
+
+type TestCreate struct {
+	Name        string
+	Description string
+	Config      string
+	IDProject   int64
+}
+
+type TestUpdate struct {
+	ID        int64
+	IDProject int64
+	Config    string
 }
 
 type StepReorder struct {
@@ -600,6 +638,110 @@ func (h *Handler) ReorderSteps(writer http.ResponseWriter, request *http.Request
 		return
 	}
 	writeJSON(writer, http.StatusOK, page)
+}
+
+func (h *Handler) Tests(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	query := parseResourceQuery(request, projectID, "id")
+	page, err := h.sessions.ListTests(request, user, query)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "list browser tests", err)
+		return
+	}
+	if !query.Paged {
+		writeJSON(writer, http.StatusOK, page.Data)
+		return
+	}
+	writeJSON(writer, http.StatusOK, page)
+}
+
+func (h *Handler) CreateTest(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	var input struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Config      string `json:"config"`
+		IDProject   int64  `json:"idProject"`
+	}
+	if err := decodeJSON(writer, request, &input); err != nil || strings.TrimSpace(input.Name) == "" || strings.TrimSpace(input.Description) == "" || strings.TrimSpace(input.Config) == "" || input.IDProject <= 0 {
+		validationErrors(writer, map[string][]string{"name": {"The name field is required."}, "description": {"The description field is required."}, "config": {"The config field is required."}, "idProject": {"The id project field is required."}})
+		return
+	}
+	err := h.sessions.CreateTest(request, user, TestCreate{Name: strings.TrimSpace(input.Name), Description: strings.TrimSpace(input.Description), Config: input.Config, IDProject: input.IDProject})
+	if errors.Is(err, ErrNotFound) {
+		validationError(writer, "idProject", "The selected id project is invalid.")
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "create browser test", err)
+		return
+	}
+	request.SetPathValue("idProject", strconv.FormatInt(input.IDProject, 10))
+	h.Tests(writer, request)
+}
+
+func (h *Handler) ShowTest(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	projectID, testID, ok := parseProjectResourcePath(writer, request, "test")
+	if !ok {
+		return
+	}
+	test, err := h.sessions.GetTest(request, user, projectID, testID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "load browser test", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, test)
+}
+
+func (h *Handler) UpdateTest(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	projectID, testID, ok := parseProjectResourcePath(writer, request, "test")
+	if !ok {
+		return
+	}
+	var input struct {
+		Config string `json:"config"`
+	}
+	if err := decodeJSON(writer, request, &input); err != nil || strings.TrimSpace(input.Config) == "" {
+		validationError(writer, "config", "The config field is required.")
+		return
+	}
+	err := h.sessions.UpdateTest(request, user, TestUpdate{ID: testID, IDProject: projectID, Config: input.Config})
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "update browser test", err)
+		return
+	}
+	h.Tests(writer, request)
 }
 
 func (h *Handler) requireCapability(writer http.ResponseWriter, request *http.Request, capability string) (User, bool) {

@@ -69,6 +69,10 @@ func NewRouter(
 	router.Put("/admin/testcycles/{idProject}/{testcycle}", browserAuthHandler.UpdateTestCycle)
 	router.Post("/admin/testcycles", browserAuthHandler.CreateTestCycle)
 	router.Post("/admin/steps/{idProject}/updateorder", browserAuthHandler.ReorderSteps)
+	router.Get("/admin/tests/{idProject}", browserAuthHandler.Tests)
+	router.Get("/admin/tests/{idProject}/{test}", browserAuthHandler.ShowTest)
+	router.Put("/admin/tests/{idProject}/{test}", browserAuthHandler.UpdateTest)
+	router.Post("/admin/tests", browserAuthHandler.CreateTest)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)

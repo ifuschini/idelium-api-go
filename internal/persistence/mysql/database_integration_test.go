@@ -489,6 +489,7 @@ func TestBrowserAuthRepositoryTestCyclesAndStepOrderingIntegration(t *testing.T)
 	for _, statement := range []string{
 		"DROP TABLE IF EXISTS asset_versions",
 		"DROP TABLE IF EXISTS steps",
+		"DROP TABLE IF EXISTS tests",
 		"DROP TABLE IF EXISTS test_cycles",
 		"DROP TABLE IF EXISTS projects",
 		`CREATE TABLE projects (
@@ -504,6 +505,16 @@ func TestBrowserAuthRepositoryTestCyclesAndStepOrderingIntegration(t *testing.T)
 			name VARCHAR(255) NOT NULL,
 			description VARCHAR(255) NOT NULL,
 			config TEXT NOT NULL,
+			idProject BIGINT NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE tests (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			config JSON NOT NULL,
 			idProject BIGINT NOT NULL,
 			idCostumer BIGINT NOT NULL,
 			created_at TIMESTAMP NULL,
@@ -539,6 +550,9 @@ func TestBrowserAuthRepositoryTestCyclesAndStepOrderingIntegration(t *testing.T)
 		`INSERT INTO test_cycles (id, name, description, config, idProject, idCostumer, created_at, updated_at) VALUES
 			(5, 'Nightly', 'Browser', '{}', 3, 11, NULL, NULL),
 			(6, 'Foreign', 'Hidden', '{}', 4, 42, NULL, NULL)`,
+		`INSERT INTO tests (id, name, description, config, idProject, idCostumer, created_at, updated_at) VALUES
+			(7, 'Checkout', 'Happy path', '{"steps":[9,10]}', 3, 11, NULL, NULL),
+			(8, 'Foreign test', 'Hidden', '{"steps":[11]}', 4, 42, NULL, NULL)`,
 		`INSERT INTO steps (id, name, description, config, idProject, idCostumer, ` + "`order`" + `, created_at, updated_at) VALUES
 			(9, 'First', 'First step', '{}', 3, 11, 10, NULL, NULL),
 			(10, 'Second', 'Second step', '{}', 3, 11, 20, NULL, NULL),
@@ -592,6 +606,36 @@ func TestBrowserAuthRepositoryTestCyclesAndStepOrderingIntegration(t *testing.T)
 	steps, err := repository.ListStepsForReorder(request, actor, browserauth.ResourceQuery{ProjectID: 3, Page: 1, PageSize: 25, Paged: true, Sort: "order", Direction: "asc"})
 	if err != nil || len(steps.Data) != 2 || steps.Data[0].ID != 10 || steps.Data[0].Order != 25 {
 		t.Fatalf("unexpected reordered steps: %#v err=%v", steps, err)
+	}
+
+	testsPage, err := repository.ListTests(request, actor, browserauth.ResourceQuery{ProjectID: 3, Page: 1, PageSize: 25, Paged: true, Sort: "id", Direction: "asc"})
+	if err != nil {
+		t.Fatalf("ListTests() returned an error: %v", err)
+	}
+	if testsPage.Meta.Total != 1 || len(testsPage.Data) != 1 || testsPage.Data[0].ID != 7 {
+		t.Fatalf("unexpected test page: %#v", testsPage)
+	}
+	if _, err := repository.ListTests(request, actor, browserauth.ResourceQuery{ProjectID: 4, Page: 1, PageSize: 25, Paged: true, Sort: "id", Direction: "asc"}); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected foreign test project to be hidden, got %v", err)
+	}
+	if err := repository.CreateTest(request, actor, browserauth.TestCreate{Name: "Smoke", Description: "Fast", Config: "{\"steps\":[9]}", IDProject: 3}); err != nil {
+		t.Fatalf("CreateTest() returned an error: %v", err)
+	}
+	if err := database.QueryRowContext(ctx, "SELECT COUNT(*) FROM asset_versions WHERE assetType = 'test' AND reason = 'asset.created'").Scan(&versions); err != nil || versions != 1 {
+		t.Fatalf("expected created test asset version, count=%d err=%v", versions, err)
+	}
+	testDetail, err := repository.GetTest(request, actor, 3, 7)
+	if err != nil || testDetail.ID != 7 || testDetail.IDProject != 3 || testDetail.Config != "{\"steps\":[9,10]}" {
+		t.Fatalf("unexpected test detail: %#v err=%v", testDetail, err)
+	}
+	if _, err := repository.GetTest(request, actor, 3, 8); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-tenant test to be hidden, got %v", err)
+	}
+	if err := repository.UpdateTest(request, actor, browserauth.TestUpdate{ID: 7, IDProject: 3, Config: "{\"steps\":[10,9]}"}); err != nil {
+		t.Fatalf("UpdateTest() returned an error: %v", err)
+	}
+	if err := database.QueryRowContext(ctx, "SELECT COUNT(*) FROM asset_versions WHERE assetType = 'test' AND reason = 'asset.updated'").Scan(&versions); err != nil || versions != 1 {
+		t.Fatalf("expected updated test asset version, count=%d err=%v", versions, err)
 	}
 }
 

@@ -451,6 +451,108 @@ func (r *BrowserAuthRepository) ListStepsForReorder(request *http.Request, actor
 	return browserauth.StepPage{Data: items, Meta: pageMeta(query.Page, query.PageSize, total, query.Sort, query.Direction)}, nil
 }
 
+func (r *BrowserAuthRepository) ListTests(request *http.Request, actor browserauth.User, query browserauth.ResourceQuery) (browserauth.TestPage, error) {
+	if err := r.ensureProject(request.Context(), actor.ActiveTenant(), query.ProjectID); err != nil {
+		return browserauth.TestPage{}, err
+	}
+	where, args := resourceWhere(actor.ActiveTenant(), query.ProjectID, query)
+	total, err := countRows(request.Context(), r.database, "tests", where, args)
+	if err != nil {
+		return browserauth.TestPage{}, err
+	}
+	sqlQuery := `SELECT id, name, description, created_at, updated_at FROM tests ` + where + ` ORDER BY ` + resourceSortColumn(query.Sort) + ` ` + resourceDirection(query.Direction)
+	if query.Paged {
+		sqlQuery += ` LIMIT ? OFFSET ?`
+		args = append(args, query.PageSize, (query.Page-1)*query.PageSize)
+	}
+	rows, err := r.database.QueryContext(request.Context(), sqlQuery, args...)
+	if err != nil {
+		return browserauth.TestPage{}, safeDatabaseFailure("list browser tests", err)
+	}
+	defer rows.Close()
+	items := []browserauth.Test{}
+	for rows.Next() {
+		var item browserauth.Test
+		if err := rows.Scan(&item.ID, &item.Name, &item.Description, &item.CreatedAt, &item.UpdatedAt); err != nil {
+			return browserauth.TestPage{}, safeDatabaseFailure("scan browser test", err)
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return browserauth.TestPage{}, safeDatabaseFailure("read browser tests", err)
+	}
+	return browserauth.TestPage{Data: items, Meta: pageMeta(query.Page, query.PageSize, total, query.Sort, query.Direction)}, nil
+}
+
+func (r *BrowserAuthRepository) CreateTest(request *http.Request, actor browserauth.User, input browserauth.TestCreate) error {
+	ctx := request.Context()
+	if err := r.ensureProject(ctx, actor.ActiveTenant(), input.IDProject); err != nil {
+		return err
+	}
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return safeDatabaseFailure("start browser test create", err)
+	}
+	defer tx.Rollback()
+	now := time.Now().UTC()
+	result, err := tx.ExecContext(ctx, `INSERT INTO tests (name, description, config, idProject, idCostumer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`, input.Name, input.Description, input.Config, input.IDProject, actor.ActiveTenant(), now, now)
+	if err != nil {
+		return safeDatabaseFailure("create browser test", err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return safeDatabaseFailure("read created browser test id", err)
+	}
+	if err := recordAssetVersion(ctx, tx, actor, "test", id, input.IDProject, "asset.created", map[string]any{"id": id, "name": input.Name, "description": input.Description, "config": input.Config, "idProject": input.IDProject, "idCostumer": actor.ActiveTenant()}); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r *BrowserAuthRepository) GetTest(request *http.Request, actor browserauth.User, projectID int64, testID int64) (browserauth.TestDetail, error) {
+	var test browserauth.TestDetail
+	err := r.database.QueryRowContext(request.Context(), `SELECT tests.id, tests.name, tests.description, tests.config, tests.idProject
+		FROM tests
+		JOIN projects ON projects.id = tests.idProject AND projects.idCostumer = tests.idCostumer
+		WHERE tests.id = ? AND tests.idProject = ? AND tests.idCostumer = ? LIMIT 1`, testID, projectID, actor.ActiveTenant()).Scan(&test.ID, &test.Name, &test.Description, &test.Config, &test.IDProject)
+	if errors.Is(err, sql.ErrNoRows) {
+		return browserauth.TestDetail{}, browserauth.ErrNotFound
+	}
+	if err != nil {
+		return browserauth.TestDetail{}, safeDatabaseFailure("load browser test", err)
+	}
+	return test, nil
+}
+
+func (r *BrowserAuthRepository) UpdateTest(request *http.Request, actor browserauth.User, input browserauth.TestUpdate) error {
+	ctx := request.Context()
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return safeDatabaseFailure("start browser test update", err)
+	}
+	defer tx.Rollback()
+	var name string
+	var description string
+	err = tx.QueryRowContext(ctx, `SELECT name, description FROM tests WHERE id = ? AND idProject = ? AND idCostumer = ? LIMIT 1`, input.ID, input.IDProject, actor.ActiveTenant()).Scan(&name, &description)
+	if errors.Is(err, sql.ErrNoRows) {
+		return browserauth.ErrNotFound
+	}
+	if err != nil {
+		return safeDatabaseFailure("load browser test for update", err)
+	}
+	result, err := tx.ExecContext(ctx, `UPDATE tests SET config = ?, updated_at = ? WHERE id = ? AND idProject = ? AND idCostumer = ?`, input.Config, time.Now().UTC(), input.ID, input.IDProject, actor.ActiveTenant())
+	if err != nil {
+		return safeDatabaseFailure("update browser test", err)
+	}
+	if err := requireAffected(result); err != nil {
+		return err
+	}
+	if err := recordAssetVersion(ctx, tx, actor, "test", input.ID, input.IDProject, "asset.updated", map[string]any{"id": input.ID, "name": name, "description": description, "config": input.Config, "idProject": input.IDProject, "idCostumer": actor.ActiveTenant()}); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 func (r *BrowserAuthRepository) accountTarget(request *http.Request, actor browserauth.User, accountID int64) (browserauth.Account, error) {
 	where, args := accountScope(actor)
 	where += ` AND users.id = ?`
