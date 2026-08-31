@@ -103,6 +103,9 @@ type AdminRepository interface {
 	GetTest(request *http.Request, actor User, projectID int64, testID int64) (TestDetail, error)
 	UpdateTest(request *http.Request, actor User, input TestUpdate) error
 	ImportTest(request *http.Request, actor User, input TestImport) error
+	ListPerformedCycles(request *http.Request, actor User, query ResultQuery) (PerformedCyclePage, error)
+	ListPerformedTests(request *http.Request, actor User, query ResultQuery) (PerformedTestPage, error)
+	ListPerformedSteps(request *http.Request, actor User, performedTestID int64) ([]PerformedStep, error)
 }
 
 type CustomerQuery struct {
@@ -216,6 +219,72 @@ type TestImport struct {
 	Description string
 	Import      string
 	IDProject   int64
+}
+
+type ResultQuery struct {
+	ParentID  int64
+	Page      int
+	PerPage   int
+	Paged     bool
+	Status    *int
+	Sort      string
+	Direction string
+}
+
+type ResultPaginationMeta struct {
+	Page      int    `json:"page"`
+	PerPage   int    `json:"perPage"`
+	Total     int64  `json:"total"`
+	LastPage  int    `json:"lastPage"`
+	Sort      string `json:"sort"`
+	Direction string `json:"direction"`
+}
+
+type ResultMeta struct {
+	Pagination ResultPaginationMeta `json:"pagination"`
+}
+
+type PerformedCycle struct {
+	ID          int64      `json:"id"`
+	TestCycleID int64      `json:"testCycleId"`
+	Date        *time.Time `json:"date,omitempty"`
+	Status      int64      `json:"status"`
+	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
+	CreatedAt   *time.Time `json:"created_at,omitempty"`
+}
+
+type PerformedCyclePage struct {
+	Data []PerformedCycle `json:"data"`
+	Meta ResultMeta       `json:"meta"`
+}
+
+type PerformedTest struct {
+	ID              int64      `json:"id"`
+	TestCycleDoneID int64      `json:"testCycleDoneId"`
+	TestID          int64      `json:"testId"`
+	Status          int64      `json:"status"`
+	PostmanData     *string    `json:"postmanData"`
+	Name            string     `json:"name"`
+	UpdatedAt       *time.Time `json:"updated_at,omitempty"`
+	CreatedAt       *time.Time `json:"created_at,omitempty"`
+}
+
+type PerformedTestPage struct {
+	Data []PerformedTest `json:"data"`
+	Meta ResultMeta      `json:"meta"`
+}
+
+type PerformedStep struct {
+	ID              int64      `json:"id"`
+	TestCycleDoneID int64      `json:"testCycleDoneId"`
+	TestDoneID      int64      `json:"testDoneId"`
+	Name            string     `json:"name"`
+	Status          int64      `json:"status"`
+	Screenshots     string     `json:"screenshots"`
+	Data            string     `json:"data"`
+	Type            string     `json:"type"`
+	UpdatedAt       *time.Time `json:"updated_at,omitempty"`
+	CreatedAt       *time.Time `json:"created_at,omitempty"`
 }
 
 type StepReorder struct {
@@ -783,6 +852,70 @@ func (h *Handler) ImportTest(writer http.ResponseWriter, request *http.Request) 
 	writeJSON(writer, http.StatusOK, map[string]string{"status": "ok"})
 }
 
+func (h *Handler) PerformedCycles(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	parentID, err := parsePathID(request.PathValue("idTestCyclePerformed"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	query := parseResultQuery(request, parentID, "date", "desc")
+	page, err := h.sessions.ListPerformedCycles(request, user, query)
+	if err != nil {
+		h.internalError(writer, request, "list browser performed cycles", err)
+		return
+	}
+	if !query.Paged {
+		writeJSON(writer, http.StatusOK, page.Data)
+		return
+	}
+	writeJSON(writer, http.StatusOK, page)
+}
+
+func (h *Handler) PerformedTests(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	parentID, err := parsePathID(request.PathValue("idTestPerformed"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	query := parseResultQuery(request, parentID, "id", "asc")
+	page, err := h.sessions.ListPerformedTests(request, user, query)
+	if err != nil {
+		h.internalError(writer, request, "list browser performed tests", err)
+		return
+	}
+	if !query.Paged {
+		writeJSON(writer, http.StatusOK, page.Data)
+		return
+	}
+	writeJSON(writer, http.StatusOK, page)
+}
+
+func (h *Handler) PerformedSteps(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	performedTestID, err := parsePathID(request.PathValue("idTestPerformed"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	steps, err := h.sessions.ListPerformedSteps(request, user, performedTestID)
+	if err != nil {
+		h.internalError(writer, request, "list browser performed steps", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, steps)
+}
+
 func (h *Handler) requireCapability(writer http.ResponseWriter, request *http.Request, capability string) (User, bool) {
 	user, ok := h.authenticatedUser(writer, request)
 	if !ok {
@@ -838,6 +971,29 @@ func parseCustomerQuery(request *http.Request) CustomerQuery {
 		direction = "asc"
 	}
 	return CustomerQuery{Page: page, PageSize: pageSize, Paged: pageSet || pageSizeSet, Search: strings.TrimSpace(request.URL.Query().Get("search")), Sort: sort, Direction: direction}
+}
+
+func parseResultQuery(request *http.Request, parentID int64, defaultSort string, defaultDirection string) ResultQuery {
+	page, pageSet := positiveQueryInt(request, "page", 1)
+	perPage, perPageSet := positiveQueryInt(request, "perPage", 25)
+	if perPage > 100 {
+		perPage = 100
+	}
+	sort := request.URL.Query().Get("sort")
+	if sort == "" {
+		sort = defaultSort
+	}
+	direction := strings.ToLower(request.URL.Query().Get("direction"))
+	if direction != "asc" && direction != "desc" {
+		direction = defaultDirection
+	}
+	query := ResultQuery{ParentID: parentID, Page: page, PerPage: perPage, Paged: pageSet || perPageSet, Sort: sort, Direction: direction}
+	if rawStatus := strings.TrimSpace(request.URL.Query().Get("status")); rawStatus != "" {
+		if status, err := strconv.Atoi(rawStatus); err == nil {
+			query.Status = &status
+		}
+	}
+	return query
 }
 
 func validateImportedSteps(rawImport string) error {

@@ -58,6 +58,9 @@ type sessionsStub struct {
 	createdTest       TestCreate
 	updatedTest       TestUpdate
 	importedTest      TestImport
+	performedCycles   PerformedCyclePage
+	performedTests    PerformedTestPage
+	performedSteps    []PerformedStep
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -160,6 +163,15 @@ func (s *sessionsStub) UpdateTest(_ *http.Request, _ User, input TestUpdate) err
 func (s *sessionsStub) ImportTest(_ *http.Request, _ User, input TestImport) error {
 	s.importedTest = input
 	return s.accountErr
+}
+func (s *sessionsStub) ListPerformedCycles(*http.Request, User, ResultQuery) (PerformedCyclePage, error) {
+	return s.performedCycles, s.accountErr
+}
+func (s *sessionsStub) ListPerformedTests(*http.Request, User, ResultQuery) (PerformedTestPage, error) {
+	return s.performedTests, s.accountErr
+}
+func (s *sessionsStub) ListPerformedSteps(*http.Request, User, int64) ([]PerformedStep, error) {
+	return s.performedSteps, s.accountErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -574,6 +586,46 @@ func TestPostmanImportCreatesTestFromValidatedImportedSteps(t *testing.T) {
 	handler.ImportTest(emptyImportResponse, emptyImport)
 	if emptyImportResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(emptyImportResponse.Body.String(), "non-empty JSON array") {
 		t.Fatalf("expected empty import validation failure, got %d %s", emptyImportResponse.Code, emptyImportResponse.Body.String())
+	}
+}
+
+func TestPerformedResultExplorationUsesBrowserSessionAndPagination(t *testing.T) {
+	postmanData := `[{"request":{"headers":{"Authorization":"[REDACTED]"}}}]`
+	sessions := &sessionsStub{
+		user: User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3},
+		performedCycles: PerformedCyclePage{Data: []PerformedCycle{{ID: 44, TestCycleID: 5, Status: 1}}, Meta: ResultMeta{Pagination: ResultPaginationMeta{
+			Page: 1, PerPage: 25, Total: 1, LastPage: 1, Sort: "date", Direction: "desc",
+		}}},
+		performedTests: PerformedTestPage{Data: []PerformedTest{{ID: 55, TestCycleDoneID: 44, TestID: 7, Status: 1, Name: "Checkout", PostmanData: &postmanData}}},
+		performedSteps: []PerformedStep{{ID: 77, TestCycleDoneID: 44, TestDoneID: 55, Name: "Open", Status: 1, Screenshots: `[]`, Data: `{"token":"[REDACTED]"}`, Type: "selenium"}},
+	}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+
+	cyclesRequest := httptest.NewRequest(http.MethodGet, "/admin/testcyclesperfomed/5?page=1&perPage=25&status=1", nil)
+	cyclesRequest.SetPathValue("idTestCyclePerformed", "5")
+	cyclesRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	cyclesResponse := httptest.NewRecorder()
+	handler.PerformedCycles(cyclesResponse, cyclesRequest)
+	if cyclesResponse.Code != http.StatusOK || !strings.Contains(cyclesResponse.Body.String(), `"pagination"`) || !strings.Contains(cyclesResponse.Body.String(), `"testCycleId":5`) {
+		t.Fatalf("unexpected performed cycle response: %d %s", cyclesResponse.Code, cyclesResponse.Body.String())
+	}
+
+	testsRequest := httptest.NewRequest(http.MethodGet, "/admin/testsperfomed/44", nil)
+	testsRequest.SetPathValue("idTestPerformed", "44")
+	testsRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	testsResponse := httptest.NewRecorder()
+	handler.PerformedTests(testsResponse, testsRequest)
+	if testsResponse.Code != http.StatusOK || !strings.Contains(testsResponse.Body.String(), `"postmanData"`) || strings.Contains(testsResponse.Body.String(), "unsafe-token") {
+		t.Fatalf("unexpected performed test response: %d %s", testsResponse.Code, testsResponse.Body.String())
+	}
+
+	stepsRequest := httptest.NewRequest(http.MethodGet, "/admin/stepsperfomed/55", nil)
+	stepsRequest.SetPathValue("idTestPerformed", "55")
+	stepsRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	stepsResponse := httptest.NewRecorder()
+	handler.PerformedSteps(stepsResponse, stepsRequest)
+	if stepsResponse.Code != http.StatusOK || !strings.Contains(stepsResponse.Body.String(), `"type":"selenium"`) || strings.Contains(stepsResponse.Body.String(), "unsafe-token") {
+		t.Fatalf("unexpected performed step response: %d %s", stepsResponse.Code, stepsResponse.Body.String())
 	}
 }
 

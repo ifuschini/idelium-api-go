@@ -842,6 +842,105 @@ func TestBrowserAuthoringWorkflowEndToEndIntegration(t *testing.T) {
 	}
 }
 
+func TestBrowserPerformedResultExplorationIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS performed_steps",
+		"DROP TABLE IF EXISTS performed_tests",
+		"DROP TABLE IF EXISTS performed_test_cycles",
+		`CREATE TABLE performed_test_cycles (
+			id BIGINT PRIMARY KEY,
+			testCycleId BIGINT NOT NULL,
+			date DATETIME NULL,
+			status INT NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE performed_tests (
+			id BIGINT PRIMARY KEY,
+			testCycleDoneId BIGINT NOT NULL,
+			testId BIGINT NOT NULL,
+			status INT NOT NULL,
+			postmanData LONGTEXT NULL,
+			name VARCHAR(255) NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE performed_steps (
+			id BIGINT PRIMARY KEY,
+			testCycleDoneId BIGINT NOT NULL,
+			testDoneId BIGINT NOT NULL,
+			stepId BIGINT NOT NULL,
+			status INT NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			screenshots JSON NOT NULL,
+			type VARCHAR(255) NOT NULL,
+			data JSON NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`INSERT INTO performed_test_cycles (id, testCycleId, date, status, idCostumer, created_at, updated_at) VALUES
+			(44, 5, '2026-08-31 09:00:00', 1, 11, NULL, NULL),
+			(45, 5, '2026-08-31 10:00:00', 2, 11, NULL, NULL),
+			(46, 5, '2026-08-31 11:00:00', 1, 42, NULL, NULL)`,
+		`INSERT INTO performed_tests (id, testCycleDoneId, testId, status, postmanData, name, idCostumer, created_at, updated_at) VALUES
+			(55, 44, 7, 1, '[{"request":{"headers":{"Authorization":"Bearer unsafe-token"},"url":"https://api.example.test"},"response":{"token":"unsafe-response-token"}}]', 'Checkout', 11, NULL, NULL),
+			(56, 46, 7, 1, '[{"request":{"headers":{"Authorization":"Bearer foreign-token"}}}]', 'Foreign', 42, NULL, NULL)`,
+		`INSERT INTO performed_steps (id, testCycleDoneId, testDoneId, stepId, status, name, screenshots, type, data, idCostumer, created_at, updated_at) VALUES
+			(77, 44, 55, 9, 1, 'Open', '["screen.png"]', 'selenium', '{"headers":{"Authorization":"Bearer unsafe-token"},"body":"ok"}', 11, NULL, NULL),
+			(78, 46, 56, 9, 1, 'Foreign', '["foreign.png"]', 'selenium', '{"token":"foreign-token"}', 42, NULL, NULL)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare performed result fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewBrowserAuthRepository(database)
+	actor := browserauth.User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3}
+	request := httptest.NewRequest(http.MethodGet, "/admin/testcyclesperfomed/5?page=1&perPage=1&status=1", nil)
+	status := 1
+	cycles, err := repository.ListPerformedCycles(request, actor, browserauth.ResultQuery{ParentID: 5, Page: 1, PerPage: 1, Paged: true, Status: &status, Sort: "date", Direction: "desc"})
+	if err != nil {
+		t.Fatalf("ListPerformedCycles() returned an error: %v", err)
+	}
+	if cycles.Meta.Pagination.Total != 1 || len(cycles.Data) != 1 || cycles.Data[0].ID != 44 || cycles.Data[0].TestCycleID != 5 {
+		t.Fatalf("unexpected performed cycles page: %#v", cycles)
+	}
+
+	tests, err := repository.ListPerformedTests(request, actor, browserauth.ResultQuery{ParentID: 44, Page: 1, PerPage: 25, Paged: true, Sort: "id", Direction: "asc"})
+	if err != nil {
+		t.Fatalf("ListPerformedTests() returned an error: %v", err)
+	}
+	if tests.Meta.Pagination.Total != 1 || len(tests.Data) != 1 || tests.Data[0].ID != 55 || tests.Data[0].PostmanData == nil {
+		t.Fatalf("unexpected performed tests page: %#v", tests)
+	}
+	if strings.Contains(*tests.Data[0].PostmanData, "unsafe-token") || !strings.Contains(*tests.Data[0].PostmanData, "[REDACTED]") {
+		t.Fatalf("performed test leaked sensitive postman data: %s", *tests.Data[0].PostmanData)
+	}
+
+	steps, err := repository.ListPerformedSteps(request, actor, 55)
+	if err != nil {
+		t.Fatalf("ListPerformedSteps() returned an error: %v", err)
+	}
+	if len(steps) != 1 || steps[0].ID != 77 || steps[0].Type != "selenium" {
+		t.Fatalf("unexpected performed steps: %#v", steps)
+	}
+	if strings.Contains(steps[0].Data, "unsafe-token") || !strings.Contains(steps[0].Data, "[REDACTED]") {
+		t.Fatalf("performed step leaked sensitive data: %s", steps[0].Data)
+	}
+	if foreignSteps, err := repository.ListPerformedSteps(request, actor, 56); err != nil || len(foreignSteps) != 0 {
+		t.Fatalf("expected foreign performed steps to be hidden, got %#v err=%v", foreignSteps, err)
+	}
+}
+
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

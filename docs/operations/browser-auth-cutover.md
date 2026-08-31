@@ -15,6 +15,8 @@ with the existing Laravel Web client while enforcing the active Go session
 tenant on every project, test, test-cycle, and step lookup.
 Issue #140 adds the end-to-end MySQL-backed authoring workflow gate that
 exercises those routes through a real Go browser session before route cutover.
+Issue #141 adds browser-session result exploration for performed cycles, tests,
+and steps, preserving the legacy `perfomed` route spelling used by the Web UI.
 
 ## Contract
 
@@ -51,6 +53,9 @@ The Go runtime exposes these paths without the gateway `/api` prefix:
 | `GET /api/admin/testcycles/{idProject}/{testcycle}` | `/admin/testcycles/{idProject}/{testcycle}` | Tenant-scoped test-cycle detail |
 | `PUT /api/admin/testcycles/{idProject}/{testcycle}` | `/admin/testcycles/{idProject}/{testcycle}` | Tenant-scoped test-cycle description/config update with an asset-version snapshot |
 | `POST /api/admin/steps/{idProject}/updateorder` | `/admin/steps/{idProject}/updateorder` | Transactional tenant-scoped step order update |
+| `GET /api/admin/testcyclesperfomed/{idTestCyclePerformed}` | `/admin/testcyclesperfomed/{idTestCyclePerformed}` | Tenant-scoped performed-cycle exploration with Laravel result pagination |
+| `GET /api/admin/testsperfomed/{idTestPerformed}` | `/admin/testsperfomed/{idTestPerformed}` | Tenant-scoped performed-test exploration with redacted Postman data |
+| `GET /api/admin/stepsperfomed/{idTestPerformed}` | `/admin/stepsperfomed/{idTestPerformed}` | Tenant-scoped performed-step exploration with redacted data and screenshots |
 
 The session cookie is `HttpOnly`, `Secure`, `SameSite=Lax`, and expires after
 120 minutes. The CSRF cookie is readable by the existing Web client and is
@@ -84,16 +89,26 @@ executable actions, and that Postman-marked steps contain a
 `postman_collection` action with a collection payload. The import transaction
 creates all generated steps with the legacy high sort order and commits the
 generated test only after every step insert succeeds.
+Performed-result exploration routes filter by the active tenant in the same
+query as the requested parent identifier. Performed cycle and test reads support
+the legacy `status`, `sort`, `direction`, `page`, and `perPage` query
+parameters and return Laravel-compatible `meta.pagination` when paginated.
+Performed test `postmanData` and performed step `data` and `screenshots` are
+redacted before serialization so stored result details can be inspected without
+returning authorization headers, tokens, cookies, sessions, CSRF values,
+passwords, API keys, or secrets.
 
 ## Cutover and rollback
 
 Before moving any route to Go, deploy the additive Laravel migration and verify
 the unmodified Web login, reload, logout, expiry, import, test list/create/show/
-update, test-cycle list/create/show/update, and step-order flows against a
-Go-only staging route map. The `TestBrowserAuthoringWorkflowEndToEndIntegration`
-gate must pass against MySQL before promoting the route-owner change. Move
-login, logout, CSRF, current-user, capabilities, and the Go-native
-authenticated consumers in one gateway release; there are no dual writes.
+update, test-cycle list/create/show/update, performed-cycle/test/step result
+exploration, and step-order flows against a Go-only staging route map. The
+`TestBrowserAuthoringWorkflowEndToEndIntegration` and
+`TestBrowserPerformedResultExplorationIntegration` gates must pass against MySQL
+before promoting the route-owner change. Move login, logout, CSRF, current-user,
+capabilities, and the Go-native authenticated consumers in one gateway release;
+there are no dual writes.
 
 Rollback switches those route owners back to Laravel. Go sessions intentionally
 do not deserialize in Laravel, so rollback invalidates Go sessions and requires

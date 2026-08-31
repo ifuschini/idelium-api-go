@@ -74,6 +74,9 @@ func NewRouter(
 	router.Put("/admin/tests/{idProject}/{test}", browserAuthHandler.UpdateTest)
 	router.Post("/admin/tests", browserAuthHandler.CreateTest)
 	router.Post("/admin/importtest", browserAuthHandler.ImportTest)
+	router.Get("/admin/testcyclesperfomed/{idTestCyclePerformed}", browserAuthHandler.PerformedCycles)
+	router.Get("/admin/testsperfomed/{idTestPerformed}", browserAuthHandler.PerformedTests)
+	router.Get("/admin/stepsperfomed/{idTestPerformed}", browserAuthHandler.PerformedSteps)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)

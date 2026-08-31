@@ -187,6 +187,15 @@ func (fakeBrowserAuthRepository) UpdateTest(*http.Request, browserauth.User, bro
 func (fakeBrowserAuthRepository) ImportTest(*http.Request, browserauth.User, browserauth.TestImport) error {
 	return nil
 }
+func (fakeBrowserAuthRepository) ListPerformedCycles(*http.Request, browserauth.User, browserauth.ResultQuery) (browserauth.PerformedCyclePage, error) {
+	return browserauth.PerformedCyclePage{}, nil
+}
+func (fakeBrowserAuthRepository) ListPerformedTests(*http.Request, browserauth.User, browserauth.ResultQuery) (browserauth.PerformedTestPage, error) {
+	return browserauth.PerformedTestPage{}, nil
+}
+func (fakeBrowserAuthRepository) ListPerformedSteps(*http.Request, browserauth.User, int64) ([]browserauth.PerformedStep, error) {
+	return nil, nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {

@@ -597,6 +597,96 @@ func (r *BrowserAuthRepository) ImportTest(request *http.Request, actor browsera
 	return tx.Commit()
 }
 
+func (r *BrowserAuthRepository) ListPerformedCycles(request *http.Request, actor browserauth.User, query browserauth.ResultQuery) (browserauth.PerformedCyclePage, error) {
+	where, args := resultWhere("testCycleId", actor.ActiveTenant(), query)
+	total, err := countRows(request.Context(), r.database, "performed_test_cycles", where, args)
+	if err != nil {
+		return browserauth.PerformedCyclePage{}, err
+	}
+	sqlQuery := `SELECT id, testCycleId, date, status, updated_at, created_at FROM performed_test_cycles ` + where + ` ORDER BY ` + resultSortColumn(query.Sort, "date") + ` ` + resourceDirection(query.Direction)
+	if query.Paged {
+		sqlQuery += ` LIMIT ? OFFSET ?`
+		args = append(args, query.PerPage, (query.Page-1)*query.PerPage)
+	}
+	rows, err := r.database.QueryContext(request.Context(), sqlQuery, args...)
+	if err != nil {
+		return browserauth.PerformedCyclePage{}, safeDatabaseFailure("list browser performed cycles", err)
+	}
+	defer rows.Close()
+	items := []browserauth.PerformedCycle{}
+	for rows.Next() {
+		var item browserauth.PerformedCycle
+		if err := rows.Scan(&item.ID, &item.TestCycleID, &item.Date, &item.Status, &item.UpdatedAt, &item.CreatedAt); err != nil {
+			return browserauth.PerformedCyclePage{}, safeDatabaseFailure("scan browser performed cycle", err)
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return browserauth.PerformedCyclePage{}, safeDatabaseFailure("read browser performed cycles", err)
+	}
+	return browserauth.PerformedCyclePage{Data: items, Meta: resultMeta(query.Page, query.PerPage, total, query.Sort, query.Direction)}, nil
+}
+
+func (r *BrowserAuthRepository) ListPerformedTests(request *http.Request, actor browserauth.User, query browserauth.ResultQuery) (browserauth.PerformedTestPage, error) {
+	where, args := resultWhere("testCycleDoneId", actor.ActiveTenant(), query)
+	total, err := countRows(request.Context(), r.database, "performed_tests", where, args)
+	if err != nil {
+		return browserauth.PerformedTestPage{}, err
+	}
+	sqlQuery := `SELECT id, testCycleDoneId, testId, status, postmanData, name, updated_at, created_at FROM performed_tests ` + where + ` ORDER BY ` + resultSortColumn(query.Sort, "id") + ` ` + resourceDirection(query.Direction)
+	if query.Paged {
+		sqlQuery += ` LIMIT ? OFFSET ?`
+		args = append(args, query.PerPage, (query.Page-1)*query.PerPage)
+	}
+	rows, err := r.database.QueryContext(request.Context(), sqlQuery, args...)
+	if err != nil {
+		return browserauth.PerformedTestPage{}, safeDatabaseFailure("list browser performed tests", err)
+	}
+	defer rows.Close()
+	items := []browserauth.PerformedTest{}
+	for rows.Next() {
+		var item browserauth.PerformedTest
+		var postmanData sql.NullString
+		if err := rows.Scan(&item.ID, &item.TestCycleDoneID, &item.TestID, &item.Status, &postmanData, &item.Name, &item.UpdatedAt, &item.CreatedAt); err != nil {
+			return browserauth.PerformedTestPage{}, safeDatabaseFailure("scan browser performed test", err)
+		}
+		if postmanData.Valid {
+			redacted := redactResultJSONString(postmanData.String)
+			item.PostmanData = &redacted
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return browserauth.PerformedTestPage{}, safeDatabaseFailure("read browser performed tests", err)
+	}
+	return browserauth.PerformedTestPage{Data: items, Meta: resultMeta(query.Page, query.PerPage, total, query.Sort, query.Direction)}, nil
+}
+
+func (r *BrowserAuthRepository) ListPerformedSteps(request *http.Request, actor browserauth.User, performedTestID int64) ([]browserauth.PerformedStep, error) {
+	rows, err := r.database.QueryContext(request.Context(), `SELECT id, testCycleDoneId, testDoneId, name, status, screenshots, data, type, updated_at, created_at
+		FROM performed_steps
+		WHERE testDoneId = ? AND idCostumer = ?
+		ORDER BY id ASC`, performedTestID, actor.ActiveTenant())
+	if err != nil {
+		return nil, safeDatabaseFailure("list browser performed steps", err)
+	}
+	defer rows.Close()
+	items := []browserauth.PerformedStep{}
+	for rows.Next() {
+		var item browserauth.PerformedStep
+		if err := rows.Scan(&item.ID, &item.TestCycleDoneID, &item.TestDoneID, &item.Name, &item.Status, &item.Screenshots, &item.Data, &item.Type, &item.UpdatedAt, &item.CreatedAt); err != nil {
+			return nil, safeDatabaseFailure("scan browser performed step", err)
+		}
+		item.Screenshots = redactResultJSONString(item.Screenshots)
+		item.Data = redactResultJSONString(item.Data)
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, safeDatabaseFailure("read browser performed steps", err)
+	}
+	return items, nil
+}
+
 func (r *BrowserAuthRepository) accountTarget(request *http.Request, actor browserauth.User, accountID int64) (browserauth.Account, error) {
 	where, args := accountScope(actor)
 	where += ` AND users.id = ?`
@@ -743,6 +833,88 @@ func pageMeta(page int, pageSize int, total int64, sort string, direction string
 		lastPage = 1
 	}
 	return browserauth.PageMeta{Page: page, PageSize: pageSize, Total: total, LastPage: lastPage, HasNextPage: page < lastPage, HasPreviousPage: page > 1, Sort: sort, Direction: direction, Stale: false, Partial: false}
+}
+
+func resultWhere(parentColumn string, tenantID int64, query browserauth.ResultQuery) (string, []any) {
+	where := `WHERE idCostumer = ? AND ` + parentColumn + ` = ?`
+	args := []any{tenantID, query.ParentID}
+	if query.Status != nil {
+		where += ` AND status = ?`
+		args = append(args, *query.Status)
+	}
+	return where, args
+}
+
+func resultSortColumn(sort string, defaultSort string) string {
+	switch sort {
+	case "id":
+		return "id"
+	case "name":
+		return "name"
+	case "date":
+		return "date"
+	case "status":
+		return "status"
+	case "created_at":
+		return "created_at"
+	case "updated_at":
+		return "updated_at"
+	default:
+		return defaultSort
+	}
+}
+
+func resultMeta(page int, perPage int, total int64, sort string, direction string) browserauth.ResultMeta {
+	lastPage := int((total + int64(perPage) - 1) / int64(perPage))
+	if lastPage == 0 {
+		lastPage = 1
+	}
+	return browserauth.ResultMeta{Pagination: browserauth.ResultPaginationMeta{Page: page, PerPage: perPage, Total: total, LastPage: lastPage, Sort: sort, Direction: direction}}
+}
+
+func redactResultJSONString(payload string) string {
+	var value any
+	if err := json.Unmarshal([]byte(payload), &value); err != nil {
+		return payload
+	}
+	encoded, err := json.Marshal(redactResultJSONValue(value))
+	if err != nil {
+		return payload
+	}
+	return string(encoded)
+}
+
+func redactResultJSONValue(value any) any {
+	switch typed := value.(type) {
+	case map[string]any:
+		redacted := make(map[string]any, len(typed))
+		for key, child := range typed {
+			if isSensitiveResultJSONKey(key) {
+				redacted[key] = "[REDACTED]"
+				continue
+			}
+			redacted[key] = redactResultJSONValue(child)
+		}
+		return redacted
+	case []any:
+		redacted := make([]any, len(typed))
+		for index, child := range typed {
+			redacted[index] = redactResultJSONValue(child)
+		}
+		return redacted
+	default:
+		return typed
+	}
+}
+
+func isSensitiveResultJSONKey(key string) bool {
+	normalized := strings.ToLower(strings.ReplaceAll(key, "_", "-"))
+	for _, marker := range []string{"authorization", "password", "secret", "token", "apikey", "api-key", "session", "csrf", "cookie"} {
+		if strings.Contains(normalized, marker) {
+			return true
+		}
+	}
+	return false
 }
 
 func recordAssetVersion(ctx context.Context, execer interface {
