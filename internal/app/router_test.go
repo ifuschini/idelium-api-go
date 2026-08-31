@@ -262,6 +262,18 @@ func (fakeBrowserAuthRepository) ReplayIntegrationDelivery(*http.Request, browse
 func (fakeBrowserAuthRepository) ListAuditEvents(*http.Request, browserauth.User, browserauth.AuditEventFilter) ([]browserauth.AuditEventRecord, error) {
 	return nil, nil
 }
+func (fakeBrowserAuthRepository) AssetImpact(*http.Request, browserauth.User, int64, string, int64) (browserauth.AssetImpact, error) {
+	return browserauth.AssetImpact{}, nil
+}
+func (fakeBrowserAuthRepository) ListAssetVersions(*http.Request, browserauth.User, int64, string, int64) ([]browserauth.AssetVersion, error) {
+	return nil, nil
+}
+func (fakeBrowserAuthRepository) GetAssetVersion(*http.Request, browserauth.User, int64, int64) (browserauth.AssetVersion, error) {
+	return browserauth.AssetVersion{}, nil
+}
+func (fakeBrowserAuthRepository) TransitionAssetVersionReview(*http.Request, browserauth.User, int64, int64, string, *string, time.Time) (browserauth.AssetReviewEvent, error) {
+	return browserauth.AssetReviewEvent{}, nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {

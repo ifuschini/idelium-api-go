@@ -73,6 +73,11 @@ type sessionsStub struct {
 	gridJobInput      GridBulkJobCreate
 	integrationInput  IntegrationEndpointCreate
 	auditFilter       AuditEventFilter
+	assetImpact       AssetImpact
+	assetVersions     []AssetVersion
+	assetVersion      AssetVersion
+	reviewEvent       AssetReviewEvent
+	reviewErr         error
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -260,6 +265,18 @@ func (s *sessionsStub) ReplayIntegrationDelivery(*http.Request, User, int64, int
 func (s *sessionsStub) ListAuditEvents(_ *http.Request, _ User, filter AuditEventFilter) ([]AuditEventRecord, error) {
 	s.auditFilter = filter
 	return []AuditEventRecord{{ID: 30, ActiveTenantID: 11, Action: "secret.changed", TargetType: "environment", CorrelationID: "018fb9d0-1f16-7abc-9f2f-4e1d8457f001", AfterValues: map[string]any{"apiKey": "[REDACTED]"}, Result: "success", CreatedAt: time.Now()}}, s.accountErr
+}
+func (s *sessionsStub) AssetImpact(*http.Request, User, int64, string, int64) (AssetImpact, error) {
+	return s.assetImpact, s.accountErr
+}
+func (s *sessionsStub) ListAssetVersions(*http.Request, User, int64, string, int64) ([]AssetVersion, error) {
+	return s.assetVersions, s.accountErr
+}
+func (s *sessionsStub) GetAssetVersion(*http.Request, User, int64, int64) (AssetVersion, error) {
+	return s.assetVersion, s.accountErr
+}
+func (s *sessionsStub) TransitionAssetVersionReview(*http.Request, User, int64, int64, string, *string, time.Time) (AssetReviewEvent, error) {
+	return s.reviewEvent, s.reviewErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -988,6 +1005,80 @@ func TestAuditEventHandlerValidatesFiltersAndRequiresCapability(t *testing.T) {
 	NewHandler(usersStub{}, forbiddenSessions, testLogger()).AuditEvents(forbiddenResponse, forbiddenRequest)
 	if forbiddenResponse.Code != http.StatusForbidden {
 		t.Fatalf("expected audit_events.read capability enforcement, got %d", forbiddenResponse.Code)
+	}
+}
+
+func TestAssetImpactAndVersionHandlersValidateCapabilityAndPayload(t *testing.T) {
+	impact := AssetImpact{Tests: []AssetImpactItem{{ID: 7, Name: "Checkout"}}}
+	impact.Asset.AssetType = "environment"
+	impact.Asset.AssetID = 3
+	impact.Summary.Tests = 1
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3}, assetImpact: impact, assetVersions: []AssetVersion{{ID: 20, AssetType: "test", AssetID: 7, Version: 2}}}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+
+	impactRequest := httptest.NewRequest(http.MethodGet, "/admin/projects/5/asset-impact/environment/3", nil)
+	impactRequest.SetPathValue("idProject", "5")
+	impactRequest.SetPathValue("assetType", "environment")
+	impactRequest.SetPathValue("assetId", "3")
+	impactRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	impactResponse := httptest.NewRecorder()
+	handler.AssetImpact(impactResponse, impactRequest)
+	if impactResponse.Code != http.StatusOK || !strings.Contains(impactResponse.Body.String(), `"assetType":"environment"`) || !strings.Contains(impactResponse.Body.String(), `"name":"Checkout"`) {
+		t.Fatalf("unexpected asset impact response: %d %s", impactResponse.Code, impactResponse.Body.String())
+	}
+
+	invalidRequest := httptest.NewRequest(http.MethodGet, "/admin/projects/5/asset-versions/plugin/3", nil)
+	invalidRequest.SetPathValue("idProject", "5")
+	invalidRequest.SetPathValue("assetType", "plugin")
+	invalidRequest.SetPathValue("assetId", "3")
+	invalidRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	invalidResponse := httptest.NewRecorder()
+	handler.AssetVersions(invalidResponse, invalidRequest)
+	if invalidResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(invalidResponse.Body.String(), "assetType") {
+		t.Fatalf("expected asset type validation, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
+	}
+
+	forbiddenSessions := &sessionsStub{user: User{ID: 8, TenantID: 11, ActiveTenantID: 11, Role: 99}}
+	forbiddenResponse := httptest.NewRecorder()
+	NewHandler(usersStub{}, forbiddenSessions, testLogger()).AssetImpact(forbiddenResponse, impactRequest)
+	if forbiddenResponse.Code != http.StatusForbidden {
+		t.Fatalf("expected resources.read capability enforcement, got %d", forbiddenResponse.Code)
+	}
+}
+
+func TestAssetReviewTransitionAndDiffContracts(t *testing.T) {
+	sessions := &sessionsStub{
+		user:        User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 2},
+		reviewEvent: AssetReviewEvent{ID: 31, AssetVersionID: 20, FromStatus: "draft", ToStatus: "in_review"},
+	}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	reviewRequest := httptest.NewRequest(http.MethodPost, "/admin/projects/5/asset-versions/20/review-events", strings.NewReader(`{"toStatus":"in_review","comment":"Ready"}`))
+	reviewRequest.SetPathValue("idProject", "5")
+	reviewRequest.SetPathValue("assetVersion", "20")
+	reviewRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	reviewResponse := httptest.NewRecorder()
+	handler.TransitionAssetVersionReview(reviewResponse, reviewRequest)
+	if reviewResponse.Code != http.StatusCreated || !strings.Contains(reviewResponse.Body.String(), `"toStatus":"in_review"`) {
+		t.Fatalf("unexpected review response: %d %s", reviewResponse.Code, reviewResponse.Body.String())
+	}
+
+	sessions.reviewErr = ReviewFailure{Message: "The requested review transition is not allowed.", FromStatus: "approved", ToStatus: "in_review"}
+	invalidRequest := httptest.NewRequest(http.MethodPost, "/admin/projects/5/asset-versions/20/review-events", strings.NewReader(`{"toStatus":"in_review"}`))
+	invalidRequest.SetPathValue("idProject", "5")
+	invalidRequest.SetPathValue("assetVersion", "20")
+	invalidRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	invalidResponse := httptest.NewRecorder()
+	handler.TransitionAssetVersionReview(invalidResponse, invalidRequest)
+	if invalidResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(invalidResponse.Body.String(), `"fromStatus":"approved"`) {
+		t.Fatalf("unexpected invalid transition response: %d %s", invalidResponse.Code, invalidResponse.Body.String())
+	}
+
+	fromSnapshot := map[string]any{"removed": true, "changed": "old"}
+	toSnapshot := map[string]any{"added": 2.0, "changed": "new"}
+	diff := assetVersionDiff(AssetVersion{ID: 20, AssetType: "test", AssetID: 7, Version: 1, Snapshot: &fromSnapshot}, AssetVersion{ID: 21, AssetType: "test", AssetID: 7, Version: 2, Snapshot: &toSnapshot})
+	changes := diff["changes"].(map[string]any)
+	if changes["added"].(map[string]any)["added"] != 2.0 || changes["removed"].(map[string]any)["removed"] != true || changes["changed"].(map[string]any)["changed"].(map[string]any)["to"] != "new" {
+		t.Fatalf("unexpected asset diff: %#v", diff)
 	}
 }
 

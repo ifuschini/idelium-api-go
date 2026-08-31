@@ -55,6 +55,11 @@ type ServerInterface interface {
 	ListIntegrationDeliveries(http.ResponseWriter, *http.Request)
 	ReplayIntegrationDelivery(http.ResponseWriter, *http.Request)
 	ListAuditEvents(http.ResponseWriter, *http.Request)
+	ShowAssetImpact(http.ResponseWriter, *http.Request)
+	ListAssetVersions(http.ResponseWriter, *http.Request)
+	ShowAssetVersion(http.ResponseWriter, *http.Request)
+	TransitionAssetVersionReview(http.ResponseWriter, *http.Request)
+	DiffAssetVersions(http.ResponseWriter, *http.Request)
 	Get(http.ResponseWriter, *http.Request)
 	GetAdminAccounts(http.ResponseWriter, *http.Request)
 	PostAdminAccounts(http.ResponseWriter, *http.Request)
@@ -117,11 +122,6 @@ type ServerInterface interface {
 	GetAdminProjects(http.ResponseWriter, *http.Request)
 	PostAdminProjects(http.ResponseWriter, *http.Request)
 	GetAdminProjectsCreate(http.ResponseWriter, *http.Request)
-	GetAdminProjectsIdProjectAssetImpactAssetTypeAssetId(http.ResponseWriter, *http.Request)
-	GetAdminProjectsIdProjectAssetVersionsAssetTypeAssetId(http.ResponseWriter, *http.Request)
-	GetAdminProjectsIdProjectAssetVersionsAssetVersion(http.ResponseWriter, *http.Request)
-	PostAdminProjectsIdProjectAssetVersionsAssetVersionReviewEvents(http.ResponseWriter, *http.Request)
-	GetAdminProjectsIdProjectAssetVersionsFromVersionDiffToVersion(http.ResponseWriter, *http.Request)
 	GetAdminProjectsIdProjectParallelRuns(http.ResponseWriter, *http.Request)
 	PostAdminProjectsIdProjectParallelRuns(http.ResponseWriter, *http.Request)
 	PostAdminProjectsIdProjectParallelRunsMatrix(http.ResponseWriter, *http.Request)
@@ -596,6 +596,61 @@ var Operations = []Operation{
 		OperationID:        "listAuditEvents",
 		Tags:               []string{"Audit"},
 		LaravelRoute:       "/api/audit-events",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}",
+		OperationID:        "showAssetImpact",
+		Tags:               []string{"Asset Review"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}",
+		OperationID:        "listAssetVersions",
+		Tags:               []string{"Asset Review"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/projects/{idProject}/asset-versions/{assetVersion}",
+		OperationID:        "showAssetVersion",
+		Tags:               []string{"Asset Review"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/asset-versions/{assetVersion}",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events",
+		OperationID:        "transitionAssetVersionReview",
+		Tags:               []string{"Asset Review"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}",
+		OperationID:        "diffAssetVersions",
+		Tags:               []string{"Asset Review"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}",
 		AuthenticationMode: "browser-session",
 		TrustPath:          "browser-session",
 		TenantContext:      true,
@@ -1282,61 +1337,6 @@ var Operations = []Operation{
 		TrustPath:          "browser-session",
 		TenantContext:      true,
 		Consumers:          []string{"idelium-web"},
-	},
-	{
-		Method:             "GET",
-		Path:               "/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}",
-		OperationID:        "getAdminProjectsIdProjectAssetImpactAssetTypeAssetId",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "GET",
-		Path:               "/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}",
-		OperationID:        "getAdminProjectsIdProjectAssetVersionsAssetTypeAssetId",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "GET",
-		Path:               "/admin/projects/{idProject}/asset-versions/{assetVersion}",
-		OperationID:        "getAdminProjectsIdProjectAssetVersionsAssetVersion",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/asset-versions/{assetVersion}",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "POST",
-		Path:               "/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events",
-		OperationID:        "postAdminProjectsIdProjectAssetVersionsAssetVersionReviewEvents",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "GET",
-		Path:               "/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}",
-		OperationID:        "getAdminProjectsIdProjectAssetVersionsFromVersionDiffToVersion",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
 	},
 	{
 		Method:             "GET",

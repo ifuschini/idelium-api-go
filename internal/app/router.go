@@ -98,6 +98,11 @@ func NewRouter(
 	router.Get("/admin/projects/{idProject}/integration-deliveries", browserAuthHandler.IntegrationDeliveries)
 	router.Post("/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay", browserAuthHandler.ReplayIntegrationDelivery)
 	router.Get("/audit-events", browserAuthHandler.AuditEvents)
+	router.Get("/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}", browserAuthHandler.AssetImpact)
+	router.Get("/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}", browserAuthHandler.AssetVersions)
+	router.Get("/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}", browserAuthHandler.DiffAssetVersions)
+	router.Post("/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events", browserAuthHandler.TransitionAssetVersionReview)
+	router.Get("/admin/projects/{idProject}/asset-versions/{assetVersion}", browserAuthHandler.ShowAssetVersion)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)

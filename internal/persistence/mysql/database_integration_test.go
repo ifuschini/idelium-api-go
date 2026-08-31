@@ -1479,6 +1479,115 @@ func TestBrowserAuditEventReadsAreTenantScopedFilteredAndRedactedIntegration(t *
 	}
 }
 
+func TestBrowserAssetImpactAndVersionReviewIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS asset_version_review_events",
+		"DROP TABLE IF EXISTS asset_versions",
+		"DROP TABLE IF EXISTS audit_events",
+		"DROP TABLE IF EXISTS test_cycles",
+		"DROP TABLE IF EXISTS tests",
+		"DROP TABLE IF EXISTS projects",
+		`CREATE TABLE projects (id BIGINT PRIMARY KEY, name VARCHAR(255) NOT NULL, description TEXT NULL, idCostumer BIGINT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)`,
+		`CREATE TABLE tests (
+			id BIGINT PRIMARY KEY, name VARCHAR(255) NOT NULL, description TEXT NULL, config JSON NOT NULL,
+			idProject BIGINT NOT NULL, idCostumer BIGINT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE test_cycles (
+			id BIGINT PRIMARY KEY, name VARCHAR(255) NOT NULL, description TEXT NULL, config JSON NOT NULL,
+			idProject BIGINT NOT NULL, idCostumer BIGINT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE asset_versions (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT, idCostumer BIGINT NOT NULL, idProject BIGINT NOT NULL,
+			assetType VARCHAR(64) NOT NULL, assetId BIGINT NOT NULL, version INT NOT NULL,
+			actorUserId BIGINT NULL, reason VARCHAR(255) NOT NULL, snapshot JSON NOT NULL,
+			created_at TIMESTAMP NULL, UNIQUE KEY asset_versions_unique_version (idCostumer, assetType, assetId, version)
+		)`,
+		`CREATE TABLE asset_version_review_events (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT, idCostumer BIGINT NOT NULL, idProject BIGINT NOT NULL,
+			assetVersionId BIGINT NOT NULL, fromStatus VARCHAR(32) NOT NULL, toStatus VARCHAR(32) NOT NULL,
+			comment TEXT NULL, actorUserId BIGINT NULL, created_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE audit_events (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT, actorUserId BIGINT NULL, actorTenantId BIGINT NULL,
+			activeTenantId BIGINT NOT NULL, idProject BIGINT NULL, action VARCHAR(128) NOT NULL,
+			targetType VARCHAR(128) NOT NULL, targetId VARCHAR(128) NULL, beforeValues JSON NULL,
+			afterValues JSON NULL, result VARCHAR(32) NOT NULL, sourceIp VARCHAR(64) NULL,
+			correlationId VARCHAR(128) NOT NULL, metadata JSON NULL, created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`INSERT INTO projects (id, name, idCostumer) VALUES (5, 'Primary', 11), (6, 'Foreign', 42), (7, 'Other own project', 11)`,
+		`INSERT INTO tests (id, name, description, config, idProject, idCostumer) VALUES
+			(7, 'Checkout', 'Uses staging', '{"environment":3}', 5, 11),
+			(8, 'Unrelated', 'No dependency', '{"environment":4}', 5, 11),
+			(9, 'Foreign', 'Hidden', '{"environment":3}', 6, 42)`,
+		`INSERT INTO test_cycles (id, name, description, config, idProject, idCostumer) VALUES
+			(10, 'Release', 'Contains checkout', '{"tests":[7]}', 5, 11),
+			(11, 'Unrelated cycle', 'No dependency', '{"tests":[8]}', 5, 11),
+			(12, 'Foreign cycle', 'Hidden', '{"tests":[9]}', 6, 42)`,
+		`INSERT INTO asset_versions (id, idCostumer, idProject, assetType, assetId, version, actorUserId, reason, snapshot, created_at) VALUES
+			(20, 11, 5, 'test', 7, 1, 7, 'asset.created', '{"name":"Checkout","obsolete":true}', '2026-08-30 12:00:00'),
+			(21, 11, 5, 'test', 7, 2, 7, 'asset.updated', '{"name":"Checkout v2","enabled":true}', '2026-08-31 12:00:00'),
+			(22, 42, 6, 'test', 9, 1, 9, 'asset.created', '{"name":"Foreign"}', '2026-08-31 13:00:00')`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare asset review fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewBrowserAuthRepository(database)
+	author := browserauth.User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 2}
+	request := httptest.NewRequest(http.MethodGet, "/admin/projects/5/asset-impact/environment/3", nil)
+	request.Header.Set("X-Correlation-ID", "asset-review-test")
+	impact, err := repository.AssetImpact(request, author, 5, "environment", 3)
+	if err != nil || len(impact.Tests) != 1 || impact.Tests[0].ID != 7 || len(impact.TestCycles) != 1 || impact.TestCycles[0].ID != 10 {
+		t.Fatalf("unexpected tenant-scoped asset impact: %#v err=%v", impact, err)
+	}
+	if _, err := repository.AssetImpact(request, author, 6, "environment", 3); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected foreign asset impact project to be hidden, got %v", err)
+	}
+
+	versions, err := repository.ListAssetVersions(request, author, 5, "test", 7)
+	if err != nil || len(versions) != 2 || versions[0].ID != 21 || versions[0].Snapshot != nil || versions[0].Review.Status != "draft" {
+		t.Fatalf("unexpected version list: %#v err=%v", versions, err)
+	}
+	version, err := repository.GetAssetVersion(request, author, 5, 21)
+	if err != nil || version.Snapshot == nil || (*version.Snapshot)["name"] != "Checkout v2" {
+		t.Fatalf("unexpected version detail: %#v err=%v", version, err)
+	}
+	if _, err := repository.GetAssetVersion(request, author, 5, 22); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected foreign version to be hidden, got %v", err)
+	}
+	if _, err := repository.GetAssetVersion(request, author, 7, 21); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-project version to be hidden, got %v", err)
+	}
+
+	now := time.Date(2026, time.August, 31, 14, 0, 0, 0, time.UTC)
+	event, err := repository.TransitionAssetVersionReview(request, author, 5, 21, "in_review", nil, now)
+	if err != nil || event.FromStatus != "draft" || event.ToStatus != "in_review" {
+		t.Fatalf("unexpected review submission: %#v err=%v", event, err)
+	}
+	if _, err := repository.TransitionAssetVersionReview(request, author, 5, 21, "approved", nil, now.Add(time.Minute)); err == nil || !strings.Contains(err.Error(), "authors cannot approve") {
+		t.Fatalf("expected self-approval prevention, got %v", err)
+	}
+	reviewer := browserauth.User{ID: 8, TenantID: 11, ActiveTenantID: 11, Role: 2}
+	approved, err := repository.TransitionAssetVersionReview(request, reviewer, 5, 21, "approved", nil, now.Add(2*time.Minute))
+	if err != nil || approved.FromStatus != "in_review" || approved.ToStatus != "approved" {
+		t.Fatalf("unexpected review approval: %#v err=%v", approved, err)
+	}
+	updated, err := repository.GetAssetVersion(request, reviewer, 5, 21)
+	if err != nil || updated.Review.Status != "approved" || updated.Review.ReviewedByUserID == nil || *updated.Review.ReviewedByUserID != 8 {
+		t.Fatalf("unexpected updated review state: %#v err=%v", updated, err)
+	}
+	var auditCount int
+	if err := database.QueryRowContext(ctx, "SELECT COUNT(*) FROM audit_events WHERE activeTenantId = 11 AND idProject = 5 AND action = 'asset_version.review_transitioned'").Scan(&auditCount); err != nil || auditCount != 2 {
+		t.Fatalf("expected two committed review audit events, count=%d err=%v", auditCount, err)
+	}
+}
+
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

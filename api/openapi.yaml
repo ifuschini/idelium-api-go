@@ -1714,6 +1714,243 @@ paths:
           $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/asset-impact/{assetType}/{assetId}:
+    get:
+      operationId: showAssetImpact
+      summary: Show tests and cycles affected by an asset
+      description: Resolves direct and indirect references inside tenant-and-project-scoped test configuration.
+      tags: [Asset Review]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - name: assetType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [environment, plugin, step, test, test_cycle]
+        - name: assetId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: Tenant-scoped asset impact envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AssetImpact"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/asset-versions/{assetType}/{assetId}:
+    get:
+      operationId: listAssetVersions
+      summary: List immutable versions for one asset
+      tags: [Asset Review]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - name: assetType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [environment, step, test, test_cycle]
+        - name: assetId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: Newest-first version list without snapshots.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AssetVersion"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/asset-versions/{assetVersion}:
+    get:
+      operationId: showAssetVersion
+      summary: Show one immutable asset version
+      tags: [Asset Review]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/asset-versions/{assetVersion}"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - name: assetVersion
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: Asset version detail including its redacted snapshot.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AssetVersion"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/asset-versions/{assetVersion}/review-events:
+    post:
+      operationId: transitionAssetVersionReview
+      summary: Transition an asset version review state
+      description: Appends a review event and its redacted audit event in one transaction; authors cannot approve their own versions.
+      tags: [Asset Review]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - name: assetVersion
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [toStatus]
+              additionalProperties: false
+              properties:
+                toStatus:
+                  type: string
+                  enum: [in_review, approved, deprecated]
+                comment:
+                  type: string
+                  maxLength: 2000
+                  nullable: true
+      responses:
+        "201":
+          description: Appended review event.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AssetReviewEvent"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}:
+    get:
+      operationId: diffAssetVersions
+      summary: Compare two versions of the same asset
+      tags: [Asset Review]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - name: fromVersion
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+        - name: toVersion
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: Added, removed, and changed top-level snapshot fields.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AssetVersionDiff"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
   # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS
   /:
     get:
@@ -3845,212 +4082,6 @@ paths:
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
       x-idelium-consumers: ["idelium-web"]
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/asset-impact/{assetType}/{assetId}:
-    get:
-      operationId: getAdminProjectsIdProjectAssetImpactAssetTypeAssetId
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}"
-      x-idelium-controller: "App\\Http\\Controllers\\AssetImpactController@show"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: assetType
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: assetId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/asset-versions/{assetType}/{assetId}:
-    get:
-      operationId: getAdminProjectsIdProjectAssetVersionsAssetTypeAssetId
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}"
-      x-idelium-controller: "App\\Http\\Controllers\\AssetVersionController@index"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: assetType
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: assetId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/asset-versions/{assetVersion}:
-    get:
-      operationId: getAdminProjectsIdProjectAssetVersionsAssetVersion
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/asset-versions/{assetVersion}"
-      x-idelium-controller: "App\\Http\\Controllers\\AssetVersionController@show"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: assetVersion
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/asset-versions/{assetVersion}/review-events:
-    post:
-      operationId: postAdminProjectsIdProjectAssetVersionsAssetVersionReviewEvents
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events"
-      x-idelium-controller: "App\\Http\\Controllers\\AssetVersionController@transitionReview"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: assetVersion
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}:
-    get:
-      operationId: getAdminProjectsIdProjectAssetVersionsFromVersionDiffToVersion
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}"
-      x-idelium-controller: "App\\Http\\Controllers\\AssetVersionController@diff"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: fromVersion
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: toVersion
-          in: path
-          required: true
-          schema:
-            type: string
       responses:
         "200":
           $ref: "#/components/responses/LegacyCompatibilityResponse"
@@ -7024,6 +7055,160 @@ components:
         created_at:
           type: string
           format: date-time
+    AssetImpact:
+      type: object
+      required: [asset, summary, tests, testCycles]
+      properties:
+        asset:
+          type: object
+          required: [assetType, assetId]
+          properties:
+            assetType:
+              type: string
+            assetId:
+              type: integer
+              format: int64
+        summary:
+          type: object
+          required: [tests, testCycles]
+          properties:
+            tests:
+              type: integer
+              minimum: 0
+            testCycles:
+              type: integer
+              minimum: 0
+        tests:
+          type: array
+          items:
+            $ref: "#/components/schemas/AssetImpactItem"
+        testCycles:
+          type: array
+          items:
+            $ref: "#/components/schemas/AssetImpactItem"
+    AssetImpactItem:
+      type: object
+      required: [id, name, description]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+    AssetReview:
+      type: object
+      required: [status, lastEventId, lastComment, reviewedByUserId, reviewedAt, authorUserId]
+      properties:
+        status:
+          type: string
+          enum: [draft, in_review, approved, deprecated]
+        lastEventId:
+          type: integer
+          format: int64
+          nullable: true
+        lastComment:
+          type: string
+          nullable: true
+        reviewedByUserId:
+          type: integer
+          format: int64
+          nullable: true
+        reviewedAt:
+          type: string
+          format: date-time
+          nullable: true
+        authorUserId:
+          type: integer
+          format: int64
+          nullable: true
+    AssetVersion:
+      type: object
+      required: [id, idProject, assetType, assetId, version, actorUserId, reason, createdAt, review]
+      properties:
+        id:
+          type: integer
+          format: int64
+        idProject:
+          type: integer
+          format: int64
+        assetType:
+          type: string
+        assetId:
+          type: integer
+          format: int64
+        version:
+          type: integer
+          minimum: 1
+        actorUserId:
+          type: integer
+          format: int64
+          nullable: true
+        reason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        review:
+          $ref: "#/components/schemas/AssetReview"
+        snapshot:
+          type: object
+          additionalProperties: true
+    AssetReviewEvent:
+      type: object
+      required: [id, assetVersionId, fromStatus, toStatus, comment, actorUserId, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        assetVersionId:
+          type: integer
+          format: int64
+        fromStatus:
+          type: string
+        toStatus:
+          type: string
+        comment:
+          type: string
+          nullable: true
+        actorUserId:
+          type: integer
+          format: int64
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+    AssetVersionDiff:
+      type: object
+      required: [from, to, changes]
+      properties:
+        from:
+          type: object
+          additionalProperties: true
+        to:
+          type: object
+          additionalProperties: true
+        changes:
+          type: object
+          required: [added, removed, changed]
+          properties:
+            added:
+              type: object
+              additionalProperties: true
+            removed:
+              type: object
+              additionalProperties: true
+            changed:
+              type: object
+              additionalProperties:
+                type: object
+                required: [from, to]
+                properties:
+                  from: {}
+                  to: {}
     ArtifactDescriptor:
       type: object
       required:

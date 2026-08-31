@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -141,6 +143,10 @@ type AdminRepository interface {
 	ListIntegrationDeliveries(request *http.Request, actor User, projectID int64, status string) ([]IntegrationDelivery, error)
 	ReplayIntegrationDelivery(request *http.Request, actor User, projectID, deliveryID int64, now time.Time) (IntegrationDelivery, error)
 	ListAuditEvents(request *http.Request, actor User, filter AuditEventFilter) ([]AuditEventRecord, error)
+	AssetImpact(request *http.Request, actor User, projectID int64, assetType string, assetID int64) (AssetImpact, error)
+	ListAssetVersions(request *http.Request, actor User, projectID int64, assetType string, assetID int64) ([]AssetVersion, error)
+	GetAssetVersion(request *http.Request, actor User, projectID, versionID int64) (AssetVersion, error)
+	TransitionAssetVersionReview(request *http.Request, actor User, projectID, versionID int64, toStatus string, comment *string, now time.Time) (AssetReviewEvent, error)
 }
 
 type CustomerQuery struct {
@@ -500,6 +506,65 @@ type AuditEventRecord struct {
 	Metadata       map[string]any `json:"metadata"`
 	CreatedAt      time.Time      `json:"created_at"`
 }
+
+type AssetImpactItem struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+type AssetImpact struct {
+	Asset struct {
+		AssetType string `json:"assetType"`
+		AssetID   int64  `json:"assetId"`
+	} `json:"asset"`
+	Summary struct {
+		Tests      int `json:"tests"`
+		TestCycles int `json:"testCycles"`
+	} `json:"summary"`
+	Tests      []AssetImpactItem `json:"tests"`
+	TestCycles []AssetImpactItem `json:"testCycles"`
+}
+
+type AssetReview struct {
+	Status           string     `json:"status"`
+	LastEventID      *int64     `json:"lastEventId"`
+	LastComment      *string    `json:"lastComment"`
+	ReviewedByUserID *int64     `json:"reviewedByUserId"`
+	ReviewedAt       *time.Time `json:"reviewedAt"`
+	AuthorUserID     *int64     `json:"authorUserId"`
+}
+
+type AssetVersion struct {
+	ID          int64           `json:"id"`
+	IDProject   int64           `json:"idProject"`
+	AssetType   string          `json:"assetType"`
+	AssetID     int64           `json:"assetId"`
+	Version     int             `json:"version"`
+	ActorUserID *int64          `json:"actorUserId"`
+	Reason      string          `json:"reason"`
+	CreatedAt   *time.Time      `json:"createdAt"`
+	Review      AssetReview     `json:"review"`
+	Snapshot    *map[string]any `json:"snapshot,omitempty"`
+}
+
+type AssetReviewEvent struct {
+	ID             int64      `json:"id"`
+	AssetVersionID int64      `json:"assetVersionId"`
+	FromStatus     string     `json:"fromStatus"`
+	ToStatus       string     `json:"toStatus"`
+	Comment        *string    `json:"comment"`
+	ActorUserID    *int64     `json:"actorUserId"`
+	CreatedAt      *time.Time `json:"createdAt"`
+}
+
+type ReviewFailure struct {
+	Message    string
+	FromStatus string
+	ToStatus   string
+}
+
+func (failure ReviewFailure) Error() string { return failure.Message }
 
 var gridUUIDPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$`)
 var gridTagPattern = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
@@ -1752,6 +1817,228 @@ func parseAuditDate(value string) (time.Time, bool) {
 		}
 	}
 	return time.Time{}, false
+}
+
+func (h *Handler) AssetImpact(writer http.ResponseWriter, request *http.Request) {
+	user, projectID, assetType, assetID, ok := h.assetPath(writer, request, true)
+	if !ok {
+		return
+	}
+	impact, err := h.sessions.AssetImpact(request, user, projectID, assetType, assetID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "load browser asset impact", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"data": impact})
+}
+
+func (h *Handler) AssetVersions(writer http.ResponseWriter, request *http.Request) {
+	user, projectID, assetType, assetID, ok := h.assetPath(writer, request, false)
+	if !ok {
+		return
+	}
+	versions, err := h.sessions.ListAssetVersions(request, user, projectID, assetType, assetID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "list browser asset versions", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"data": versions})
+}
+
+func (h *Handler) ShowAssetVersion(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "resources.read")
+	if !ok {
+		return
+	}
+	projectID, versionID, ok := parseAssetVersionPath(writer, request, "assetVersion")
+	if !ok {
+		return
+	}
+	version, err := h.sessions.GetAssetVersion(request, user, projectID, versionID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "show browser asset version", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"data": version})
+}
+
+func (h *Handler) DiffAssetVersions(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "resources.read")
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	fromID, err := parsePathID(request.PathValue("fromVersion"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	toID, err := parsePathID(request.PathValue("toVersion"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	from, err := h.sessions.GetAssetVersion(request, user, projectID, fromID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "load browser asset diff source", err)
+		return
+	}
+	to, err := h.sessions.GetAssetVersion(request, user, projectID, toID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "load browser asset diff target", err)
+		return
+	}
+	if from.AssetType != to.AssetType || from.AssetID != to.AssetID {
+		writeJSON(writer, http.StatusUnprocessableEntity, map[string]string{"message": "Asset versions must belong to the same asset before they can be compared."})
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"data": assetVersionDiff(from, to)})
+}
+
+func (h *Handler) TransitionAssetVersionReview(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "resources.manage")
+	if !ok {
+		return
+	}
+	projectID, versionID, ok := parseAssetVersionPath(writer, request, "assetVersion")
+	if !ok {
+		return
+	}
+	var body struct {
+		ToStatus string  `json:"toStatus"`
+		Comment  *string `json:"comment"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil {
+		return
+	}
+	if body.ToStatus != "in_review" && body.ToStatus != "approved" && body.ToStatus != "deprecated" {
+		validationError(writer, "toStatus", "The selected to status is invalid.")
+		return
+	}
+	if body.Comment != nil && len(*body.Comment) > 2000 {
+		validationError(writer, "comment", "The comment field must not exceed 2000 characters.")
+		return
+	}
+	event, err := h.sessions.TransitionAssetVersionReview(request, user, projectID, versionID, body.ToStatus, body.Comment, h.now().UTC())
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	var reviewFailure ReviewFailure
+	if errors.As(err, &reviewFailure) {
+		payload := map[string]any{"message": reviewFailure.Message}
+		if reviewFailure.FromStatus != "" {
+			payload["fromStatus"] = reviewFailure.FromStatus
+			payload["toStatus"] = reviewFailure.ToStatus
+		}
+		writeJSON(writer, http.StatusUnprocessableEntity, payload)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "transition browser asset review", err)
+		return
+	}
+	writeJSON(writer, http.StatusCreated, map[string]any{"data": event})
+}
+
+func (h *Handler) assetPath(writer http.ResponseWriter, request *http.Request, allowPlugin bool) (User, int64, string, int64, bool) {
+	user, ok := h.requireCapability(writer, request, "resources.read")
+	if !ok {
+		return User{}, 0, "", 0, false
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return User{}, 0, "", 0, false
+	}
+	assetID, err := parsePathID(request.PathValue("assetId"))
+	if err != nil {
+		h.notFound(writer)
+		return User{}, 0, "", 0, false
+	}
+	assetType := request.PathValue("assetType")
+	allowed := assetType == "environment" || assetType == "step" || assetType == "test" || assetType == "test_cycle" || (allowPlugin && assetType == "plugin")
+	if !allowed {
+		validationError(writer, "assetType", "The selected asset type is invalid.")
+		return User{}, 0, "", 0, false
+	}
+	return user, projectID, assetType, assetID, true
+}
+
+func parseAssetVersionPath(writer http.ResponseWriter, request *http.Request, versionName string) (int64, int64, bool) {
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		writeJSON(writer, http.StatusNotFound, map[string]string{"message": "Not Found"})
+		return 0, 0, false
+	}
+	versionID, err := parsePathID(request.PathValue(versionName))
+	if err != nil {
+		writeJSON(writer, http.StatusNotFound, map[string]string{"message": "Not Found"})
+		return 0, 0, false
+	}
+	return projectID, versionID, true
+}
+
+func assetVersionDiff(from, to AssetVersion) map[string]any {
+	fromSnapshot := map[string]any{}
+	toSnapshot := map[string]any{}
+	if from.Snapshot != nil {
+		fromSnapshot = *from.Snapshot
+	}
+	if to.Snapshot != nil {
+		toSnapshot = *to.Snapshot
+	}
+	keys := make([]string, 0, len(fromSnapshot)+len(toSnapshot))
+	seen := map[string]bool{}
+	for key := range fromSnapshot {
+		seen[key] = true
+		keys = append(keys, key)
+	}
+	for key := range toSnapshot {
+		if !seen[key] {
+			keys = append(keys, key)
+		}
+	}
+	sort.Strings(keys)
+	added := map[string]any{}
+	removed := map[string]any{}
+	changed := map[string]any{}
+	for _, key := range keys {
+		fromValue, fromExists := fromSnapshot[key]
+		toValue, toExists := toSnapshot[key]
+		if !fromExists {
+			added[key] = toValue
+		} else if !toExists {
+			removed[key] = fromValue
+		} else if !reflect.DeepEqual(fromValue, toValue) {
+			changed[key] = map[string]any{"from": fromValue, "to": toValue}
+		}
+	}
+	return map[string]any{"from": map[string]any{"assetType": from.AssetType, "assetId": from.AssetID, "version": from.Version, "versionId": from.ID}, "to": map[string]any{"assetType": to.AssetType, "assetId": to.AssetID, "version": to.Version, "versionId": to.ID}, "changes": map[string]any{"added": added, "removed": removed, "changed": changed}}
 }
 
 func (h *Handler) integrationEndpointPath(writer http.ResponseWriter, request *http.Request, capability string) (User, int64, int64, bool) {
