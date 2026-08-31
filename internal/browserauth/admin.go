@@ -12,6 +12,8 @@ import (
 )
 
 var ErrForbidden = errors.New("browser admin action is forbidden")
+var ErrConflict = errors.New("browser admin resource is not ready")
+var ErrGone = errors.New("browser admin resource is gone")
 
 type Role struct {
 	ID        int64      `json:"id"`
@@ -106,6 +108,9 @@ type AdminRepository interface {
 	ListPerformedCycles(request *http.Request, actor User, query ResultQuery) (PerformedCyclePage, error)
 	ListPerformedTests(request *http.Request, actor User, query ResultQuery) (PerformedTestPage, error)
 	ListPerformedSteps(request *http.Request, actor User, performedTestID int64) ([]PerformedStep, error)
+	CreateResultExport(request *http.Request, actor User, input ResultExportCreate) (ResultExportDescriptor, error)
+	GetResultExport(request *http.Request, actor User, exportID int64) (ResultExportDescriptor, error)
+	DownloadResultExport(request *http.Request, actor User, exportID int64, now time.Time) (ResultExportDownload, error)
 }
 
 type CustomerQuery struct {
@@ -285,6 +290,31 @@ type PerformedStep struct {
 	Type            string     `json:"type"`
 	UpdatedAt       *time.Time `json:"updated_at,omitempty"`
 	CreatedAt       *time.Time `json:"created_at,omitempty"`
+}
+
+type ResultExportCreate struct {
+	PerformedTestCycleID int64
+	Format               string
+	Now                  time.Time
+}
+
+type ResultExportDescriptor struct {
+	ID           int64      `json:"id"`
+	Format       string     `json:"format"`
+	Status       string     `json:"status"`
+	Filename     string     `json:"filename"`
+	ContentType  string     `json:"contentType"`
+	URL          string     `json:"url"`
+	ExpiresAt    *time.Time `json:"expiresAt,omitempty"`
+	Authorized   bool       `json:"authorized"`
+	Ready        bool       `json:"ready"`
+	ErrorMessage *string    `json:"errorMessage"`
+}
+
+type ResultExportDownload struct {
+	Filename    string
+	ContentType string
+	Payload     string
 }
 
 type StepReorder struct {
@@ -914,6 +944,86 @@ func (h *Handler) PerformedSteps(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 	writeJSON(writer, http.StatusOK, steps)
+}
+
+func (h *Handler) CreateResultExport(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	var input struct {
+		PerformedTestCycleID int64  `json:"performedTestCycleId"`
+		Format               string `json:"format"`
+	}
+	if err := decodeJSON(writer, request, &input); err != nil || input.PerformedTestCycleID <= 0 || (input.Format != "json" && input.Format != "markdown") {
+		validationErrors(writer, map[string][]string{"performedTestCycleId": {"The performed test cycle id field is required."}, "format": {"The selected format is invalid."}})
+		return
+	}
+	descriptor, err := h.sessions.CreateResultExport(request, user, ResultExportCreate{PerformedTestCycleID: input.PerformedTestCycleID, Format: input.Format, Now: h.now()})
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "create browser result export", err)
+		return
+	}
+	writeJSON(writer, http.StatusAccepted, descriptor)
+}
+
+func (h *Handler) ShowResultExport(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	exportID, err := parsePathID(request.PathValue("resultExport"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	descriptor, err := h.sessions.GetResultExport(request, user, exportID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "show browser result export", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, descriptor)
+}
+
+func (h *Handler) DownloadResultExport(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	exportID, err := parsePathID(request.PathValue("resultExport"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	download, err := h.sessions.DownloadResultExport(request, user, exportID, h.now())
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if errors.Is(err, ErrConflict) {
+		writeJSON(writer, http.StatusConflict, map[string]string{"message": "Conflict."})
+		return
+	}
+	if errors.Is(err, ErrGone) {
+		writeJSON(writer, http.StatusGone, map[string]string{"message": "Gone."})
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "download browser result export", err)
+		return
+	}
+	writer.Header().Set("Content-Type", download.ContentType)
+	writer.Header().Set("Content-Disposition", `attachment; filename="`+download.Filename+`"`)
+	writer.WriteHeader(http.StatusOK)
+	_, _ = writer.Write([]byte(download.Payload))
 }
 
 func (h *Handler) requireCapability(writer http.ResponseWriter, request *http.Request, capability string) (User, bool) {

@@ -941,6 +941,116 @@ func TestBrowserPerformedResultExplorationIntegration(t *testing.T) {
 	}
 }
 
+func TestBrowserResultExportsIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS result_exports",
+		"DROP TABLE IF EXISTS performed_steps",
+		"DROP TABLE IF EXISTS performed_tests",
+		"DROP TABLE IF EXISTS performed_test_cycles",
+		`CREATE TABLE performed_test_cycles (
+			id BIGINT PRIMARY KEY,
+			testCycleId BIGINT NOT NULL,
+			date DATETIME NULL,
+			status INT NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE performed_tests (
+			id BIGINT PRIMARY KEY,
+			testCycleDoneId BIGINT NOT NULL,
+			testId BIGINT NOT NULL,
+			status INT NOT NULL,
+			postmanData LONGTEXT NULL,
+			name VARCHAR(255) NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE performed_steps (
+			id BIGINT PRIMARY KEY,
+			testCycleDoneId BIGINT NOT NULL,
+			testDoneId BIGINT NOT NULL,
+			stepId BIGINT NOT NULL,
+			status INT NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			screenshots JSON NOT NULL,
+			type VARCHAR(255) NOT NULL,
+			data JSON NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE result_exports (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			idCostumer BIGINT NOT NULL,
+			performedTestCycleId BIGINT NOT NULL,
+			format VARCHAR(32) NOT NULL,
+			status VARCHAR(32) NOT NULL,
+			filename VARCHAR(255) NOT NULL,
+			contentType VARCHAR(128) NOT NULL,
+			payload LONGTEXT NULL,
+			errorMessage TEXT NULL,
+			expiresAt TIMESTAMP NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`INSERT INTO performed_test_cycles (id, testCycleId, date, status, idCostumer, created_at, updated_at) VALUES
+			(44, 5, '2026-08-31 09:00:00', 1, 11, NULL, NULL),
+			(45, 6, '2026-08-31 09:00:00', 1, 42, NULL, NULL)`,
+		`INSERT INTO performed_tests (id, testCycleDoneId, testId, status, postmanData, name, idCostumer, created_at, updated_at) VALUES
+			(55, 44, 7, 1, NULL, 'Checkout', 11, NULL, NULL)`,
+		`INSERT INTO performed_steps (id, testCycleDoneId, testDoneId, stepId, status, name, screenshots, type, data, idCostumer, created_at, updated_at) VALUES
+			(77, 44, 55, 9, 1, 'Open', '[]', 'selenium', '{}', 11, NULL, NULL)`,
+		`INSERT INTO result_exports (id, idCostumer, performedTestCycleId, format, status, filename, contentType, payload, errorMessage, expiresAt, created_at, updated_at) VALUES
+			(90, 11, 44, 'json', 'queued', 'idelium-run-44.json', 'application/json', NULL, NULL, '2026-09-01 09:00:00', NULL, NULL),
+			(91, 11, 44, 'json', 'completed', 'idelium-run-44.json', 'application/json', '{\"ok\":true}', NULL, '2026-08-30 09:00:00', NULL, NULL),
+			(92, 42, 45, 'json', 'completed', 'idelium-run-45.json', 'application/json', '{\"foreign\":true}', NULL, '2026-09-01 09:00:00', NULL, NULL)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare result export fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewBrowserAuthRepository(database)
+	actor := browserauth.User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3}
+	request := httptest.NewRequest(http.MethodPost, "/admin/result-exports", nil)
+	now := time.Date(2026, time.August, 31, 12, 0, 0, 0, time.UTC)
+	descriptor, err := repository.CreateResultExport(request, actor, browserauth.ResultExportCreate{PerformedTestCycleID: 44, Format: "json", Now: now})
+	if err != nil {
+		t.Fatalf("CreateResultExport() returned an error: %v", err)
+	}
+	if descriptor.Status != "completed" || !descriptor.Ready || descriptor.Filename != "idelium-run-44.json" || descriptor.ContentType != "application/json" {
+		t.Fatalf("unexpected export descriptor: %#v", descriptor)
+	}
+	download, err := repository.DownloadResultExport(request, actor, descriptor.ID, now)
+	if err != nil || !strings.Contains(download.Payload, "result-export.v1") || !strings.Contains(download.Payload, "Checkout") {
+		t.Fatalf("unexpected export download: %#v err=%v", download, err)
+	}
+	shown, err := repository.GetResultExport(request, actor, descriptor.ID)
+	if err != nil || shown.ID != descriptor.ID || !shown.Authorized {
+		t.Fatalf("unexpected export show: %#v err=%v", shown, err)
+	}
+	if _, err := repository.CreateResultExport(request, actor, browserauth.ResultExportCreate{PerformedTestCycleID: 45, Format: "json", Now: now}); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected foreign run to be hidden, got %v", err)
+	}
+	if _, err := repository.DownloadResultExport(request, actor, 90, now); !errors.Is(err, browserauth.ErrConflict) {
+		t.Fatalf("expected queued export conflict, got %v", err)
+	}
+	if _, err := repository.DownloadResultExport(request, actor, 91, now); !errors.Is(err, browserauth.ErrGone) {
+		t.Fatalf("expected expired export gone, got %v", err)
+	}
+	if _, err := repository.GetResultExport(request, actor, 92); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected foreign export to be hidden, got %v", err)
+	}
+}
+
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

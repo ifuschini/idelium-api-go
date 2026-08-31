@@ -61,6 +61,9 @@ type sessionsStub struct {
 	performedCycles   PerformedCyclePage
 	performedTests    PerformedTestPage
 	performedSteps    []PerformedStep
+	createdExport     ResultExportCreate
+	exportDescriptor  ResultExportDescriptor
+	exportDownload    ResultExportDownload
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -172,6 +175,16 @@ func (s *sessionsStub) ListPerformedTests(*http.Request, User, ResultQuery) (Per
 }
 func (s *sessionsStub) ListPerformedSteps(*http.Request, User, int64) ([]PerformedStep, error) {
 	return s.performedSteps, s.accountErr
+}
+func (s *sessionsStub) CreateResultExport(_ *http.Request, _ User, input ResultExportCreate) (ResultExportDescriptor, error) {
+	s.createdExport = input
+	return s.exportDescriptor, s.accountErr
+}
+func (s *sessionsStub) GetResultExport(*http.Request, User, int64) (ResultExportDescriptor, error) {
+	return s.exportDescriptor, s.accountErr
+}
+func (s *sessionsStub) DownloadResultExport(*http.Request, User, int64, time.Time) (ResultExportDownload, error) {
+	return s.exportDownload, s.accountErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -626,6 +639,50 @@ func TestPerformedResultExplorationUsesBrowserSessionAndPagination(t *testing.T)
 	handler.PerformedSteps(stepsResponse, stepsRequest)
 	if stepsResponse.Code != http.StatusOK || !strings.Contains(stepsResponse.Body.String(), `"type":"selenium"`) || strings.Contains(stepsResponse.Body.String(), "unsafe-token") {
 		t.Fatalf("unexpected performed step response: %d %s", stepsResponse.Code, stepsResponse.Body.String())
+	}
+}
+
+func TestResultExportsCreateShowAndDownload(t *testing.T) {
+	expiresAt := time.Date(2026, time.September, 1, 12, 0, 0, 0, time.UTC)
+	sessions := &sessionsStub{
+		user:             User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3},
+		exportDescriptor: ResultExportDescriptor{ID: 88, Format: "json", Status: "completed", Filename: "idelium-run-44.json", ContentType: "application/json", URL: "/api/admin/result-exports/88/download", ExpiresAt: &expiresAt, Authorized: true, Ready: true},
+		exportDownload:   ResultExportDownload{Filename: "idelium-run-44.json", ContentType: "application/json", Payload: `{"schemaVersion":"result-export.v1"}`},
+	}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+
+	createRequest := httptest.NewRequest(http.MethodPost, "/admin/result-exports", strings.NewReader(`{"performedTestCycleId":44,"format":"json"}`))
+	createRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	createResponse := httptest.NewRecorder()
+	handler.CreateResultExport(createResponse, createRequest)
+	if createResponse.Code != http.StatusAccepted || sessions.createdExport.PerformedTestCycleID != 44 || !strings.Contains(createResponse.Body.String(), `"ready":true`) {
+		t.Fatalf("unexpected export create: %d %s %#v", createResponse.Code, createResponse.Body.String(), sessions.createdExport)
+	}
+
+	showRequest := httptest.NewRequest(http.MethodGet, "/admin/result-exports/88", nil)
+	showRequest.SetPathValue("resultExport", "88")
+	showRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	showResponse := httptest.NewRecorder()
+	handler.ShowResultExport(showResponse, showRequest)
+	if showResponse.Code != http.StatusOK || !strings.Contains(showResponse.Body.String(), `"filename":"idelium-run-44.json"`) {
+		t.Fatalf("unexpected export show: %d %s", showResponse.Code, showResponse.Body.String())
+	}
+
+	downloadRequest := httptest.NewRequest(http.MethodGet, "/admin/result-exports/88/download", nil)
+	downloadRequest.SetPathValue("resultExport", "88")
+	downloadRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	downloadResponse := httptest.NewRecorder()
+	handler.DownloadResultExport(downloadResponse, downloadRequest)
+	if downloadResponse.Code != http.StatusOK || downloadResponse.Header().Get("Content-Disposition") != `attachment; filename="idelium-run-44.json"` || !strings.Contains(downloadResponse.Body.String(), "result-export.v1") {
+		t.Fatalf("unexpected export download: %d headers=%#v body=%s", downloadResponse.Code, downloadResponse.Header(), downloadResponse.Body.String())
+	}
+
+	invalidRequest := httptest.NewRequest(http.MethodPost, "/admin/result-exports", strings.NewReader(`{"performedTestCycleId":44,"format":"pdf"}`))
+	invalidRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	invalidResponse := httptest.NewRecorder()
+	handler.CreateResultExport(invalidResponse, invalidRequest)
+	if invalidResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(invalidResponse.Body.String(), "format") {
+		t.Fatalf("expected invalid format validation, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
 	}
 }
 

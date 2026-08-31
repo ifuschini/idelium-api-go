@@ -687,6 +687,55 @@ func (r *BrowserAuthRepository) ListPerformedSteps(request *http.Request, actor 
 	return items, nil
 }
 
+func (r *BrowserAuthRepository) CreateResultExport(request *http.Request, actor browserauth.User, input browserauth.ResultExportCreate) (browserauth.ResultExportDescriptor, error) {
+	ctx := request.Context()
+	run, err := r.performedCycle(ctx, actor.ActiveTenant(), input.PerformedTestCycleID)
+	if err != nil {
+		return browserauth.ResultExportDescriptor{}, err
+	}
+	payload, err := r.resultExportPayload(ctx, actor.ActiveTenant(), run, input.Format)
+	if err != nil {
+		return browserauth.ResultExportDescriptor{}, err
+	}
+	expiresAt := input.Now.Add(24 * time.Hour)
+	filename := resultExportFilename(run.ID, input.Format)
+	contentType := resultExportContentType(input.Format)
+	result, err := r.database.ExecContext(ctx, `INSERT INTO result_exports (idCostumer, performedTestCycleId, format, status, filename, contentType, payload, errorMessage, expiresAt, created_at, updated_at) VALUES (?, ?, ?, 'completed', ?, ?, ?, NULL, ?, ?, ?)`, actor.ActiveTenant(), run.ID, input.Format, filename, contentType, payload, expiresAt, input.Now, input.Now)
+	if err != nil {
+		return browserauth.ResultExportDescriptor{}, safeDatabaseFailure("create browser result export", err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return browserauth.ResultExportDescriptor{}, safeDatabaseFailure("read created browser result export id", err)
+	}
+	return browserauth.ResultExportDescriptor{ID: id, Format: input.Format, Status: "completed", Filename: filename, ContentType: contentType, URL: resultExportURL(id), ExpiresAt: &expiresAt, Authorized: true, Ready: true, ErrorMessage: nil}, nil
+}
+
+func (r *BrowserAuthRepository) GetResultExport(request *http.Request, actor browserauth.User, exportID int64) (browserauth.ResultExportDescriptor, error) {
+	export, err := r.resultExport(request.Context(), actor.ActiveTenant(), exportID)
+	if err != nil {
+		return browserauth.ResultExportDescriptor{}, err
+	}
+	return export.descriptor(), nil
+}
+
+func (r *BrowserAuthRepository) DownloadResultExport(request *http.Request, actor browserauth.User, exportID int64, now time.Time) (browserauth.ResultExportDownload, error) {
+	export, err := r.resultExport(request.Context(), actor.ActiveTenant(), exportID)
+	if err != nil {
+		return browserauth.ResultExportDownload{}, err
+	}
+	if export.Status != "completed" {
+		return browserauth.ResultExportDownload{}, browserauth.ErrConflict
+	}
+	if export.ExpiresAt != nil && export.ExpiresAt.Before(now) {
+		return browserauth.ResultExportDownload{}, browserauth.ErrGone
+	}
+	if export.Payload == nil {
+		return browserauth.ResultExportDownload{}, browserauth.ErrConflict
+	}
+	return browserauth.ResultExportDownload{Filename: export.Filename, ContentType: export.ContentType, Payload: *export.Payload}, nil
+}
+
 func (r *BrowserAuthRepository) accountTarget(request *http.Request, actor browserauth.User, accountID int64) (browserauth.Account, error) {
 	where, args := accountScope(actor)
 	where += ` AND users.id = ?`
@@ -870,6 +919,191 @@ func resultMeta(page int, perPage int, total int64, sort string, direction strin
 		lastPage = 1
 	}
 	return browserauth.ResultMeta{Pagination: browserauth.ResultPaginationMeta{Page: page, PerPage: perPage, Total: total, LastPage: lastPage, Sort: sort, Direction: direction}}
+}
+
+type performedCycleRecord struct {
+	ID          int64
+	TestCycleID int64
+	Date        *time.Time
+	Status      int64
+}
+
+type resultExportRecord struct {
+	ID           int64
+	Format       string
+	Status       string
+	Filename     string
+	ContentType  string
+	Payload      *string
+	ExpiresAt    *time.Time
+	ErrorMessage *string
+}
+
+func (record resultExportRecord) descriptor() browserauth.ResultExportDescriptor {
+	return browserauth.ResultExportDescriptor{
+		ID:           record.ID,
+		Format:       record.Format,
+		Status:       record.Status,
+		Filename:     record.Filename,
+		ContentType:  record.ContentType,
+		URL:          resultExportURL(record.ID),
+		ExpiresAt:    record.ExpiresAt,
+		Authorized:   true,
+		Ready:        record.Status == "completed",
+		ErrorMessage: record.ErrorMessage,
+	}
+}
+
+func (r *BrowserAuthRepository) performedCycle(ctx context.Context, tenantID int64, performedCycleID int64) (performedCycleRecord, error) {
+	var record performedCycleRecord
+	err := r.database.QueryRowContext(ctx, `SELECT id, testCycleId, date, status FROM performed_test_cycles WHERE id = ? AND idCostumer = ? LIMIT 1`, performedCycleID, tenantID).Scan(&record.ID, &record.TestCycleID, &record.Date, &record.Status)
+	if errors.Is(err, sql.ErrNoRows) {
+		return performedCycleRecord{}, browserauth.ErrNotFound
+	}
+	if err != nil {
+		return performedCycleRecord{}, safeDatabaseFailure("load browser result export run", err)
+	}
+	return record, nil
+}
+
+func (r *BrowserAuthRepository) resultExport(ctx context.Context, tenantID int64, exportID int64) (resultExportRecord, error) {
+	var record resultExportRecord
+	var payload sql.NullString
+	var errorMessage sql.NullString
+	err := r.database.QueryRowContext(ctx, `SELECT id, format, status, filename, contentType, payload, expiresAt, errorMessage FROM result_exports WHERE id = ? AND idCostumer = ? LIMIT 1`, exportID, tenantID).Scan(&record.ID, &record.Format, &record.Status, &record.Filename, &record.ContentType, &payload, &record.ExpiresAt, &errorMessage)
+	if errors.Is(err, sql.ErrNoRows) {
+		return resultExportRecord{}, browserauth.ErrNotFound
+	}
+	if err != nil {
+		return resultExportRecord{}, safeDatabaseFailure("load browser result export", err)
+	}
+	if payload.Valid {
+		record.Payload = &payload.String
+	}
+	if errorMessage.Valid && record.Status == "failed" {
+		record.ErrorMessage = &errorMessage.String
+	}
+	return record, nil
+}
+
+func (r *BrowserAuthRepository) resultExportPayload(ctx context.Context, tenantID int64, run performedCycleRecord, format string) (string, error) {
+	tests, err := r.resultExportTests(ctx, tenantID, run.ID)
+	if err != nil {
+		return "", err
+	}
+	document := map[string]any{
+		"schemaVersion":        "result-export.v1",
+		"performedTestCycleId": run.ID,
+		"testCycleId":          run.TestCycleID,
+		"status":               run.Status,
+		"date":                 run.Date,
+		"tests":                tests,
+	}
+	if format == "json" {
+		encoded, err := json.MarshalIndent(document, "", "  ")
+		if err != nil {
+			return "", fmt.Errorf("encode browser result export payload: %w", err)
+		}
+		return string(encoded), nil
+	}
+	return resultExportMarkdown(document, tests), nil
+}
+
+func (r *BrowserAuthRepository) resultExportTests(ctx context.Context, tenantID int64, performedCycleID int64) ([]map[string]any, error) {
+	rows, err := r.database.QueryContext(ctx, `SELECT id, name, status FROM performed_tests WHERE testCycleDoneId = ? AND idCostumer = ? ORDER BY id ASC`, performedCycleID, tenantID)
+	if err != nil {
+		return nil, safeDatabaseFailure("list browser result export tests", err)
+	}
+	defer rows.Close()
+	tests := []map[string]any{}
+	for rows.Next() {
+		var id int64
+		var name string
+		var status int64
+		if err := rows.Scan(&id, &name, &status); err != nil {
+			return nil, safeDatabaseFailure("scan browser result export test", err)
+		}
+		steps, err := r.resultExportSteps(ctx, tenantID, performedCycleID, id)
+		if err != nil {
+			return nil, err
+		}
+		tests = append(tests, map[string]any{"id": id, "name": name, "status": status, "steps": steps})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, safeDatabaseFailure("read browser result export tests", err)
+	}
+	return tests, nil
+}
+
+func (r *BrowserAuthRepository) resultExportSteps(ctx context.Context, tenantID int64, performedCycleID int64, performedTestID int64) ([]map[string]any, error) {
+	rows, err := r.database.QueryContext(ctx, `SELECT id, name, status, type, created_at, updated_at FROM performed_steps WHERE testCycleDoneId = ? AND testDoneId = ? AND idCostumer = ? ORDER BY id ASC`, performedCycleID, performedTestID, tenantID)
+	if err != nil {
+		return nil, safeDatabaseFailure("list browser result export steps", err)
+	}
+	defer rows.Close()
+	steps := []map[string]any{}
+	for rows.Next() {
+		var id int64
+		var name string
+		var status int64
+		var stepType string
+		var createdAt *time.Time
+		var updatedAt *time.Time
+		if err := rows.Scan(&id, &name, &status, &stepType, &createdAt, &updatedAt); err != nil {
+			return nil, safeDatabaseFailure("scan browser result export step", err)
+		}
+		steps = append(steps, map[string]any{"id": id, "name": name, "status": status, "type": stepType, "created_at": createdAt, "updated_at": updatedAt})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, safeDatabaseFailure("read browser result export steps", err)
+	}
+	return steps, nil
+}
+
+func resultExportMarkdown(document map[string]any, tests []map[string]any) string {
+	lines := []string{
+		"# Idelium execution report",
+		"",
+		fmt.Sprintf("- Schema: %s", document["schemaVersion"]),
+		fmt.Sprintf("- Performed test cycle: %d", document["performedTestCycleId"]),
+		fmt.Sprintf("- Source test cycle: %d", document["testCycleId"]),
+		fmt.Sprintf("- Status: %d", document["status"]),
+		fmt.Sprintf("- Date: %v", document["date"]),
+		"",
+		"## Tests",
+		"",
+	}
+	for _, test := range tests {
+		steps, _ := test["steps"].([]map[string]any)
+		lines = append(lines,
+			fmt.Sprintf("### %s", test["name"]),
+			"",
+			fmt.Sprintf("- Test ID: %d", test["id"]),
+			fmt.Sprintf("- Status: %d", test["status"]),
+			fmt.Sprintf("- Steps: %d", len(steps)),
+			"",
+		)
+	}
+	return strings.Join(lines, "\n") + "\n"
+}
+
+func resultExportFilename(performedCycleID int64, format string) string {
+	extension := "md"
+	if format == "json" {
+		extension = "json"
+	}
+	return fmt.Sprintf("idelium-run-%d.%s", performedCycleID, extension)
+}
+
+func resultExportContentType(format string) string {
+	if format == "json" {
+		return "application/json"
+	}
+	return "text/markdown"
+}
+
+func resultExportURL(exportID int64) string {
+	return fmt.Sprintf("/api/admin/result-exports/%d/download", exportID)
 }
 
 func redactResultJSONString(payload string) string {
