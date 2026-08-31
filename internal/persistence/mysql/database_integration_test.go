@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -1864,6 +1865,49 @@ func TestParallelRunWorkerClaimsUseRowLocksAndTenantScopeIntegration(t *testing.
 	var auditValues string
 	if err := database.QueryRowContext(ctx, "SELECT COUNT(*), MAX(afterValues) FROM audit_events WHERE activeTenantId = 11 AND idProject = 5 AND action IN ('run_token.consume', 'run_token.reject')").Scan(&auditCount, &auditValues); err != nil || auditCount != 2 || strings.Contains(auditValues, "one-use-secret") {
 		t.Fatalf("unexpected redacted run token audit evidence: count=%d values=%s err=%v", auditCount, auditValues, err)
+	}
+	heartbeatRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/40/workers/"+winner+"/heartbeat", nil)
+	heartbeat, err := repository.HeartbeatParallelRunWorker(heartbeatRequest, 11, 5, 40, winner, 300, now.Add(10*time.Second))
+	if err != nil || heartbeat.WorkerStatus != "" || heartbeat.Run.ActiveWorkers != 1 || heartbeat.Run.LostWorkers != 0 {
+		t.Fatalf("unexpected active worker heartbeat: %#v err=%v", heartbeat, err)
+	}
+	var renewedWorkerJSON string
+	if err := database.QueryRowContext(ctx, "SELECT workerStates FROM parallel_run_schedules WHERE id = 40").Scan(&renewedWorkerJSON); err != nil || !strings.Contains(renewedWorkerJSON, parallelRunISOString(now.Add(310*time.Second))) {
+		t.Fatalf("heartbeat did not persist the renewed lease: %s err=%v", renewedWorkerJSON, err)
+	}
+	foreignHeartbeatRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/40/workers/"+winner+"/heartbeat", nil)
+	if _, err := repository.HeartbeatParallelRunWorker(foreignHeartbeatRequest, 42, 5, 40, winner, 120, now); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-tenant heartbeat to be hidden, got %v", err)
+	}
+	missingHeartbeatRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/40/workers/missing/heartbeat", nil)
+	if _, err := repository.HeartbeatParallelRunWorker(missingHeartbeatRequest, 11, 5, 40, "missing", 120, now); !errors.Is(err, browserauth.ErrParallelWorkerMissing) {
+		t.Fatalf("expected unknown worker heartbeat rejection, got %v", err)
+	}
+	expiredStates, _ := json.Marshal(map[string]any{"expired": map[string]any{
+		"workerId": "expired", "status": "running", "capabilities": []any{}, "claimedAt": parallelRunISOString(now.Add(-10 * time.Minute)),
+		"lastHeartbeatAt": parallelRunISOString(now.Add(-10 * time.Minute)), "leaseExpiresAt": parallelRunISOString(now.Add(-time.Second)), "updatedAt": parallelRunISOString(now.Add(-10 * time.Minute)), "result": nil,
+	}})
+	boundaryStates, _ := json.Marshal(map[string]any{"boundary": map[string]any{
+		"workerId": "boundary", "status": "running", "capabilities": []any{}, "claimedAt": parallelRunISOString(now.Add(-time.Minute)),
+		"lastHeartbeatAt": parallelRunISOString(now.Add(-time.Minute)), "leaseExpiresAt": parallelRunISOString(now), "updatedAt": parallelRunISOString(now.Add(-time.Minute)), "result": nil,
+	}})
+	if _, err := database.ExecContext(ctx, `INSERT INTO parallel_run_schedules
+		(id, idProject, testCycleId, idCostumer, idempotencyKey, status, requestedConcurrency, activeWorkers, totalWorkers,
+		completedWorkers, failedWorkers, cancelledWorkers, workerStates, resultSummary, metadata, scheduledAt, startedAt, created_at, updated_at)
+		VALUES (43, 5, 7, 11, 'expired-heartbeat', 'running', 1, 1, 1, 0, 0, 0, ?, '[]', '{}', ?, ?, ?, ?),
+		(44, 5, 7, 11, 'boundary-heartbeat', 'running', 1, 1, 1, 0, 0, 0, ?, '[]', '{}', ?, ?, ?, ?)`,
+		string(expiredStates), now, now.Add(-10*time.Minute), now, now, string(boundaryStates), now, now.Add(-time.Minute), now, now); err != nil {
+		t.Fatal(err)
+	}
+	expiredRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/43/workers/expired/heartbeat", nil)
+	expired, err := repository.HeartbeatParallelRunWorker(expiredRequest, 11, 5, 43, "expired", 120, now)
+	if err != nil || expired.WorkerStatus != "lost" || expired.Run.Status != "lost" || expired.Run.LostWorkers != 1 || expired.Run.AggregateStatus == nil || *expired.Run.AggregateStatus != 4 {
+		t.Fatalf("expired lease did not converge to lost: %#v err=%v", expired, err)
+	}
+	boundaryRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/44/workers/boundary/heartbeat", nil)
+	boundary, err := repository.HeartbeatParallelRunWorker(boundaryRequest, 11, 5, 44, "boundary", 120, now)
+	if err != nil || boundary.WorkerStatus != "" || boundary.Run.Status != "running" || boundary.Run.ActiveWorkers != 1 {
+		t.Fatalf("lease at the exact boundary should remain renewable: %#v err=%v", boundary, err)
 	}
 }
 

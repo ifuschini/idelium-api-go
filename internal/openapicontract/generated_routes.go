@@ -70,6 +70,8 @@ type ServerInterface interface {
 	ShowCLIParallelRun(http.ResponseWriter, *http.Request)
 	ClaimBrowserParallelRunWorker(http.ResponseWriter, *http.Request)
 	ClaimCLIParallelRunWorker(http.ResponseWriter, *http.Request)
+	HeartbeatBrowserParallelRunWorker(http.ResponseWriter, *http.Request)
+	HeartbeatCLIParallelRunWorker(http.ResponseWriter, *http.Request)
 	Get(http.ResponseWriter, *http.Request)
 	GetAdminAccounts(http.ResponseWriter, *http.Request)
 	PostAdminAccounts(http.ResponseWriter, *http.Request)
@@ -135,7 +137,6 @@ type ServerInterface interface {
 	PostAdminProjectsIdProjectParallelRunsParallelRunCancel(http.ResponseWriter, *http.Request)
 	GetAdminProjectsIdProjectParallelRunsParallelRunResults(http.ResponseWriter, *http.Request)
 	PutAdminProjectsIdProjectParallelRunsParallelRunWorkersWorkerId(http.ResponseWriter, *http.Request)
-	PostAdminProjectsIdProjectParallelRunsParallelRunWorkersWorkerIdHeartbeat(http.ResponseWriter, *http.Request)
 	GetAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorImpact(http.ResponseWriter, *http.Request)
 	DeleteAdminProjectsProject(http.ResponseWriter, *http.Request)
 	GetAdminProjectsProject(http.ResponseWriter, *http.Request)
@@ -174,7 +175,6 @@ type ServerInterface interface {
 	PostIdeliumclProjectsIdProjectParallelRunsParallelRunTokens(http.ResponseWriter, *http.Request)
 	PostIdeliumclProjectsIdProjectParallelRunsParallelRunTokensTokenIdRevoke(http.ResponseWriter, *http.Request)
 	PutIdeliumclProjectsIdProjectParallelRunsParallelRunWorkersWorkerId(http.ResponseWriter, *http.Request)
-	PostIdeliumclProjectsIdProjectParallelRunsParallelRunWorkersWorkerIdHeartbeat(http.ResponseWriter, *http.Request)
 	PostIdeliumrunnerClaim(http.ResponseWriter, *http.Request)
 	PostIdeliumrunnerHeartbeat(http.ResponseWriter, *http.Request)
 	PutIdeliumrunnerWorker(http.ResponseWriter, *http.Request)
@@ -761,6 +761,28 @@ var Operations = []Operation{
 		OperationID:        "claimCLIParallelRunWorker",
 		Tags:               []string{"Parallel Runs"},
 		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim",
+		AuthenticationMode: "api-key",
+		TrustPath:          "api-key",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
+		OperationID:        "heartbeatBrowserParallelRunWorker",
+		Tags:               []string{"Parallel Runs"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
+		OperationID:        "heartbeatCLIParallelRunWorker",
+		Tags:               []string{"Parallel Runs"},
+		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
 		AuthenticationMode: "api-key",
 		TrustPath:          "api-key",
 		TenantContext:      true,
@@ -1482,17 +1504,6 @@ var Operations = []Operation{
 		Consumers:          []string{"idelium-web"},
 	},
 	{
-		Method:             "POST",
-		Path:               "/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
-		OperationID:        "postAdminProjectsIdProjectParallelRunsParallelRunWorkersWorkerIdHeartbeat",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          []string{"idelium-web"},
-	},
-	{
 		Method:             "GET",
 		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact",
 		OperationID:        "getAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorImpact",
@@ -1905,17 +1916,6 @@ var Operations = []Operation{
 		OperationID:        "putIdeliumclProjectsIdProjectParallelRunsParallelRunWorkersWorkerId",
 		Tags:               []string{"Laravel Compatibility"},
 		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
-		AuthenticationMode: "api-key",
-		TrustPath:          "api-key",
-		TenantContext:      false,
-		Consumers:          nil,
-	},
-	{
-		Method:             "POST",
-		Path:               "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
-		OperationID:        "postIdeliumclProjectsIdProjectParallelRunsParallelRunWorkersWorkerIdHeartbeat",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
 		AuthenticationMode: "api-key",
 		TrustPath:          "api-key",
 		TenantContext:      false,

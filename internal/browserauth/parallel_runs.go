@@ -3,6 +3,7 @@ package browserauth
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -20,6 +21,7 @@ var (
 	ErrRunTokenInvalid        = errors.New("run token is invalid")
 	ErrAgentProofInvalid      = errors.New("agent identity proof is invalid")
 	ErrAgentUnavailable       = errors.New("agent is unavailable")
+	ErrParallelWorkerMissing  = errors.New("parallel run worker has not claimed")
 )
 
 type AgentUnavailableError struct {
@@ -78,6 +80,11 @@ type ParallelRunClaim struct {
 	RunToken        string
 	CertificateHash string
 	Now             time.Time
+}
+
+type ParallelRunHeartbeat struct {
+	Run          ParallelRun
+	WorkerStatus string
 }
 
 func (h *Handler) ParallelRuns(writer http.ResponseWriter, request *http.Request) {
@@ -163,6 +170,77 @@ func (h *Handler) CLClaimParallelRun(writer http.ResponseWriter, request *http.R
 		return
 	}
 	h.claimParallelRun(writer, request, tenant.CustomerID, nil)
+}
+
+func (h *Handler) HeartbeatParallelRunWorker(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	h.heartbeatParallelRunWorker(writer, request, user.ActiveTenant())
+}
+
+func (h *Handler) CLHeartbeatParallelRunWorker(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		h.unauthorized(writer)
+		return
+	}
+	h.heartbeatParallelRunWorker(writer, request, tenant.CustomerID)
+}
+
+func (h *Handler) heartbeatParallelRunWorker(writer http.ResponseWriter, request *http.Request, tenantID int64) {
+	projectID, runID, ok := parseAssetVersionPath(writer, request, "parallelRun")
+	if !ok {
+		return
+	}
+	workerID := request.PathValue("workerId")
+	if workerID == "" || len(workerID) > 128 {
+		h.notFound(writer)
+		return
+	}
+	var body struct {
+		LeaseSeconds *int `json:"leaseSeconds"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil && !errors.Is(err, io.EOF) {
+		validationError(writer, "leaseSeconds", "The lease seconds field must be an integer.")
+		return
+	}
+	leaseSeconds := 120
+	if body.LeaseSeconds != nil {
+		leaseSeconds = *body.LeaseSeconds
+	}
+	if leaseSeconds < 15 || leaseSeconds > 3600 {
+		validationError(writer, "leaseSeconds", "The lease seconds field must be between 15 and 3600.")
+		return
+	}
+	heartbeat, err := h.sessions.HeartbeatParallelRunWorker(request, tenantID, projectID, runID, workerID, leaseSeconds, h.now().UTC())
+	switch {
+	case errors.Is(err, ErrNotFound), errors.Is(err, ErrParallelWorkerMissing):
+		if errors.Is(err, ErrParallelWorkerMissing) {
+			writeJSON(writer, http.StatusNotFound, map[string]string{"message": "Worker has not claimed this run."})
+		} else {
+			h.notFound(writer)
+		}
+	case errors.Is(err, ErrParallelRunTerminal):
+		writeJSON(writer, http.StatusUnprocessableEntity, map[string]string{"message": "Parallel run is already terminal."})
+	case err != nil:
+		h.internalError(writer, request, "heartbeat parallel run worker", err)
+	case heartbeat.WorkerStatus != "":
+		payload := parallelRunPayload(heartbeat.Run)
+		payload["message"] = "Worker lease is no longer active."
+		payload["workerStatus"] = heartbeat.WorkerStatus
+		writeJSON(writer, http.StatusConflict, payload)
+	default:
+		writeJSON(writer, http.StatusOK, heartbeat.Run)
+	}
+}
+
+func parallelRunPayload(run ParallelRun) map[string]any {
+	encoded, _ := json.Marshal(run)
+	payload := map[string]any{}
+	_ = json.Unmarshal(encoded, &payload)
+	return payload
 }
 
 func (h *Handler) claimParallelRun(writer http.ResponseWriter, request *http.Request, tenantID int64, actor *User) {

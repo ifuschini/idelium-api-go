@@ -108,6 +108,7 @@ func NewRouter(
 	router.Post("/admin/projects/{idProject}/parallel-runs/matrix", browserAuthHandler.CreateParallelRunMatrix)
 	router.Get("/admin/projects/{idProject}/parallel-runs/{parallelRun}", browserAuthHandler.ShowParallelRun)
 	router.Post("/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim", browserAuthHandler.ClaimParallelRun)
+	router.Post("/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat", browserAuthHandler.HeartbeatParallelRunWorker)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)
@@ -168,6 +169,7 @@ func NewRouter(
 		router.Post("/ideliumcl/projects/{idProject}/parallel-runs/matrix", browserAuthHandler.CLCreateParallelRunMatrix)
 		router.Get("/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}", browserAuthHandler.CLShowParallelRun)
 		router.Post("/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim", browserAuthHandler.CLClaimParallelRun)
+		router.Post("/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat", browserAuthHandler.CLHeartbeatParallelRunWorker)
 	})
 
 	router.NotFound(func(writer http.ResponseWriter, request *http.Request) {

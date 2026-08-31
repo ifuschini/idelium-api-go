@@ -84,6 +84,12 @@ type sessionsStub struct {
 	parallelMatrix    []map[string]string
 	parallelClaim     ParallelRunClaim
 	parallelClaimErr  error
+	parallelHeartbeat ParallelRunHeartbeat
+	parallelHeartErr  error
+	heartbeatTenant   int64
+	heartbeatRun      int64
+	heartbeatWorker   string
+	heartbeatLease    int
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -302,6 +308,13 @@ func (s *sessionsStub) GetParallelRun(*http.Request, int64, int64, int64) (Paral
 func (s *sessionsStub) ClaimParallelRun(_ *http.Request, input ParallelRunClaim) (ParallelRun, error) {
 	s.parallelClaim = input
 	return s.parallelRun, s.parallelClaimErr
+}
+func (s *sessionsStub) HeartbeatParallelRunWorker(_ *http.Request, tenantID, _ int64, runID int64, workerID string, leaseSeconds int, _ time.Time) (ParallelRunHeartbeat, error) {
+	s.heartbeatTenant = tenantID
+	s.heartbeatRun = runID
+	s.heartbeatWorker = workerID
+	s.heartbeatLease = leaseSeconds
+	return s.parallelHeartbeat, s.parallelHeartErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -1235,6 +1248,70 @@ func TestParallelRunClaimValidationAndSafeErrors(t *testing.T) {
 	NewHandler(usersStub{}, &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11}}, testLogger()).ClaimParallelRun(invalidResponse, invalid)
 	if invalidResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(invalidResponse.Body.String(), `"workerId"`) {
 		t.Fatalf("expected worker validation, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
+	}
+}
+
+func TestParallelRunHeartbeatContractsAndValidation(t *testing.T) {
+	run := ParallelRun{ID: 40, IDProject: 5, TestCycleID: 7, IdempotencyKey: "release", Status: "running", RequestedConcurrency: 1, ActiveWorkers: 1, TotalWorkers: 1, Metadata: map[string]any{}, ResultSummary: []any{}}
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11}, parallelHeartbeat: ParallelRunHeartbeat{Run: run}}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	request := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs/40/workers/worker-a/heartbeat", strings.NewReader(`{"leaseSeconds":300}`))
+	request.SetPathValue("idProject", "5")
+	request.SetPathValue("parallelRun", "40")
+	request.SetPathValue("workerId", "worker-a")
+	request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	response := httptest.NewRecorder()
+	handler.HeartbeatParallelRunWorker(response, request)
+	if response.Code != http.StatusOK || sessions.heartbeatTenant != 11 || sessions.heartbeatRun != 40 || sessions.heartbeatWorker != "worker-a" || sessions.heartbeatLease != 300 {
+		t.Fatalf("unexpected heartbeat: %d %s tenant=%d run=%d worker=%s lease=%d", response.Code, response.Body.String(), sessions.heartbeatTenant, sessions.heartbeatRun, sessions.heartbeatWorker, sessions.heartbeatLease)
+	}
+
+	sessions.parallelHeartbeat = ParallelRunHeartbeat{Run: ParallelRun{ID: 40, Status: "lost", Metadata: map[string]any{}, ResultSummary: []any{}}, WorkerStatus: "lost"}
+	inactive := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs/40/workers/worker-a/heartbeat", strings.NewReader(`{}`))
+	inactive.SetPathValue("idProject", "5")
+	inactive.SetPathValue("parallelRun", "40")
+	inactive.SetPathValue("workerId", "worker-a")
+	inactive.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	inactiveResponse := httptest.NewRecorder()
+	handler.HeartbeatParallelRunWorker(inactiveResponse, inactive)
+	if inactiveResponse.Code != http.StatusConflict || !strings.Contains(inactiveResponse.Body.String(), `"workerStatus":"lost"`) {
+		t.Fatalf("unexpected inactive heartbeat: %d %s", inactiveResponse.Code, inactiveResponse.Body.String())
+	}
+
+	invalid := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs/40/workers/worker-a/heartbeat", strings.NewReader(`{"leaseSeconds":14}`))
+	invalid.SetPathValue("idProject", "5")
+	invalid.SetPathValue("parallelRun", "40")
+	invalid.SetPathValue("workerId", "worker-a")
+	invalid.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	invalidResponse := httptest.NewRecorder()
+	handler.HeartbeatParallelRunWorker(invalidResponse, invalid)
+	if invalidResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(invalidResponse.Body.String(), `"leaseSeconds"`) {
+		t.Fatalf("expected heartbeat lease validation, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
+	}
+}
+
+func TestParallelRunHeartbeatSafeErrors(t *testing.T) {
+	for _, test := range []struct {
+		err        error
+		status     int
+		contains   string
+		notContain string
+	}{
+		{err: ErrParallelWorkerMissing, status: http.StatusNotFound, contains: "Worker has not claimed"},
+		{err: ErrParallelRunTerminal, status: http.StatusUnprocessableEntity, contains: "already terminal"},
+		{err: errors.New("database password must not be returned"), status: http.StatusInternalServerError, contains: "could not be completed", notContain: "database password"},
+	} {
+		sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11}, parallelHeartErr: test.err}
+		request := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs/40/workers/worker-a/heartbeat", strings.NewReader(`{}`))
+		request.SetPathValue("idProject", "5")
+		request.SetPathValue("parallelRun", "40")
+		request.SetPathValue("workerId", "worker-a")
+		request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+		response := httptest.NewRecorder()
+		NewHandler(usersStub{}, sessions, testLogger()).HeartbeatParallelRunWorker(response, request)
+		if response.Code != test.status || !strings.Contains(response.Body.String(), test.contains) || (test.notContain != "" && strings.Contains(response.Body.String(), test.notContain)) {
+			t.Fatalf("unexpected heartbeat error response: %d %s", response.Code, response.Body.String())
+		}
 	}
 }
 

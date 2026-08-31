@@ -152,6 +152,7 @@ type AdminRepository interface {
 	CreateParallelRunMatrix(request *http.Request, input ParallelRunCreate, combinations []map[string]string) ([]ParallelRun, error)
 	GetParallelRun(request *http.Request, tenantID, projectID, runID int64) (ParallelRun, error)
 	ClaimParallelRun(request *http.Request, input ParallelRunClaim) (ParallelRun, error)
+	HeartbeatParallelRunWorker(request *http.Request, tenantID, projectID, runID int64, workerID string, leaseSeconds int, now time.Time) (ParallelRunHeartbeat, error)
 }
 
 type CustomerQuery struct {

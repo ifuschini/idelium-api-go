@@ -159,6 +159,70 @@ func (r *BrowserAuthRepository) ClaimParallelRun(request *http.Request, input br
 	return run, nil
 }
 
+func (r *BrowserAuthRepository) HeartbeatParallelRunWorker(request *http.Request, tenantID, projectID, runID int64, workerID string, leaseSeconds int, now time.Time) (browserauth.ParallelRunHeartbeat, error) {
+	ctx := request.Context()
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return browserauth.ParallelRunHeartbeat{}, safeDatabaseFailure("start parallel run heartbeat transaction", err)
+	}
+	defer tx.Rollback()
+	var status string
+	var aggregate sql.NullInt64
+	var completedAt sql.NullTime
+	var workerJSON sql.NullString
+	err = tx.QueryRowContext(ctx, `SELECT status, aggregateStatus, completedAt, workerStates FROM parallel_run_schedules
+		WHERE id = ? AND idCostumer = ? AND idProject = ? FOR UPDATE`, runID, tenantID, projectID).
+		Scan(&status, &aggregate, &completedAt, &workerJSON)
+	if err != nil {
+		return browserauth.ParallelRunHeartbeat{}, parallelRunNotFound("lock parallel run worker heartbeat", err)
+	}
+	workers := decodeParallelMap(workerJSON)
+	recalculateParallelRunWorkers(workers, now)
+	if parallelRunTerminal(status) {
+		return browserauth.ParallelRunHeartbeat{}, browserauth.ErrParallelRunTerminal
+	}
+	worker, exists := workers[workerID].(map[string]any)
+	if !exists {
+		return browserauth.ParallelRunHeartbeat{}, browserauth.ErrParallelWorkerMissing
+	}
+	workerStatus, _ := worker["status"].(string)
+	if workerStatus == "running" {
+		worker["lastHeartbeatAt"] = parallelRunISOString(now)
+		worker["leaseExpiresAt"] = parallelRunISOString(now.Add(time.Duration(leaseSeconds) * time.Second))
+		worker["updatedAt"] = parallelRunISOString(now)
+	}
+	counters, summary := recalculateParallelRunWorkers(workers, now)
+	nextStatus, nextAggregate, nextCompletedAt := parallelRunWorkerOutcome(status, aggregate, completedAt, counters, now)
+	workersJSON, err := json.Marshal(workers)
+	if err != nil {
+		return browserauth.ParallelRunHeartbeat{}, errors.New("parallel run worker state is invalid")
+	}
+	summaryJSON, err := json.Marshal(summary)
+	if err != nil {
+		return browserauth.ParallelRunHeartbeat{}, errors.New("parallel run result summary is invalid")
+	}
+	_, err = tx.ExecContext(ctx, `UPDATE parallel_run_schedules SET status = ?, aggregateStatus = ?, completedAt = ?,
+		workerStates = ?, resultSummary = ?, activeWorkers = ?, totalWorkers = ?, completedWorkers = ?,
+		failedWorkers = ?, cancelledWorkers = ?, updated_at = ? WHERE id = ? AND idCostumer = ? AND idProject = ?`,
+		nextStatus, nextAggregate, nextCompletedAt, string(workersJSON), string(summaryJSON), counters.active, counters.total,
+		counters.completed, counters.failed, counters.cancelled, now, runID, tenantID, projectID)
+	if err != nil {
+		return browserauth.ParallelRunHeartbeat{}, safeDatabaseFailure("update parallel run worker heartbeat", err)
+	}
+	run, err := getParallelRun(ctx, tx, tenantID, projectID, runID)
+	if err != nil {
+		return browserauth.ParallelRunHeartbeat{}, err
+	}
+	if err := tx.Commit(); err != nil {
+		return browserauth.ParallelRunHeartbeat{}, safeDatabaseFailure("commit parallel run worker heartbeat", err)
+	}
+	result := browserauth.ParallelRunHeartbeat{Run: run}
+	if workerStatus != "running" {
+		result.WorkerStatus = workerStatus
+	}
+	return result, nil
+}
+
 func (r *BrowserAuthRepository) recordParallelRunTokenAudit(request *http.Request, input browserauth.ParallelRunClaim, action, result string) error {
 	values, err := json.Marshal(map[string]any{"agentId": input.WorkerID, "tokenId": "[REDACTED]", "token": "[REDACTED]"})
 	if err != nil {
@@ -236,7 +300,7 @@ func validateParallelRunAgent(ctx context.Context, tx *sql.Tx, input browserauth
 	return nil
 }
 
-type parallelWorkerCounters struct{ active, total, completed, failed, cancelled int }
+type parallelWorkerCounters struct{ active, total, completed, failed, cancelled, lost int }
 
 func recalculateParallelRunWorkers(workers map[string]any, now time.Time) (parallelWorkerCounters, []map[string]any) {
 	ids := make([]string, 0, len(workers))
@@ -254,9 +318,10 @@ func recalculateParallelRunWorkers(workers map[string]any, now time.Time) (paral
 		}
 		if status == "running" {
 			if expiry, ok := worker["leaseExpiresAt"].(string); ok {
-				if parsed, err := time.Parse(time.RFC3339Nano, expiry); err == nil && !parsed.After(now) {
+				if parsed, err := time.Parse(time.RFC3339Nano, expiry); err == nil && parsed.Before(now) {
 					status = "lost"
 					worker["status"] = status
+					worker["lostAt"] = parallelRunISOString(now)
 					worker["updatedAt"] = parallelRunISOString(now)
 				}
 			}
@@ -270,10 +335,42 @@ func recalculateParallelRunWorkers(workers map[string]any, now time.Time) (paral
 			counters.failed++
 		case "cancelled":
 			counters.cancelled++
+		case "lost":
+			counters.lost++
 		}
 		summary = append(summary, map[string]any{"workerId": id, "status": status, "result": worker["result"]})
 	}
 	return counters, summary
+}
+
+func parallelRunWorkerOutcome(currentStatus string, aggregate sql.NullInt64, completedAt sql.NullTime, counters parallelWorkerCounters, now time.Time) (string, any, any) {
+	aggregateValue := any(nil)
+	if aggregate.Valid {
+		aggregateValue = aggregate.Int64
+	}
+	completedValue := any(nil)
+	if completedAt.Valid {
+		completedValue = completedAt.Time
+	}
+	if counters.total == 0 || counters.active > 0 {
+		return currentStatus, aggregateValue, completedValue
+	}
+	if !completedAt.Valid {
+		completedValue = now
+	}
+	if counters.failed > 0 {
+		return "failed", 2, completedValue
+	}
+	if counters.lost > 0 {
+		return "lost", 4, completedValue
+	}
+	if counters.cancelled > 0 && counters.completed == 0 {
+		return "cancelled", 3, completedValue
+	}
+	if counters.cancelled > 0 {
+		return "failed", 3, completedValue
+	}
+	return "completed", 1, completedValue
 }
 
 func parallelRunTerminal(status string) bool {
