@@ -8,8 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
-	"strings"
 	"time"
 
 	"github.com/idelium/idelium-api-go/internal/auditlog"
@@ -364,23 +362,7 @@ func recordIntegrationAudit(ctx context.Context, tx *sql.Tx, request *http.Reque
 }
 
 func integrationApplicationKey() ([]byte, error) {
-	value := os.Getenv("APP_KEY")
-	filePath := os.Getenv("IDELIUM_APP_KEY_FILE")
-	if filePath == "" {
-		filePath = os.Getenv("APP_KEY_FILE")
-	}
-	if filePath != "" {
-		contents, err := os.ReadFile(filePath)
-		if err != nil {
-			return nil, errors.New("integration application key file is not readable")
-		}
-		value = strings.TrimRight(string(contents), "\r\n")
-	}
-	key, err := integrations.ParseApplicationKey(value)
-	if err != nil {
-		return nil, errors.New("integration application key is not configured")
-	}
-	return key, nil
+	return integrations.ApplicationKeyFromEnvironment()
 }
 
 func sha256Hex(value []byte) string {

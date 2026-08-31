@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -40,6 +41,28 @@ func ParseApplicationKey(value string) ([]byte, error) {
 		return nil, ErrInvalidApplicationKey
 	}
 	return []byte(value), nil
+}
+
+// ApplicationKeyFromEnvironment loads APP_KEY from a value or mounted secret
+// file without exposing key material in diagnostics.
+func ApplicationKeyFromEnvironment() ([]byte, error) {
+	value := os.Getenv("APP_KEY")
+	filePath := os.Getenv("IDELIUM_APP_KEY_FILE")
+	if filePath == "" {
+		filePath = os.Getenv("APP_KEY_FILE")
+	}
+	if filePath != "" {
+		contents, err := os.ReadFile(filePath)
+		if err != nil {
+			return nil, errors.New("integration application key file is not readable")
+		}
+		value = strings.TrimRight(string(contents), "\r\n")
+	}
+	key, err := ParseApplicationKey(value)
+	if err != nil {
+		return nil, errors.New("integration application key is not configured")
+	}
+	return key, nil
 }
 
 // EncryptLaravelString produces the AES-256-CBC envelope used by Laravel's

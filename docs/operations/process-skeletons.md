@@ -8,13 +8,16 @@ The repository builds three process entry points:
 - `cmd/worker`, reserved for background jobs that move with their owning domain;
 - `cmd/migrate`, reserved for reviewed Go-owned schema migrations.
 
-The worker and migration binaries are intentionally fail-closed. They print safe
-build identity with `-version`, but refuse normal execution until an owning domain
-and handler are registered together. This prevents an empty worker from appearing
-healthy and prevents a no-op migration command from reporting false success.
+The migration binary remains fail-closed outside its explicit verification and
+bridge modes. The worker is now registered to the integration-delivery domain,
+but remains disabled unless `IDELIUM_INTEGRATION_WORKER_ENABLED=true` is set
+after the Laravel queue drain. This prevents an empty or premature worker from
+appearing healthy.
 
-The current API container continues to include only `cmd/api`. Docker and release
-artifacts must not publish or schedule either skeleton as an operational process.
+The pinned image contains `/idelium-api-go`, `/idelium-worker`, and the explicit
+`/idelium-migrate` verification/bridge command; the API remains the default
+entrypoint. Deployments must schedule the worker as a separate,
+single-replica process only after the drain verifier reports ready.
 
 ## Activation gate
 
@@ -41,9 +44,7 @@ missing domain or handler exits nonzero with a stable, non-sensitive error.
 
 ## Compatibility, deployment, and rollback
 
-The skeletons expose no HTTP contract, connect to no database, consume no queue,
-and perform no writes. OpenAPI, differential, MySQL, and cross-tenant execution
-are therefore not applicable until activation. The deployment change is limited
-to compiling the entry points in verification; the runtime image remains
-unchanged. Rollback is a Git revert, with Laravel retaining all work and migration
-ownership.
+The queue-drain and worker activation contract is documented in
+`docs/operations/laravel-queue-drain.md`. It is not HTTP-visible, so OpenAPI is
+not applicable. Rollback stops the Go worker before Laravel queue processing is
+resumed; the shared compatible delivery rows require no reverse replay.

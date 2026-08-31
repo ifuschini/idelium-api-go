@@ -18,10 +18,10 @@ Test and replay requests persist a `pending` delivery in the existing
 `integration_deliveries` table. The Go HTTP service does not publish a Laravel
 serialized queue job. The Go dispatcher implements Laravel-compatible adapter
 payloads, HMAC headers, bounded retry, dead-letter state, optimistic attempt
-guards, and a second SSRF destination check, but polling is not enabled yet. Gateway
-ownership for these mutation routes must remain with Laravel until issue #149
-confirms that Laravel integration jobs are drained and the Go delivery worker is
-enabled. This prevents dual consumption and abandoned jobs.
+guards, and a second SSRF destination check. The `/idelium-worker` polling process
+is disabled by default and acquires a global MySQL advisory lease when enabled.
+Gateway ownership for mutation routes moves only after the issue #149 aggregate
+drain verifier reports ready. This prevents dual consumption and abandoned jobs.
 
 ## Deployment and rollback
 

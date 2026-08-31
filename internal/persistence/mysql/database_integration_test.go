@@ -1588,6 +1588,81 @@ func TestBrowserAssetImpactAndVersionReviewIntegration(t *testing.T) {
 	}
 }
 
+func TestLaravelQueueDrainUsesAggregateGlobalBacklogCountsIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS jobs",
+		"DROP TABLE IF EXISTS failed_jobs",
+		"DROP TABLE IF EXISTS integration_deliveries",
+		"DROP TABLE IF EXISTS result_exports",
+		`CREATE TABLE jobs (id BIGINT PRIMARY KEY AUTO_INCREMENT, queue VARCHAR(255) NOT NULL, payload LONGTEXT NOT NULL)`,
+		`CREATE TABLE failed_jobs (id BIGINT PRIMARY KEY AUTO_INCREMENT, uuid VARCHAR(255) NOT NULL, payload LONGTEXT NOT NULL, exception LONGTEXT NOT NULL)`,
+		`CREATE TABLE integration_deliveries (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT, status VARCHAR(32) NOT NULL, nextAttemptAt TIMESTAMP NULL,
+			created_at TIMESTAMP NULL, idCostumer BIGINT NOT NULL, idProject BIGINT NOT NULL
+		)`,
+		`CREATE TABLE result_exports (id BIGINT PRIMARY KEY AUTO_INCREMENT, status VARCHAR(32) NOT NULL, idCostumer BIGINT NOT NULL)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare queue drain fixture %q: %v", statement, err)
+		}
+	}
+	repository := NewBrowserAuthRepository(database)
+	ready, err := integrations.VerifyQueueDrain(ctx, repository, "database", true)
+	if err != nil || ready.Status != "ready" || ready.TotalBlockingJobs != 0 {
+		t.Fatalf("unexpected empty queue verification: %#v err=%v", ready, err)
+	}
+	for _, statement := range []string{
+		`INSERT INTO jobs (queue, payload) VALUES ('default', 'opaque')`,
+		`INSERT INTO failed_jobs (uuid, payload, exception) VALUES ('failed-1', 'opaque', 'opaque')`,
+		`INSERT INTO integration_deliveries (status, nextAttemptAt, created_at, idCostumer, idProject) VALUES
+			('pending', NULL, '2026-08-31 10:00:00', 11, 5),
+			('failed', '2026-08-31 11:00:00', '2026-08-31 10:00:00', 42, 6),
+			('failed', '2026-09-01 11:00:00', '2026-08-31 10:00:00', 11, 5),
+			('dead_letter', NULL, '2026-08-31 10:00:00', 11, 5)`,
+		`INSERT INTO result_exports (status, idCostumer) VALUES ('queued', 11), ('completed', 42)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("seed queue drain fixture %q: %v", statement, err)
+		}
+	}
+	blocked, err := integrations.VerifyQueueDrain(ctx, repository, "database", true)
+	if err != nil || blocked.Status != "blocked" || blocked.TotalBlockingJobs != 6 || blocked.PendingDomainJobs["integration_deliveries"] != 3 || blocked.PendingDomainJobs["result_exports"] != 1 {
+		t.Fatalf("unexpected blocked queue verification: %#v err=%v", blocked, err)
+	}
+	nextID, err := repository.NextDispatchID(ctx, time.Date(2026, time.August, 31, 12, 0, 0, 0, time.UTC))
+	if err != nil || nextID != 1 {
+		t.Fatalf("unexpected next due delivery: id=%d err=%v", nextID, err)
+	}
+}
+
+func TestIntegrationDeliveryWorkerLeaseAllowsOnlyOneConsumerIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	first, err := AcquireIntegrationWorkerLease(ctx, database)
+	if err != nil {
+		t.Fatalf("acquire first integration worker lease: %v", err)
+	}
+	if _, err := AcquireIntegrationWorkerLease(ctx, database); err == nil {
+		t.Fatal("expected second integration worker lease to fail closed")
+	}
+	if err := first.Release(ctx); err != nil {
+		t.Fatalf("release integration worker lease: %v", err)
+	}
+	second, err := AcquireIntegrationWorkerLease(ctx, database)
+	if err != nil {
+		t.Fatalf("reacquire integration worker lease: %v", err)
+	}
+	if err := second.Release(ctx); err != nil {
+		t.Fatalf("release reacquired integration worker lease: %v", err)
+	}
+}
+
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()
