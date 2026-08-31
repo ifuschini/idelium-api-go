@@ -75,6 +75,7 @@ type Handler struct {
 	logger                *slog.Logger
 	now                   func() time.Time
 	runTokenRequiredClaim bool
+	runTokenTTL           time.Duration
 }
 
 type Project struct {
@@ -118,7 +119,11 @@ type AuditEvent struct {
 
 func NewHandler(users UserRepository, sessions SessionRepository, logger *slog.Logger) *Handler {
 	requireRunToken := !strings.EqualFold(strings.TrimSpace(os.Getenv("IDELIUM_RUN_TOKEN_REQUIRED_FOR_CLAIM")), "false")
-	return &Handler{users: users, sessions: sessions, logger: logger, now: time.Now, runTokenRequiredClaim: requireRunToken}
+	ttl := 300 * time.Second
+	if seconds, err := strconv.Atoi(os.Getenv("IDELIUM_RUN_TOKEN_TTL_SECONDS")); err == nil && seconds > 0 {
+		ttl = time.Duration(seconds) * time.Second
+	}
+	return &Handler{users: users, sessions: sessions, logger: logger, now: time.Now, runTokenRequiredClaim: requireRunToken, runTokenTTL: ttl}
 }
 
 func (h *Handler) CSRF(writer http.ResponseWriter, request *http.Request) {

@@ -154,6 +154,8 @@ type AdminRepository interface {
 	ClaimParallelRun(request *http.Request, input ParallelRunClaim) (ParallelRun, error)
 	HeartbeatParallelRunWorker(request *http.Request, tenantID, projectID, runID int64, workerID string, leaseSeconds int, now time.Time) (ParallelRunHeartbeat, error)
 	CancelParallelRun(request *http.Request, tenantID, projectID, runID int64, now time.Time) (ParallelRun, error)
+	IssueParallelRunToken(request *http.Request, tenantID, projectID, runID int64, agentID string, now time.Time, ttl time.Duration) (RunTokenIssued, error)
+	RevokeParallelRunToken(request *http.Request, tenantID, projectID, runID int64, tokenID string, now time.Time) (RunTokenRevoked, error)
 }
 
 type CustomerQuery struct {

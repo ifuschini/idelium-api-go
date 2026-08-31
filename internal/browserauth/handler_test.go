@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/idelium/idelium-api-go/internal/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -92,6 +93,11 @@ type sessionsStub struct {
 	heartbeatLease    int
 	parallelCancel    ParallelRun
 	parallelCancelErr error
+	issuedRunToken    RunTokenIssued
+	revokedRunToken   RunTokenRevoked
+	runTokenErr       error
+	runTokenAgent     string
+	runTokenTTL       time.Duration
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -320,6 +326,14 @@ func (s *sessionsStub) HeartbeatParallelRunWorker(_ *http.Request, tenantID, _ i
 }
 func (s *sessionsStub) CancelParallelRun(*http.Request, int64, int64, int64, time.Time) (ParallelRun, error) {
 	return s.parallelCancel, s.parallelCancelErr
+}
+func (s *sessionsStub) IssueParallelRunToken(_ *http.Request, _, _, _ int64, agentID string, _ time.Time, ttl time.Duration) (RunTokenIssued, error) {
+	s.runTokenAgent = agentID
+	s.runTokenTTL = ttl
+	return s.issuedRunToken, s.runTokenErr
+}
+func (s *sessionsStub) RevokeParallelRunToken(*http.Request, int64, int64, int64, string, time.Time) (RunTokenRevoked, error) {
+	return s.revokedRunToken, s.runTokenErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -1362,6 +1376,70 @@ func TestParallelRunCancellationContractsAndSafeErrors(t *testing.T) {
 	NewHandler(usersStub{}, sessions, testLogger()).CancelParallelRun(invalidResponse, invalid)
 	if invalidResponse.Code != http.StatusNotFound {
 		t.Fatalf("expected invalid cancellation path to be hidden, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
+	}
+}
+
+func TestParallelRunTokenIssueAndRevocationContracts(t *testing.T) {
+	t.Setenv("IDELIUM_RUN_TOKEN_TTL_SECONDS", "600")
+	sessions := &sessionsStub{
+		issuedRunToken:  RunTokenIssued{Token: "idrt_public.one-time-secret", ExpiresAt: "2026-08-31T17:10:00.000000Z", AgentID: "agent-1"},
+		revokedRunToken: RunTokenRevoked{TokenID: "idrt_public", RevokedAt: "2026-08-31T17:01:00.000000Z"},
+	}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	issue := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/40/tokens", strings.NewReader(`{"agentId":"agent-1"}`))
+	issue.SetPathValue("idProject", "5")
+	issue.SetPathValue("parallelRun", "40")
+	issue = issue.WithContext(auth.ContextWithTenant(issue.Context(), auth.TenantContext{CustomerID: 11}))
+	issueResponse := httptest.NewRecorder()
+	handler.CLIssueParallelRunToken(issueResponse, issue)
+	if issueResponse.Code != http.StatusCreated || !strings.Contains(issueResponse.Body.String(), `"token":"idrt_public.one-time-secret"`) || !strings.Contains(issueResponse.Body.String(), `"agentId":"agent-1"`) || sessions.runTokenAgent != "agent-1" || sessions.runTokenTTL != 10*time.Minute {
+		t.Fatalf("unexpected run token issue response: %d %s", issueResponse.Code, issueResponse.Body.String())
+	}
+
+	revoke := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/40/tokens/idrt_public/revoke", nil)
+	revoke.SetPathValue("idProject", "5")
+	revoke.SetPathValue("parallelRun", "40")
+	revoke.SetPathValue("tokenId", "idrt_public")
+	revoke = revoke.WithContext(auth.ContextWithTenant(revoke.Context(), auth.TenantContext{CustomerID: 11}))
+	revokeResponse := httptest.NewRecorder()
+	handler.CLRevokeParallelRunToken(revokeResponse, revoke)
+	if revokeResponse.Code != http.StatusOK || !strings.Contains(revokeResponse.Body.String(), `"tokenId":"idrt_public"`) || strings.Contains(revokeResponse.Body.String(), "one-time-secret") {
+		t.Fatalf("unexpected run token revoke response: %d %s", revokeResponse.Code, revokeResponse.Body.String())
+	}
+}
+
+func TestParallelRunTokenValidationAndSafeErrors(t *testing.T) {
+	sessions := &sessionsStub{}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	invalid := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/40/tokens", strings.NewReader(`{"agentId":""}`))
+	invalid.SetPathValue("idProject", "5")
+	invalid.SetPathValue("parallelRun", "40")
+	invalid = invalid.WithContext(auth.ContextWithTenant(invalid.Context(), auth.TenantContext{CustomerID: 11}))
+	invalidResponse := httptest.NewRecorder()
+	handler.CLIssueParallelRunToken(invalidResponse, invalid)
+	if invalidResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(invalidResponse.Body.String(), `"agentId"`) {
+		t.Fatalf("expected agent validation, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
+	}
+
+	for _, test := range []struct {
+		err        error
+		status     int
+		contains   string
+		notContain string
+	}{
+		{err: ErrNotFound, status: http.StatusNotFound, contains: "Not found"},
+		{err: errors.New("token hash and database password must not be returned"), status: http.StatusInternalServerError, contains: "could not be completed", notContain: "token hash"},
+	} {
+		sessions.runTokenErr = test.err
+		request := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/40/tokens", strings.NewReader(`{"agentId":"agent-1"}`))
+		request.SetPathValue("idProject", "5")
+		request.SetPathValue("parallelRun", "40")
+		request = request.WithContext(auth.ContextWithTenant(request.Context(), auth.TenantContext{CustomerID: 11}))
+		response := httptest.NewRecorder()
+		handler.CLIssueParallelRunToken(response, request)
+		if response.Code != test.status || !strings.Contains(response.Body.String(), test.contains) || (test.notContain != "" && strings.Contains(response.Body.String(), test.notContain)) {
+			t.Fatalf("unexpected run token error response: %d %s", response.Code, response.Body.String())
+		}
 	}
 }
 

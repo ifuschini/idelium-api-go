@@ -2345,6 +2345,59 @@ paths:
           $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
+  /ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens:
+    post:
+      operationId: issueCLIParallelRunToken
+      summary: Issue a short-lived one-use run token
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "api-key"
+      x-idelium-authentication-mode: "api-key"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/ParallelRunID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunTokenIssue"
+      responses:
+        "201":
+          $ref: "#/components/responses/RunTokenIssued"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke:
+    post:
+      operationId: revokeCLIParallelRunToken
+      summary: Revoke a tenant-and-run-scoped token idempotently
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "api-key"
+      x-idelium-authentication-mode: "api-key"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/ParallelRunID"
+        - $ref: "#/components/parameters/RunTokenID"
+      responses:
+        "200":
+          $ref: "#/components/responses/RunTokenRevoked"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
   # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS
   /:
     get:
@@ -5757,105 +5810,6 @@ paths:
           $ref: "#/components/responses/Forbidden"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
-  /ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens:
-    post:
-      operationId: postIdeliumclProjectsIdProjectParallelRunsParallelRunTokens
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@issueRunToken"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "api-key"
-      x-idelium-authentication-mode: "api-key"
-      x-idelium-tenant-context: false
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: parallelRun
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke:
-    post:
-      operationId: postIdeliumclProjectsIdProjectParallelRunsParallelRunTokensTokenIdRevoke
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@revokeRunToken"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "api-key"
-      x-idelium-authentication-mode: "api-key"
-      x-idelium-tenant-context: false
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: parallelRun
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: tokenId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
   /ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}:
     put:
       operationId: putIdeliumclProjectsIdProjectParallelRunsParallelRunWorkersWorkerId
@@ -6514,6 +6468,14 @@ components:
       schema:
         type: string
         pattern: "^[A-Fa-f0-9]{64}$"
+    RunTokenID:
+      name: tokenId
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
     RunBuildFilter:
       name: build
       in: query
@@ -6662,6 +6624,18 @@ components:
                   workerStatus:
                     type: string
                     enum: [completed, failed, cancelled, lost]
+    RunTokenIssued:
+      description: The plaintext token is returned only in this response.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RunTokenIssueResponse"
+    RunTokenRevoked:
+      description: Idempotent run token revocation result.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RunTokenRevokeResponse"
     LegacyCompatibilityError:
       description: Laravel-compatible error response.
       headers:
@@ -6790,6 +6764,31 @@ components:
           minimum: 15
           maximum: 3600
           default: 120
+    RunTokenIssue:
+      type: object
+      required: [agentId]
+      additionalProperties: false
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+          maxLength: 128
+    RunTokenIssueResponse:
+      type: object
+      required: [token, expiresAt, agentId]
+      properties:
+        token:
+          type: string
+          writeOnly: true
+          description: One-use plaintext credential; never persisted or logged.
+        expiresAt: {type: string, format: date-time}
+        agentId: {type: string, maxLength: 128}
+    RunTokenRevokeResponse:
+      type: object
+      required: [tokenId, revokedAt]
+      properties:
+        tokenId: {type: string, maxLength: 64}
+        revokedAt: {type: string, format: date-time}
     ParallelRun:
       type: object
       required: [id, runUrl, idProject, testCycleId, performedTestCycleId, idempotencyKey, status, requestedConcurrency, activeWorkers, totalWorkers, completedWorkers, failedWorkers, cancelledWorkers, lostWorkers, aggregateStatus, metadata, resultSummary, scheduledAt, startedAt, completedAt, cancelledAt]

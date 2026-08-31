@@ -1939,6 +1939,67 @@ func TestParallelRunWorkerClaimsUseRowLocksAndTenantScopeIntegration(t *testing.
 	if err != nil || emptyCancelled.Status != "cancelled" || emptyCancelled.TotalWorkers != 0 || emptyCancelled.AggregateStatus == nil || *emptyCancelled.AggregateStatus != 3 {
 		t.Fatalf("empty schedule cancellation did not converge: %#v err=%v", emptyCancelled, err)
 	}
+	if _, err := database.ExecContext(ctx, `INSERT INTO parallel_run_schedules
+		(id, idProject, testCycleId, idCostumer, idempotencyKey, status, requestedConcurrency, activeWorkers, totalWorkers,
+		completedWorkers, failedWorkers, cancelledWorkers, workerStates, resultSummary, metadata, scheduledAt, created_at, updated_at)
+		VALUES (47, 5, 7, 11, 'token-lifecycle', 'queued', 1, 0, 0, 0, 0, 0, '{}', '[]', '{}', ?, ?, ?)`, now, now, now); err != nil {
+		t.Fatal(err)
+	}
+	issueRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/47/tokens", nil)
+	issued, err := repository.IssueParallelRunToken(issueRequest, 11, 5, 47, "agent-lifecycle", now, 5*time.Minute)
+	if err != nil || issued.AgentID != "agent-lifecycle" || issued.ExpiresAt != parallelRunISOString(now.Add(5*time.Minute)) || !strings.HasPrefix(issued.Token, "idrt_") {
+		t.Fatalf("unexpected issued run token: %#v err=%v", issued, err)
+	}
+	issuedTokenID, issuedSecret, ok := strings.Cut(issued.Token, ".")
+	if !ok || issuedSecret == "" {
+		t.Fatalf("issued run token format is invalid: %q", issued.Token)
+	}
+	var issuedHash string
+	var issuedExpiry time.Time
+	if err := database.QueryRowContext(ctx, "SELECT tokenHash, expiresAt FROM run_tokens WHERE tokenId = ?", issuedTokenID).Scan(&issuedHash, &issuedExpiry); err != nil || bcrypt.CompareHashAndPassword([]byte(issuedHash), []byte(issuedSecret)) != nil || strings.Contains(issuedHash, issuedSecret) {
+		t.Fatalf("issued token was not stored as a compatible hash: expiry=%v err=%v", issuedExpiry, err)
+	}
+	var issueAudit string
+	if err := database.QueryRowContext(ctx, "SELECT afterValues FROM audit_events WHERE action = 'run_token.issue' AND targetId = '47' ORDER BY id DESC LIMIT 1").Scan(&issueAudit); err != nil || strings.Contains(issueAudit, issuedSecret) || strings.Contains(issueAudit, issuedTokenID) {
+		t.Fatalf("issued token leaked into audit: %s err=%v", issueAudit, err)
+	}
+	foreignIssueRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/47/tokens", nil)
+	if _, err := repository.IssueParallelRunToken(foreignIssueRequest, 42, 5, 47, "foreign", now, 5*time.Minute); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-tenant token issue to be hidden, got %v", err)
+	}
+	foreignRevokeRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/47/tokens/"+issuedTokenID+"/revoke", nil)
+	if _, err := repository.RevokeParallelRunToken(foreignRevokeRequest, 42, 5, 47, issuedTokenID, now); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-tenant token revocation to be hidden, got %v", err)
+	}
+	revokeRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/47/tokens/"+issuedTokenID+"/revoke", nil)
+	revoked, err := repository.RevokeParallelRunToken(revokeRequest, 11, 5, 47, issuedTokenID, now.Add(time.Minute))
+	if err != nil || revoked.TokenID != issuedTokenID || revoked.RevokedAt != parallelRunISOString(now.Add(time.Minute)) {
+		t.Fatalf("unexpected token revocation: %#v err=%v", revoked, err)
+	}
+	repeatRevokeRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/47/tokens/"+issuedTokenID+"/revoke", nil)
+	repeatedRevocation, err := repository.RevokeParallelRunToken(repeatRevokeRequest, 11, 5, 47, issuedTokenID, now.Add(2*time.Minute))
+	if err != nil || repeatedRevocation.RevokedAt != revoked.RevokedAt {
+		t.Fatalf("run token revocation was not idempotent: %#v err=%v", repeatedRevocation, err)
+	}
+	revokedClaimRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/47/claim", nil)
+	if _, err := repository.ClaimParallelRun(revokedClaimRequest, browserauth.ParallelRunClaim{TenantID: 11, ActorTenantID: 11, ProjectID: 5, RunID: 47, WorkerID: "agent-lifecycle", RunToken: issued.Token, Now: now.Add(2 * time.Minute)}); !errors.Is(err, browserauth.ErrRunTokenInvalid) {
+		t.Fatalf("expected revoked token validation failure, got %v", err)
+	}
+	if _, err := database.ExecContext(ctx, `INSERT INTO parallel_run_schedules
+		(id, idProject, testCycleId, idCostumer, idempotencyKey, status, requestedConcurrency, activeWorkers, totalWorkers,
+		completedWorkers, failedWorkers, cancelledWorkers, workerStates, resultSummary, metadata, scheduledAt, created_at, updated_at)
+		VALUES (48, 5, 7, 11, 'php-token-compatibility', 'queued', 1, 0, 0, 0, 0, 0, '{}', '[]', '{}', ?, ?, ?)`, now, now, now); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.ExecContext(ctx, `INSERT INTO run_tokens (idCostumer, idProject, parallelRunScheduleId, agentId, tokenId, tokenHash, expiresAt, created_at, updated_at)
+		VALUES (11, 5, 48, 'php-agent', 'idrt_phpcompat', '$2y$10$iKmrt4AdXvaS2tmE4WmFI.AeafiGVGS2WbPJxFXQ.X6Uiivuqb.5a', ?, ?, ?)`, now.Add(5*time.Minute), now, now); err != nil {
+		t.Fatal(err)
+	}
+	phpTokenRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/48/claim", nil)
+	phpCompatibleClaim, err := repository.ClaimParallelRun(phpTokenRequest, browserauth.ParallelRunClaim{TenantID: 11, ActorTenantID: 11, ProjectID: 5, RunID: 48, WorkerID: "php-agent", RunToken: "idrt_phpcompat.laravel-compat-secret", Now: now})
+	if err != nil || phpCompatibleClaim.ActiveWorkers != 1 {
+		t.Fatalf("PHP bcrypt run token was not compatible: %#v err=%v", phpCompatibleClaim, err)
+	}
 }
 
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {

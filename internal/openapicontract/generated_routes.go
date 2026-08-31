@@ -74,6 +74,8 @@ type ServerInterface interface {
 	HeartbeatCLIParallelRunWorker(http.ResponseWriter, *http.Request)
 	CancelBrowserParallelRun(http.ResponseWriter, *http.Request)
 	CancelCLIParallelRun(http.ResponseWriter, *http.Request)
+	IssueCLIParallelRunToken(http.ResponseWriter, *http.Request)
+	RevokeCLIParallelRunToken(http.ResponseWriter, *http.Request)
 	Get(http.ResponseWriter, *http.Request)
 	GetAdminAccounts(http.ResponseWriter, *http.Request)
 	PostAdminAccounts(http.ResponseWriter, *http.Request)
@@ -172,8 +174,6 @@ type ServerInterface interface {
 	GetCsrfCookie(http.ResponseWriter, *http.Request)
 	PostIdeliumclAgentsRegister(http.ResponseWriter, *http.Request)
 	GetIdeliumclProjectsIdProjectParallelRunsParallelRunResults(http.ResponseWriter, *http.Request)
-	PostIdeliumclProjectsIdProjectParallelRunsParallelRunTokens(http.ResponseWriter, *http.Request)
-	PostIdeliumclProjectsIdProjectParallelRunsParallelRunTokensTokenIdRevoke(http.ResponseWriter, *http.Request)
 	PutIdeliumclProjectsIdProjectParallelRunsParallelRunWorkersWorkerId(http.ResponseWriter, *http.Request)
 	PostIdeliumrunnerClaim(http.ResponseWriter, *http.Request)
 	PostIdeliumrunnerHeartbeat(http.ResponseWriter, *http.Request)
@@ -805,6 +805,28 @@ var Operations = []Operation{
 		OperationID:        "cancelCLIParallelRun",
 		Tags:               []string{"Parallel Runs"},
 		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
+		AuthenticationMode: "api-key",
+		TrustPath:          "api-key",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens",
+		OperationID:        "issueCLIParallelRunToken",
+		Tags:               []string{"Parallel Runs"},
+		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens",
+		AuthenticationMode: "api-key",
+		TrustPath:          "api-key",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke",
+		OperationID:        "revokeCLIParallelRunToken",
+		Tags:               []string{"Parallel Runs"},
+		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke",
 		AuthenticationMode: "api-key",
 		TrustPath:          "api-key",
 		TenantContext:      true,
@@ -1883,28 +1905,6 @@ var Operations = []Operation{
 		OperationID:        "getIdeliumclProjectsIdProjectParallelRunsParallelRunResults",
 		Tags:               []string{"Laravel Compatibility"},
 		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results",
-		AuthenticationMode: "api-key",
-		TrustPath:          "api-key",
-		TenantContext:      false,
-		Consumers:          nil,
-	},
-	{
-		Method:             "POST",
-		Path:               "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens",
-		OperationID:        "postIdeliumclProjectsIdProjectParallelRunsParallelRunTokens",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens",
-		AuthenticationMode: "api-key",
-		TrustPath:          "api-key",
-		TenantContext:      false,
-		Consumers:          nil,
-	},
-	{
-		Method:             "POST",
-		Path:               "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke",
-		OperationID:        "postIdeliumclProjectsIdProjectParallelRunsParallelRunTokensTokenIdRevoke",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke",
 		AuthenticationMode: "api-key",
 		TrustPath:          "api-key",
 		TenantContext:      false,

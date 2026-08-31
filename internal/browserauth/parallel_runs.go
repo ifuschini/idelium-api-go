@@ -87,6 +87,17 @@ type ParallelRunHeartbeat struct {
 	WorkerStatus string
 }
 
+type RunTokenIssued struct {
+	Token     string `json:"token"`
+	ExpiresAt string `json:"expiresAt"`
+	AgentID   string `json:"agentId"`
+}
+
+type RunTokenRevoked struct {
+	TokenID   string `json:"tokenId"`
+	RevokedAt string `json:"revokedAt"`
+}
+
 func (h *Handler) ParallelRuns(writer http.ResponseWriter, request *http.Request) {
 	user, ok := h.authenticatedUser(writer, request)
 	if !ok {
@@ -204,6 +215,67 @@ func (h *Handler) CLCancelParallelRun(writer http.ResponseWriter, request *http.
 		return
 	}
 	h.cancelParallelRun(writer, request, tenant.CustomerID)
+}
+
+func (h *Handler) CLIssueParallelRunToken(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		h.unauthorized(writer)
+		return
+	}
+	projectID, runID, ok := parseAssetVersionPath(writer, request, "parallelRun")
+	if !ok {
+		return
+	}
+	var body struct {
+		AgentID string `json:"agentId"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil {
+		validationError(writer, "agentId", "The agent id field is invalid.")
+		return
+	}
+	body.AgentID = strings.TrimSpace(body.AgentID)
+	if body.AgentID == "" || len(body.AgentID) > 128 {
+		validationError(writer, "agentId", "The agent id field is invalid.")
+		return
+	}
+	issued, err := h.sessions.IssueParallelRunToken(request, tenant.CustomerID, projectID, runID, body.AgentID, h.now().UTC(), h.runTokenTTL)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "issue parallel run token", err)
+		return
+	}
+	writeJSON(writer, http.StatusCreated, issued)
+}
+
+func (h *Handler) CLRevokeParallelRunToken(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		h.unauthorized(writer)
+		return
+	}
+	projectID, runID, ok := parseAssetVersionPath(writer, request, "parallelRun")
+	if !ok {
+		return
+	}
+	tokenID := request.PathValue("tokenId")
+	if tokenID == "" || len(tokenID) > 64 {
+		h.notFound(writer)
+		return
+	}
+	revoked, err := h.sessions.RevokeParallelRunToken(request, tenant.CustomerID, projectID, runID, tokenID, h.now().UTC())
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "revoke parallel run token", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, revoked)
 }
 
 func (h *Handler) cancelParallelRun(writer http.ResponseWriter, request *http.Request, tenantID int64) {

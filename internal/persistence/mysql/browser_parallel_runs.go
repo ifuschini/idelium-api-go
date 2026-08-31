@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
 	"database/sql"
@@ -274,6 +275,109 @@ func (r *BrowserAuthRepository) CancelParallelRun(request *http.Request, tenantI
 		return browserauth.ParallelRun{}, safeDatabaseFailure("commit parallel run cancellation", err)
 	}
 	return run, nil
+}
+
+func (r *BrowserAuthRepository) IssueParallelRunToken(request *http.Request, tenantID, projectID, runID int64, agentID string, now time.Time, ttl time.Duration) (browserauth.RunTokenIssued, error) {
+	ctx := request.Context()
+	var scheduleID int64
+	if err := r.database.QueryRowContext(ctx, "SELECT id FROM parallel_run_schedules WHERE id = ? AND idCostumer = ? AND idProject = ?", runID, tenantID, projectID).Scan(&scheduleID); err != nil {
+		return browserauth.RunTokenIssued{}, parallelRunNotFound("load parallel run for token issue", err)
+	}
+	tokenIDPart, err := randomParallelRunTokenPart(12)
+	if err != nil {
+		return browserauth.RunTokenIssued{}, errors.New("run token identifier generation failed")
+	}
+	secret, err := randomParallelRunTokenPart(32)
+	if err != nil {
+		return browserauth.RunTokenIssued{}, errors.New("run token secret generation failed")
+	}
+	tokenID := "idrt_" + tokenIDPart
+	hash, err := bcrypt.GenerateFromPassword([]byte(secret), bcrypt.DefaultCost)
+	if err != nil {
+		return browserauth.RunTokenIssued{}, errors.New("run token hashing failed")
+	}
+	expiresAt := now.Add(ttl)
+	_, err = r.database.ExecContext(ctx, `INSERT INTO run_tokens
+		(idCostumer, idProject, parallelRunScheduleId, agentId, tokenId, tokenHash, expiresAt, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, tenantID, projectID, scheduleID, agentID, tokenID, string(hash), expiresAt, now, now)
+	if err != nil {
+		return browserauth.RunTokenIssued{}, safeDatabaseFailure("issue parallel run token", err)
+	}
+	if err := r.recordParallelRunTokenLifecycleAudit(request, tenantID, projectID, runID, "run_token.issue", nil,
+		map[string]any{"agentId": agentID, "tokenId": "[REDACTED]", "token": "[REDACTED]", "expiresAt": parallelRunISOString(expiresAt)}); err != nil {
+		return browserauth.RunTokenIssued{}, err
+	}
+	return browserauth.RunTokenIssued{Token: tokenID + "." + secret, ExpiresAt: parallelRunISOString(expiresAt), AgentID: agentID}, nil
+}
+
+func (r *BrowserAuthRepository) RevokeParallelRunToken(request *http.Request, tenantID, projectID, runID int64, tokenID string, now time.Time) (browserauth.RunTokenRevoked, error) {
+	ctx := request.Context()
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return browserauth.RunTokenRevoked{}, safeDatabaseFailure("start run token revocation transaction", err)
+	}
+	defer tx.Rollback()
+	var id int64
+	var agentID string
+	var revokedAt sql.NullTime
+	err = tx.QueryRowContext(ctx, `SELECT id, agentId, revokedAt FROM run_tokens
+		WHERE tokenId = ? AND idCostumer = ? AND idProject = ? AND parallelRunScheduleId = ? FOR UPDATE`, tokenID, tenantID, projectID, runID).
+		Scan(&id, &agentID, &revokedAt)
+	if err != nil {
+		return browserauth.RunTokenRevoked{}, parallelRunNotFound("lock parallel run token revocation", err)
+	}
+	before := map[string]any{"tokenId": "[REDACTED]", "revokedAt": nil}
+	if revokedAt.Valid {
+		before["revokedAt"] = parallelRunISOString(revokedAt.Time)
+	} else {
+		if _, err := tx.ExecContext(ctx, "UPDATE run_tokens SET revokedAt = ?, updated_at = ? WHERE id = ? AND revokedAt IS NULL", now, now, id); err != nil {
+			return browserauth.RunTokenRevoked{}, safeDatabaseFailure("revoke parallel run token", err)
+		}
+		revokedAt = sql.NullTime{Time: now, Valid: true}
+	}
+	if err := tx.Commit(); err != nil {
+		return browserauth.RunTokenRevoked{}, safeDatabaseFailure("commit run token revocation", err)
+	}
+	after := map[string]any{"agentId": agentID, "tokenId": "[REDACTED]", "revokedAt": parallelRunISOString(revokedAt.Time)}
+	if err := r.recordParallelRunTokenLifecycleAudit(request, tenantID, projectID, runID, "run_token.revoke", before, after); err != nil {
+		return browserauth.RunTokenRevoked{}, err
+	}
+	return browserauth.RunTokenRevoked{TokenID: tokenID, RevokedAt: parallelRunISOString(revokedAt.Time)}, nil
+}
+
+func (r *BrowserAuthRepository) recordParallelRunTokenLifecycleAudit(request *http.Request, tenantID, projectID, runID int64, action string, before, after map[string]any) error {
+	var beforeJSON any
+	if before != nil {
+		encoded, err := json.Marshal(before)
+		if err != nil {
+			return errors.New("run token audit values are invalid")
+		}
+		beforeJSON = string(encoded)
+	}
+	var afterJSON any
+	if after != nil {
+		encoded, err := json.Marshal(after)
+		if err != nil {
+			return errors.New("run token audit values are invalid")
+		}
+		afterJSON = string(encoded)
+	}
+	_, err := r.database.ExecContext(request.Context(), `INSERT INTO audit_events
+		(actorUserId, actorTenantId, activeTenantId, idProject, action, targetType, targetId, beforeValues, afterValues, result, sourceIp, correlationId, metadata)
+		VALUES (NULL, ?, ?, ?, ?, 'parallel_run_schedule', ?, ?, ?, 'success', ?, ?, NULL)`,
+		tenantID, tenantID, projectID, action, runID, beforeJSON, afterJSON, sourceIP(request), correlationID(request))
+	if err != nil {
+		return safeDatabaseFailure("record run token lifecycle audit", err)
+	}
+	return nil
+}
+
+func randomParallelRunTokenPart(bytesCount int) (string, error) {
+	value := make([]byte, bytesCount)
+	if _, err := rand.Read(value); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(value), nil
 }
 
 func (r *BrowserAuthRepository) recordParallelRunTokenAudit(request *http.Request, input browserauth.ParallelRunClaim, action, result string) error {

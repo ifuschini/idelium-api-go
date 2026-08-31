@@ -295,6 +295,12 @@ func (fakeBrowserAuthRepository) HeartbeatParallelRunWorker(*http.Request, int64
 func (fakeBrowserAuthRepository) CancelParallelRun(*http.Request, int64, int64, int64, time.Time) (browserauth.ParallelRun, error) {
 	return browserauth.ParallelRun{}, nil
 }
+func (fakeBrowserAuthRepository) IssueParallelRunToken(*http.Request, int64, int64, int64, string, time.Time, time.Duration) (browserauth.RunTokenIssued, error) {
+	return browserauth.RunTokenIssued{}, nil
+}
+func (fakeBrowserAuthRepository) RevokeParallelRunToken(*http.Request, int64, int64, int64, string, time.Time) (browserauth.RunTokenRevoked, error) {
+	return browserauth.RunTokenRevoked{}, nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {
