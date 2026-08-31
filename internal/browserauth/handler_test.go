@@ -71,6 +71,7 @@ type sessionsStub struct {
 	lifecycleUpdate   ArtifactLifecycleUpdate
 	gridSnapshotInput GridQuerySnapshotCreate
 	gridJobInput      GridBulkJobCreate
+	integrationInput  IntegrationEndpointCreate
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -232,6 +233,28 @@ func (s *sessionsStub) GetGridBulkJob(*http.Request, User, string) (GridBulkJob,
 }
 func (s *sessionsStub) ExportGridBulkJob(*http.Request, User, string, time.Time) (GridBulkExport, error) {
 	return GridBulkExport{Filename: "idelium-projects-export.csv", Payload: "id,name\n1,Project\n"}, s.accountErr
+}
+func (s *sessionsStub) ListIntegrationEndpoints(*http.Request, User, int64) ([]IntegrationEndpoint, error) {
+	return []IntegrationEndpoint{{ID: 9, IDProject: 5, Name: "Release events", Adapter: "webhook", URL: "https://93.184.216.34/hooks", Events: []string{"*"}, Status: "active", SecretConfigured: true, SchemaVersion: "2026-07-28.v1"}}, s.accountErr
+}
+func (s *sessionsStub) CreateIntegrationEndpoint(_ *http.Request, _ User, input IntegrationEndpointCreate) (IntegrationEndpoint, error) {
+	s.integrationInput = input
+	return IntegrationEndpoint{ID: 9, IDProject: input.ProjectID, Name: input.Name, Adapter: input.Adapter, URL: input.URL, Events: input.Events, Status: "active", SecretConfigured: true, SchemaVersion: "2026-07-28.v1"}, s.accountErr
+}
+func (s *sessionsStub) CreateIntegrationTestDelivery(*http.Request, User, int64, int64, time.Time) (IntegrationDelivery, error) {
+	return IntegrationDelivery{ID: 20, DeliveryID: "idwh_test", Event: "integration.test", Status: "pending"}, s.accountErr
+}
+func (s *sessionsStub) UpdateIntegrationEndpointStatus(*http.Request, User, int64, int64, string, time.Time) (IntegrationEndpoint, error) {
+	return IntegrationEndpoint{ID: 9, IDProject: 5, Name: "Release events", Status: "disabled", SecretConfigured: true}, s.accountErr
+}
+func (s *sessionsStub) RotateIntegrationEndpointSecret(*http.Request, User, int64, int64, string, time.Time) (IntegrationEndpoint, error) {
+	return IntegrationEndpoint{ID: 9, IDProject: 5, Name: "Release events", Status: "active", SecretConfigured: true}, s.accountErr
+}
+func (s *sessionsStub) ListIntegrationDeliveries(*http.Request, User, int64, string) ([]IntegrationDelivery, error) {
+	return []IntegrationDelivery{{ID: 20, DeliveryID: "idwh_test", Event: "integration.test", Status: "dead_letter", Attempts: 3}}, s.accountErr
+}
+func (s *sessionsStub) ReplayIntegrationDelivery(*http.Request, User, int64, int64, time.Time) (IntegrationDelivery, error) {
+	return IntegrationDelivery{ID: 20, DeliveryID: "idwh_test", Event: "integration.test", Status: "pending", Attempts: 3}, s.accountErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -866,6 +889,71 @@ func TestGridBulkJobHandlersHideForeignResourcesAndExportCSV(t *testing.T) {
 	handler.ShowGridBulkJob(foreignResponse, showRequest)
 	if foreignResponse.Code != http.StatusNotFound {
 		t.Fatalf("expected hidden foreign grid job, got %d %s", foreignResponse.Code, foreignResponse.Body.String())
+	}
+}
+
+func TestIntegrationEndpointHandlersValidateCapabilitiesAndRedactSecrets(t *testing.T) {
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 2}}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+
+	createRequest := httptest.NewRequest(http.MethodPost, "/admin/projects/5/integrations", strings.NewReader(`{"name":"Release events","adapter":"webhook","url":"https://93.184.216.34/hooks/idelium","secret":"super-secret-value","events":["test.completed","test.completed"]}`))
+	createRequest.SetPathValue("idProject", "5")
+	createRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	createResponse := httptest.NewRecorder()
+	handler.CreateIntegrationEndpoint(createResponse, createRequest)
+	if createResponse.Code != http.StatusCreated || sessions.integrationInput.ProjectID != 5 || len(sessions.integrationInput.Events) != 1 || strings.Contains(createResponse.Body.String(), "super-secret-value") || strings.Contains(createResponse.Body.String(), "secretEncrypted") {
+		t.Fatalf("unexpected integration create response/input: %d %s %#v", createResponse.Code, createResponse.Body.String(), sessions.integrationInput)
+	}
+
+	invalidRequest := httptest.NewRequest(http.MethodPost, "/admin/projects/5/integrations", strings.NewReader(`{"name":"Unsafe","adapter":"webhook","url":"http://127.0.0.1/metadata","secret":"super-secret-value"}`))
+	invalidRequest.SetPathValue("idProject", "5")
+	invalidRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	invalidResponse := httptest.NewRecorder()
+	handler.CreateIntegrationEndpoint(invalidResponse, invalidRequest)
+	if invalidResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(invalidResponse.Body.String(), "url") {
+		t.Fatalf("expected SSRF validation, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
+	}
+
+	userSessions := &sessionsStub{user: User{ID: 8, TenantID: 11, ActiveTenantID: 11, Role: 3}}
+	userHandler := NewHandler(usersStub{}, userSessions, testLogger())
+	forbiddenResponse := httptest.NewRecorder()
+	userHandler.CreateIntegrationEndpoint(forbiddenResponse, createRequest)
+	if forbiddenResponse.Code != http.StatusForbidden {
+		t.Fatalf("expected integrations.manage capability enforcement, got %d", forbiddenResponse.Code)
+	}
+}
+
+func TestIntegrationDeliveryHandlersPreserveStatusAndRetryEnvelopes(t *testing.T) {
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 2}}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+
+	testRequest := httptest.NewRequest(http.MethodPost, "/admin/projects/5/integrations/9/test", nil)
+	testRequest.SetPathValue("idProject", "5")
+	testRequest.SetPathValue("integrationEndpoint", "9")
+	testRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	testResponse := httptest.NewRecorder()
+	handler.TestIntegrationEndpoint(testResponse, testRequest)
+	if testResponse.Code != http.StatusAccepted || !strings.Contains(testResponse.Body.String(), `"status":"pending"`) {
+		t.Fatalf("unexpected test delivery response: %d %s", testResponse.Code, testResponse.Body.String())
+	}
+
+	deliveriesRequest := httptest.NewRequest(http.MethodGet, "/admin/projects/5/integration-deliveries?status=dead_letter", nil)
+	deliveriesRequest.SetPathValue("idProject", "5")
+	deliveriesRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	deliveriesResponse := httptest.NewRecorder()
+	handler.IntegrationDeliveries(deliveriesResponse, deliveriesRequest)
+	if deliveriesResponse.Code != http.StatusOK || !strings.Contains(deliveriesResponse.Body.String(), `"deliveryId":"idwh_test"`) {
+		t.Fatalf("unexpected delivery list response: %d %s", deliveriesResponse.Code, deliveriesResponse.Body.String())
+	}
+
+	replayRequest := httptest.NewRequest(http.MethodPost, "/admin/projects/5/integration-deliveries/20/replay", nil)
+	replayRequest.SetPathValue("idProject", "5")
+	replayRequest.SetPathValue("integrationDelivery", "20")
+	replayRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	replayResponse := httptest.NewRecorder()
+	handler.ReplayIntegrationDelivery(replayResponse, replayRequest)
+	if replayResponse.Code != http.StatusAccepted || !strings.Contains(replayResponse.Body.String(), `"status":"pending"`) {
+		t.Fatalf("unexpected delivery replay response: %d %s", replayResponse.Code, replayResponse.Body.String())
 	}
 }
 

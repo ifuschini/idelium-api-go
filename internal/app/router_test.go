@@ -238,6 +238,27 @@ func (fakeBrowserAuthRepository) GetGridBulkJob(*http.Request, browserauth.User,
 func (fakeBrowserAuthRepository) ExportGridBulkJob(*http.Request, browserauth.User, string, time.Time) (browserauth.GridBulkExport, error) {
 	return browserauth.GridBulkExport{}, nil
 }
+func (fakeBrowserAuthRepository) ListIntegrationEndpoints(*http.Request, browserauth.User, int64) ([]browserauth.IntegrationEndpoint, error) {
+	return nil, nil
+}
+func (fakeBrowserAuthRepository) CreateIntegrationEndpoint(*http.Request, browserauth.User, browserauth.IntegrationEndpointCreate) (browserauth.IntegrationEndpoint, error) {
+	return browserauth.IntegrationEndpoint{}, nil
+}
+func (fakeBrowserAuthRepository) CreateIntegrationTestDelivery(*http.Request, browserauth.User, int64, int64, time.Time) (browserauth.IntegrationDelivery, error) {
+	return browserauth.IntegrationDelivery{}, nil
+}
+func (fakeBrowserAuthRepository) UpdateIntegrationEndpointStatus(*http.Request, browserauth.User, int64, int64, string, time.Time) (browserauth.IntegrationEndpoint, error) {
+	return browserauth.IntegrationEndpoint{}, nil
+}
+func (fakeBrowserAuthRepository) RotateIntegrationEndpointSecret(*http.Request, browserauth.User, int64, int64, string, time.Time) (browserauth.IntegrationEndpoint, error) {
+	return browserauth.IntegrationEndpoint{}, nil
+}
+func (fakeBrowserAuthRepository) ListIntegrationDeliveries(*http.Request, browserauth.User, int64, string) ([]browserauth.IntegrationDelivery, error) {
+	return nil, nil
+}
+func (fakeBrowserAuthRepository) ReplayIntegrationDelivery(*http.Request, browserauth.User, int64, int64, time.Time) (browserauth.IntegrationDelivery, error) {
+	return browserauth.IntegrationDelivery{}, nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {

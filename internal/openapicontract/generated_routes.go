@@ -47,6 +47,13 @@ type ServerInterface interface {
 	CreateGridBulkJob(http.ResponseWriter, *http.Request)
 	GetGridBulkJob(http.ResponseWriter, *http.Request)
 	ExportGridBulkJob(http.ResponseWriter, *http.Request)
+	ListIntegrationEndpoints(http.ResponseWriter, *http.Request)
+	CreateIntegrationEndpoint(http.ResponseWriter, *http.Request)
+	TestIntegrationEndpoint(http.ResponseWriter, *http.Request)
+	UpdateIntegrationEndpointStatus(http.ResponseWriter, *http.Request)
+	RotateIntegrationEndpointSecret(http.ResponseWriter, *http.Request)
+	ListIntegrationDeliveries(http.ResponseWriter, *http.Request)
+	ReplayIntegrationDelivery(http.ResponseWriter, *http.Request)
 	Get(http.ResponseWriter, *http.Request)
 	GetAdminAccounts(http.ResponseWriter, *http.Request)
 	PostAdminAccounts(http.ResponseWriter, *http.Request)
@@ -114,13 +121,6 @@ type ServerInterface interface {
 	GetAdminProjectsIdProjectAssetVersionsAssetVersion(http.ResponseWriter, *http.Request)
 	PostAdminProjectsIdProjectAssetVersionsAssetVersionReviewEvents(http.ResponseWriter, *http.Request)
 	GetAdminProjectsIdProjectAssetVersionsFromVersionDiffToVersion(http.ResponseWriter, *http.Request)
-	GetAdminProjectsIdProjectIntegrationDeliveries(http.ResponseWriter, *http.Request)
-	PostAdminProjectsIdProjectIntegrationDeliveriesIntegrationDeliveryReplay(http.ResponseWriter, *http.Request)
-	GetAdminProjectsIdProjectIntegrations(http.ResponseWriter, *http.Request)
-	PostAdminProjectsIdProjectIntegrations(http.ResponseWriter, *http.Request)
-	PostAdminProjectsIdProjectIntegrationsIntegrationEndpointRotateSecret(http.ResponseWriter, *http.Request)
-	PutAdminProjectsIdProjectIntegrationsIntegrationEndpointStatus(http.ResponseWriter, *http.Request)
-	PostAdminProjectsIdProjectIntegrationsIntegrationEndpointTest(http.ResponseWriter, *http.Request)
 	GetAdminProjectsIdProjectParallelRuns(http.ResponseWriter, *http.Request)
 	PostAdminProjectsIdProjectParallelRuns(http.ResponseWriter, *http.Request)
 	PostAdminProjectsIdProjectParallelRunsMatrix(http.ResponseWriter, *http.Request)
@@ -508,6 +508,83 @@ var Operations = []Operation{
 		OperationID:        "exportGridBulkJob",
 		Tags:               []string{"Grid"},
 		LaravelRoute:       "/api/admin/grid/bulk-jobs/{jobId}/export",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/projects/{idProject}/integrations",
+		OperationID:        "listIntegrationEndpoints",
+		Tags:               []string{"Integrations"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/integrations",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/admin/projects/{idProject}/integrations",
+		OperationID:        "createIntegrationEndpoint",
+		Tags:               []string{"Integrations"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/integrations",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/admin/projects/{idProject}/integrations/{integrationEndpoint}/test",
+		OperationID:        "testIntegrationEndpoint",
+		Tags:               []string{"Integrations"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "PUT",
+		Path:               "/admin/projects/{idProject}/integrations/{integrationEndpoint}/status",
+		OperationID:        "updateIntegrationEndpointStatus",
+		Tags:               []string{"Integrations"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret",
+		OperationID:        "rotateIntegrationEndpointSecret",
+		Tags:               []string{"Integrations"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/projects/{idProject}/integration-deliveries",
+		OperationID:        "listIntegrationDeliveries",
+		Tags:               []string{"Integrations"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/integration-deliveries",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay",
+		OperationID:        "replayIntegrationDelivery",
+		Tags:               []string{"Integrations"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay",
 		AuthenticationMode: "browser-session",
 		TrustPath:          "browser-session",
 		TenantContext:      true,
@@ -1245,83 +1322,6 @@ var Operations = []Operation{
 		OperationID:        "getAdminProjectsIdProjectAssetVersionsFromVersionDiffToVersion",
 		Tags:               []string{"Laravel Compatibility"},
 		LaravelRoute:       "/api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "GET",
-		Path:               "/admin/projects/{idProject}/integration-deliveries",
-		OperationID:        "getAdminProjectsIdProjectIntegrationDeliveries",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/integration-deliveries",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "POST",
-		Path:               "/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay",
-		OperationID:        "postAdminProjectsIdProjectIntegrationDeliveriesIntegrationDeliveryReplay",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "GET",
-		Path:               "/admin/projects/{idProject}/integrations",
-		OperationID:        "getAdminProjectsIdProjectIntegrations",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/integrations",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "POST",
-		Path:               "/admin/projects/{idProject}/integrations",
-		OperationID:        "postAdminProjectsIdProjectIntegrations",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/integrations",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "POST",
-		Path:               "/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret",
-		OperationID:        "postAdminProjectsIdProjectIntegrationsIntegrationEndpointRotateSecret",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "PUT",
-		Path:               "/admin/projects/{idProject}/integrations/{integrationEndpoint}/status",
-		OperationID:        "putAdminProjectsIdProjectIntegrationsIntegrationEndpointStatus",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "POST",
-		Path:               "/admin/projects/{idProject}/integrations/{integrationEndpoint}/test",
-		OperationID:        "postAdminProjectsIdProjectIntegrationsIntegrationEndpointTest",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test",
 		AuthenticationMode: "browser-session",
 		TrustPath:          "browser-session",
 		TenantContext:      true,

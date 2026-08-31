@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -22,6 +23,7 @@ import (
 	"github.com/idelium/idelium-api-go/internal/cliapi"
 	"github.com/idelium/idelium-api-go/internal/config"
 	"github.com/idelium/idelium-api-go/internal/health"
+	"github.com/idelium/idelium-api-go/internal/integrations"
 	"github.com/idelium/idelium-api-go/internal/platforms"
 )
 
@@ -82,6 +84,12 @@ func TestReadinessHTTPContractIntegration(t *testing.T) {
 
 type integrationChecker struct {
 	database *sql.DB
+}
+
+type integrationDoerFunc func(*http.Request) (*http.Response, error)
+
+func (function integrationDoerFunc) Do(request *http.Request) (*http.Response, error) {
+	return function(request)
 }
 
 func (checker integrationChecker) Check(ctx context.Context) error {
@@ -1308,6 +1316,125 @@ func TestBrowserGridBulkOperationsIntegration(t *testing.T) {
 	var auditCount int
 	if err := database.QueryRowContext(ctx, "SELECT COUNT(*) FROM audit_events WHERE activeTenantId = 11 AND action IN ('grid.bulk.tag', 'grid.bulk.export')").Scan(&auditCount); err != nil || auditCount != 2 {
 		t.Fatalf("expected two grid audit events, count=%d err=%v", auditCount, err)
+	}
+}
+
+func TestBrowserIntegrationEndpointsAndDeliveriesIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+	t.Setenv("APP_KEY", "base64:"+base64.StdEncoding.EncodeToString([]byte("0123456789abcdef0123456789abcdef")))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS integration_deliveries",
+		"DROP TABLE IF EXISTS integration_endpoints",
+		"DROP TABLE IF EXISTS audit_events",
+		"DROP TABLE IF EXISTS projects",
+		`CREATE TABLE projects (id BIGINT PRIMARY KEY, name VARCHAR(255) NOT NULL, description TEXT NULL, idCostumer BIGINT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL)`,
+		`CREATE TABLE integration_endpoints (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT, idCostumer BIGINT NOT NULL, idProject BIGINT NOT NULL,
+			name VARCHAR(128) NOT NULL, adapter VARCHAR(32) NOT NULL, url VARCHAR(2048) NOT NULL,
+			secretEncrypted TEXT NOT NULL, events JSON NULL, status VARCHAR(32) NOT NULL,
+			metadata JSON NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL,
+			UNIQUE KEY integration_endpoint_name_unique (idCostumer, idProject, name)
+		)`,
+		`CREATE TABLE integration_deliveries (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT, idCostumer BIGINT NOT NULL, idProject BIGINT NOT NULL,
+			integrationEndpointId BIGINT NOT NULL, event VARCHAR(128) NOT NULL, deliveryId VARCHAR(96) NOT NULL UNIQUE,
+			idempotencyKey VARCHAR(160) NOT NULL, schemaVersion VARCHAR(64) NOT NULL, payloadDigest VARCHAR(64) NOT NULL,
+			status VARCHAR(32) NOT NULL, attempts SMALLINT UNSIGNED NOT NULL DEFAULT 0, responseStatus SMALLINT UNSIGNED NULL,
+			lastError TEXT NULL, nextAttemptAt TIMESTAMP NULL, sentAt TIMESTAMP NULL, payload JSON NULL,
+			created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL,
+			UNIQUE KEY integration_delivery_idempotency_unique (idCostumer, idProject, integrationEndpointId, idempotencyKey)
+		)`,
+		`CREATE TABLE audit_events (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT, actorUserId BIGINT NULL, actorTenantId BIGINT NULL,
+			activeTenantId BIGINT NOT NULL, idProject BIGINT NULL, action VARCHAR(128) NOT NULL,
+			targetType VARCHAR(128) NOT NULL, targetId VARCHAR(128) NULL, beforeValues JSON NULL,
+			afterValues JSON NULL, result VARCHAR(32) NOT NULL, sourceIp VARCHAR(64) NULL,
+			correlationId VARCHAR(128) NOT NULL, metadata JSON NULL, created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`INSERT INTO projects (id, name, description, idCostumer) VALUES (5, 'Primary', 'Primary', 11), (6, 'Foreign', 'Foreign', 42)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare integration endpoint fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewBrowserAuthRepository(database)
+	actor := browserauth.User{ID: 7, TenantID: 11, ActiveTenantID: 11, Email: "admin@example.test", Role: 2}
+	now := time.Date(2026, time.August, 31, 12, 0, 0, 0, time.UTC)
+	request := httptest.NewRequest(http.MethodPost, "/admin/projects/5/integrations", nil)
+	request.Header.Set("X-Correlation-ID", "integration-endpoint-test")
+	created, err := repository.CreateIntegrationEndpoint(request, actor, browserauth.IntegrationEndpointCreate{ProjectID: 5, Name: "Release events", Adapter: "webhook", URL: "https://93.184.216.34/hooks/idelium", Secret: "super-secret-value", Events: []string{"*"}, Now: now})
+	if err != nil || !created.SecretConfigured || created.SchemaVersion != integrationSchemaVersion {
+		t.Fatalf("unexpected created integration endpoint: %#v err=%v", created, err)
+	}
+	var encrypted string
+	if err := database.QueryRowContext(ctx, "SELECT secretEncrypted FROM integration_endpoints WHERE id = ? AND idCostumer = ?", created.ID, 11).Scan(&encrypted); err != nil {
+		t.Fatal(err)
+	}
+	key, _ := integrations.ParseApplicationKey(os.Getenv("APP_KEY"))
+	plaintext, err := integrations.DecryptLaravelString(key, encrypted)
+	if err != nil || plaintext != "super-secret-value" || strings.Contains(encrypted, plaintext) {
+		t.Fatalf("integration secret did not preserve encrypted Laravel compatibility: plaintext=%q err=%v", plaintext, err)
+	}
+	listed, err := repository.ListIntegrationEndpoints(request, actor, 5)
+	if err != nil || len(listed) != 1 || listed[0].Name != "Release events" {
+		t.Fatalf("unexpected integration endpoint list: %#v err=%v", listed, err)
+	}
+	if _, err := repository.ListIntegrationEndpoints(request, actor, 6); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected foreign project endpoints to be hidden, got %v", err)
+	}
+
+	disabled, err := repository.UpdateIntegrationEndpointStatus(request, actor, 5, created.ID, "disabled", now.Add(time.Minute))
+	if err != nil || disabled.Status != "disabled" {
+		t.Fatalf("unexpected disabled integration endpoint: %#v err=%v", disabled, err)
+	}
+	if _, err := repository.CreateIntegrationTestDelivery(request, actor, 5, created.ID, now.Add(2*time.Minute)); err == nil {
+		t.Fatal("expected disabled endpoint delivery validation")
+	}
+	if _, err := repository.RotateIntegrationEndpointSecret(request, actor, 5, created.ID, "rotated-secret-value", now.Add(3*time.Minute)); err != nil {
+		t.Fatalf("RotateIntegrationEndpointSecret() returned an error: %v", err)
+	}
+	if _, err := repository.UpdateIntegrationEndpointStatus(request, actor, 5, created.ID, "active", now.Add(4*time.Minute)); err != nil {
+		t.Fatalf("reactivate integration endpoint: %v", err)
+	}
+	delivery, err := repository.CreateIntegrationTestDelivery(request, actor, 5, created.ID, now.Add(5*time.Minute))
+	if err != nil || delivery.Status != "pending" || delivery.Event != "integration.test" {
+		t.Fatalf("unexpected integration test delivery: %#v err=%v", delivery, err)
+	}
+	dispatcher := integrations.Dispatcher{Store: repository, ApplicationKey: key, Now: func() time.Time { return now.Add(6 * time.Minute) }, Client: integrationDoerFunc(func(outbound *http.Request) (*http.Response, error) {
+		if outbound.Header.Get("Idelium-Delivery-Id") != delivery.DeliveryID || outbound.Header.Get("Idelium-Signature") == "" {
+			t.Fatalf("missing integration delivery signature headers: %#v", outbound.Header)
+		}
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(`{"ok":true}`))}, nil
+	})}
+	if err := dispatcher.Dispatch(ctx, delivery.ID); err != nil {
+		t.Fatalf("Dispatch() returned an error: %v", err)
+	}
+	dispatched, err := repository.integrationDelivery(ctx, actor, 5, delivery.ID)
+	if err != nil || dispatched.Status != "sent" || dispatched.Attempts != 1 {
+		t.Fatalf("unexpected dispatched delivery: %#v err=%v", dispatched, err)
+	}
+	if _, err := repository.ReplayIntegrationDelivery(request, actor, 6, delivery.ID, now.Add(6*time.Minute)); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-tenant delivery replay to be hidden, got %v", err)
+	}
+	if _, err := database.ExecContext(ctx, "UPDATE integration_deliveries SET status = 'dead_letter', attempts = 3 WHERE id = ?", delivery.ID); err != nil {
+		t.Fatal(err)
+	}
+	deadLetters, err := repository.ListIntegrationDeliveries(request, actor, 5, "dead_letter")
+	if err != nil || len(deadLetters) != 1 || deadLetters[0].DeliveryID != delivery.DeliveryID {
+		t.Fatalf("unexpected dead-letter list: %#v err=%v", deadLetters, err)
+	}
+	replayed, err := repository.ReplayIntegrationDelivery(request, actor, 5, delivery.ID, now.Add(7*time.Minute))
+	if err != nil || replayed.Status != "pending" || replayed.NextAttemptAt != nil {
+		t.Fatalf("unexpected replayed integration delivery: %#v err=%v", replayed, err)
+	}
+	var auditCount int
+	if err := database.QueryRowContext(ctx, "SELECT COUNT(*) FROM audit_events WHERE activeTenantId = 11 AND idProject = 5").Scan(&auditCount); err != nil || auditCount != 7 {
+		t.Fatalf("expected seven integration audit events, count=%d err=%v", auditCount, err)
 	}
 }
 

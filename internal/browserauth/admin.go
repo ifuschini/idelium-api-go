@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/idelium/idelium-api-go/internal/integrations"
 )
 
 var ErrForbidden = errors.New("browser admin action is forbidden")
@@ -131,6 +133,13 @@ type AdminRepository interface {
 	CreateGridBulkJob(request *http.Request, actor User, input GridBulkJobCreate) (GridBulkJob, error)
 	GetGridBulkJob(request *http.Request, actor User, jobID string) (GridBulkJob, error)
 	ExportGridBulkJob(request *http.Request, actor User, jobID string, now time.Time) (GridBulkExport, error)
+	ListIntegrationEndpoints(request *http.Request, actor User, projectID int64) ([]IntegrationEndpoint, error)
+	CreateIntegrationEndpoint(request *http.Request, actor User, input IntegrationEndpointCreate) (IntegrationEndpoint, error)
+	CreateIntegrationTestDelivery(request *http.Request, actor User, projectID, endpointID int64, now time.Time) (IntegrationDelivery, error)
+	UpdateIntegrationEndpointStatus(request *http.Request, actor User, projectID, endpointID int64, status string, now time.Time) (IntegrationEndpoint, error)
+	RotateIntegrationEndpointSecret(request *http.Request, actor User, projectID, endpointID int64, secret string, now time.Time) (IntegrationEndpoint, error)
+	ListIntegrationDeliveries(request *http.Request, actor User, projectID int64, status string) ([]IntegrationDelivery, error)
+	ReplayIntegrationDelivery(request *http.Request, actor User, projectID, deliveryID int64, now time.Time) (IntegrationDelivery, error)
 }
 
 type CustomerQuery struct {
@@ -427,6 +436,40 @@ type GridBulkJob struct {
 type GridBulkExport struct {
 	Filename string
 	Payload  string
+}
+
+type IntegrationEndpoint struct {
+	ID               int64      `json:"id"`
+	IDProject        int64      `json:"idProject"`
+	Name             string     `json:"name"`
+	Adapter          string     `json:"adapter"`
+	URL              string     `json:"url"`
+	Events           []string   `json:"events"`
+	Status           string     `json:"status"`
+	SecretConfigured bool       `json:"secretConfigured"`
+	SchemaVersion    string     `json:"schemaVersion"`
+	CreatedAt        *time.Time `json:"createdAt"`
+}
+
+type IntegrationEndpointCreate struct {
+	ProjectID int64
+	Name      string
+	Adapter   string
+	URL       string
+	Secret    string
+	Events    []string
+	Now       time.Time
+}
+
+type IntegrationDelivery struct {
+	ID             int64      `json:"id"`
+	DeliveryID     string     `json:"deliveryId"`
+	Event          string     `json:"event"`
+	Status         string     `json:"status"`
+	Attempts       int        `json:"attempts"`
+	ResponseStatus *int       `json:"responseStatus"`
+	NextAttemptAt  *time.Time `json:"nextAttemptAt"`
+	SentAt         *time.Time `json:"sentAt"`
 }
 
 var gridUUIDPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$`)
@@ -1458,6 +1501,252 @@ func validateGridJobInput(snapshotID, action string, payload map[string]any) ([]
 		}
 	}
 	return tags, failures
+}
+
+func (h *Handler) IntegrationEndpoints(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "integrations.read")
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	endpoints, err := h.sessions.ListIntegrationEndpoints(request, user, projectID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "list browser integration endpoints", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"data": endpoints})
+}
+
+func (h *Handler) CreateIntegrationEndpoint(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "integrations.manage")
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	var body struct {
+		Name    string   `json:"name"`
+		Adapter string   `json:"adapter"`
+		URL     string   `json:"url"`
+		Secret  string   `json:"secret"`
+		Events  []string `json:"events"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil {
+		return
+	}
+	validation := validateIntegrationEndpointInput(body.Name, body.Adapter, body.URL, body.Secret, body.Events)
+	if len(validation) != 0 {
+		validationErrors(writer, validation)
+		return
+	}
+	if len(body.Events) == 0 {
+		body.Events = []string{"*"}
+	}
+	endpoint, err := h.sessions.CreateIntegrationEndpoint(request, user, IntegrationEndpointCreate{ProjectID: projectID, Name: body.Name, Adapter: body.Adapter, URL: body.URL, Secret: body.Secret, Events: uniqueStrings(body.Events), Now: h.now().UTC()})
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	var validationFailure ValidationFailure
+	if errors.As(err, &validationFailure) {
+		validationErrors(writer, validationFailure.Errors)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "create browser integration endpoint", err)
+		return
+	}
+	writeJSON(writer, http.StatusCreated, map[string]any{"data": endpoint})
+}
+
+func (h *Handler) TestIntegrationEndpoint(writer http.ResponseWriter, request *http.Request) {
+	user, projectID, endpointID, ok := h.integrationEndpointPath(writer, request, "integrations.manage")
+	if !ok {
+		return
+	}
+	delivery, err := h.sessions.CreateIntegrationTestDelivery(request, user, projectID, endpointID, h.now().UTC())
+	h.writeIntegrationDelivery(writer, request, "create browser integration test delivery", delivery, err, http.StatusAccepted)
+}
+
+func (h *Handler) UpdateIntegrationEndpointStatus(writer http.ResponseWriter, request *http.Request) {
+	user, projectID, endpointID, ok := h.integrationEndpointPath(writer, request, "integrations.manage")
+	if !ok {
+		return
+	}
+	var body struct {
+		Status string `json:"status"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil {
+		return
+	}
+	if body.Status != "active" && body.Status != "disabled" {
+		validationError(writer, "status", "The selected status is invalid.")
+		return
+	}
+	endpoint, err := h.sessions.UpdateIntegrationEndpointStatus(request, user, projectID, endpointID, body.Status, h.now().UTC())
+	h.writeIntegrationEndpoint(writer, request, "update browser integration endpoint status", endpoint, err, http.StatusOK)
+}
+
+func (h *Handler) RotateIntegrationEndpointSecret(writer http.ResponseWriter, request *http.Request) {
+	user, projectID, endpointID, ok := h.integrationEndpointPath(writer, request, "integrations.manage")
+	if !ok {
+		return
+	}
+	var body struct {
+		Secret string `json:"secret"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil {
+		return
+	}
+	if len(body.Secret) < 16 || len(body.Secret) > 2000 {
+		validationError(writer, "secret", "The secret field must be between 16 and 2000 characters.")
+		return
+	}
+	endpoint, err := h.sessions.RotateIntegrationEndpointSecret(request, user, projectID, endpointID, body.Secret, h.now().UTC())
+	h.writeIntegrationEndpoint(writer, request, "rotate browser integration endpoint secret", endpoint, err, http.StatusOK)
+}
+
+func (h *Handler) IntegrationDeliveries(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "integrations.read")
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	status := request.URL.Query().Get("status")
+	if status != "" && status != "pending" && status != "sent" && status != "failed" && status != "dead_letter" {
+		validationError(writer, "status", "The selected status is invalid.")
+		return
+	}
+	deliveries, err := h.sessions.ListIntegrationDeliveries(request, user, projectID, status)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "list browser integration deliveries", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"data": deliveries})
+}
+
+func (h *Handler) ReplayIntegrationDelivery(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "integrations.manage")
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	deliveryID, err := parsePathID(request.PathValue("integrationDelivery"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	delivery, err := h.sessions.ReplayIntegrationDelivery(request, user, projectID, deliveryID, h.now().UTC())
+	h.writeIntegrationDelivery(writer, request, "replay browser integration delivery", delivery, err, http.StatusAccepted)
+}
+
+func (h *Handler) integrationEndpointPath(writer http.ResponseWriter, request *http.Request, capability string) (User, int64, int64, bool) {
+	user, ok := h.requireCapability(writer, request, capability)
+	if !ok {
+		return User{}, 0, 0, false
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return User{}, 0, 0, false
+	}
+	endpointID, err := parsePathID(request.PathValue("integrationEndpoint"))
+	if err != nil {
+		h.notFound(writer)
+		return User{}, 0, 0, false
+	}
+	return user, projectID, endpointID, true
+}
+
+func (h *Handler) writeIntegrationEndpoint(writer http.ResponseWriter, request *http.Request, action string, endpoint IntegrationEndpoint, err error, status int) {
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, action, err)
+		return
+	}
+	writeJSON(writer, status, map[string]any{"data": endpoint})
+}
+
+func (h *Handler) writeIntegrationDelivery(writer http.ResponseWriter, request *http.Request, action string, delivery IntegrationDelivery, err error, status int) {
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	var validationFailure ValidationFailure
+	if errors.As(err, &validationFailure) {
+		validationErrors(writer, validationFailure.Errors)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, action, err)
+		return
+	}
+	writeJSON(writer, status, map[string]any{"data": delivery})
+}
+
+func validateIntegrationEndpointInput(name, adapter, destination, secret string, events []string) map[string][]string {
+	failures := map[string][]string{}
+	if strings.TrimSpace(name) == "" || len(name) > 128 {
+		failures["name"] = []string{"The name field is required and must not exceed 128 characters."}
+	}
+	if adapter != "webhook" && adapter != "jira" && adapter != "slack" && adapter != "teams" {
+		failures["adapter"] = []string{"The selected adapter is invalid."}
+	}
+	if len(destination) > 2048 || !safeIntegrationDestination(destination) {
+		failures["url"] = []string{"The integration destination must be a safe public HTTP or HTTPS URL."}
+	}
+	if len(secret) < 16 || len(secret) > 2000 {
+		failures["secret"] = []string{"The secret field must be between 16 and 2000 characters."}
+	}
+	for _, event := range events {
+		if strings.TrimSpace(event) == "" || len(event) > 128 {
+			failures["events"] = []string{"Each event must be a non-empty string of at most 128 characters."}
+			break
+		}
+	}
+	return failures
+}
+
+func safeIntegrationDestination(value string) bool {
+	return integrations.SafeDestination(value)
+}
+
+func uniqueStrings(values []string) []string {
+	seen := map[string]bool{}
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		if !seen[value] {
+			seen[value] = true
+			result = append(result, value)
+		}
+	}
+	return result
 }
 
 func (h *Handler) artifactLifecycleInput(writer http.ResponseWriter, request *http.Request) (User, ArtifactLifecycleUpdate, bool) {

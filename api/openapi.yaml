@@ -1431,6 +1431,218 @@ paths:
           description: The job is not a completed export.
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/integrations:
+    get:
+      operationId: listIntegrationEndpoints
+      summary: List project integration endpoints
+      tags: [Integrations]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integrations"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+      responses:
+        "200":
+          $ref: "#/components/responses/IntegrationEndpointList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+    post:
+      operationId: createIntegrationEndpoint
+      summary: Create a project integration endpoint
+      tags: [Integrations]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integrations"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IntegrationEndpointCreate"
+      responses:
+        "201":
+          $ref: "#/components/responses/IntegrationEndpointEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/integrations/{integrationEndpoint}/test:
+    post:
+      operationId: testIntegrationEndpoint
+      summary: Queue a signed integration test delivery
+      tags: [Integrations]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/IntegrationEndpointID"
+      responses:
+        "202":
+          $ref: "#/components/responses/IntegrationDeliveryEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/integrations/{integrationEndpoint}/status:
+    put:
+      operationId: updateIntegrationEndpointStatus
+      summary: Enable or disable an integration endpoint
+      tags: [Integrations]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/IntegrationEndpointID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              additionalProperties: false
+              properties:
+                status:
+                  type: string
+                  enum: [active, disabled]
+      responses:
+        "200":
+          $ref: "#/components/responses/IntegrationEndpointEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret:
+    post:
+      operationId: rotateIntegrationEndpointSecret
+      summary: Rotate an integration endpoint secret
+      description: The plaintext secret is encrypted with the Laravel-compatible APP_KEY envelope and is never returned or audited.
+      tags: [Integrations]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/IntegrationEndpointID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [secret]
+              additionalProperties: false
+              properties:
+                secret:
+                  type: string
+                  minLength: 16
+                  maxLength: 2000
+                  writeOnly: true
+      responses:
+        "200":
+          $ref: "#/components/responses/IntegrationEndpointEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/integration-deliveries:
+    get:
+      operationId: listIntegrationDeliveries
+      summary: List the latest project integration deliveries
+      tags: [Integrations]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integration-deliveries"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, sent, failed, dead_letter]
+      responses:
+        "200":
+          $ref: "#/components/responses/IntegrationDeliveryList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay:
+    post:
+      operationId: replayIntegrationDelivery
+      summary: Requeue an integration delivery
+      tags: [Integrations]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/IntegrationDeliveryID"
+      responses:
+        "202":
+          $ref: "#/components/responses/IntegrationDeliveryEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
   # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS
   /:
     get:
@@ -3775,297 +3987,6 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/integration-deliveries:
-    get:
-      operationId: getAdminProjectsIdProjectIntegrationDeliveries
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integration-deliveries"
-      x-idelium-controller: "App\\Http\\Controllers\\IntegrationEndpointController@deliveries"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay:
-    post:
-      operationId: postAdminProjectsIdProjectIntegrationDeliveriesIntegrationDeliveryReplay
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay"
-      x-idelium-controller: "App\\Http\\Controllers\\IntegrationEndpointController@replay"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: integrationDelivery
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/integrations:
-    get:
-      operationId: getAdminProjectsIdProjectIntegrations
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integrations"
-      x-idelium-controller: "App\\Http\\Controllers\\IntegrationEndpointController@index"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-    post:
-      operationId: postAdminProjectsIdProjectIntegrations
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integrations"
-      x-idelium-controller: "App\\Http\\Controllers\\IntegrationEndpointController@store"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret:
-    post:
-      operationId: postAdminProjectsIdProjectIntegrationsIntegrationEndpointRotateSecret
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret"
-      x-idelium-controller: "App\\Http\\Controllers\\IntegrationEndpointController@rotateSecret"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: integrationEndpoint
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/integrations/{integrationEndpoint}/status:
-    put:
-      operationId: putAdminProjectsIdProjectIntegrationsIntegrationEndpointStatus
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status"
-      x-idelium-controller: "App\\Http\\Controllers\\IntegrationEndpointController@updateStatus"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: integrationEndpoint
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/integrations/{integrationEndpoint}/test:
-    post:
-      operationId: postAdminProjectsIdProjectIntegrationsIntegrationEndpointTest
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test"
-      x-idelium-controller: "App\\Http\\Controllers\\IntegrationEndpointController@test"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: integrationEndpoint
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
   /admin/projects/{idProject}/parallel-runs:
@@ -6652,6 +6573,30 @@ components:
         type: string
         enum: [no-store]
   parameters:
+    ProjectID:
+      name: idProject
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    IntegrationEndpointID:
+      name: integrationEndpoint
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    IntegrationDeliveryID:
+      name: integrationDelivery
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
     GridJobID:
       name: jobId
       in: path
@@ -6682,8 +6627,53 @@ components:
             type: object
             required: [data]
             properties:
+                  data:
+                    $ref: "#/components/schemas/ArtifactDescriptor"
+    IntegrationEndpointEnvelope:
+      description: Laravel-compatible integration endpoint envelope without secret material.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
               data:
-                $ref: "#/components/schemas/ArtifactDescriptor"
+                $ref: "#/components/schemas/IntegrationEndpoint"
+    IntegrationEndpointList:
+      description: Tenant-and-project-scoped integration endpoint list.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IntegrationEndpoint"
+    IntegrationDeliveryEnvelope:
+      description: Laravel-compatible integration delivery envelope.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                $ref: "#/components/schemas/IntegrationDelivery"
+    IntegrationDeliveryList:
+      description: Bounded tenant-and-project-scoped integration delivery list.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/IntegrationDelivery"
     LegacyCompatibilityError:
       description: Laravel-compatible error response.
       headers:
@@ -6844,6 +6834,94 @@ components:
                 format: int64
             exportAvailable:
               type: boolean
+    IntegrationEndpointCreate:
+      type: object
+      required: [name, adapter, url, secret]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        adapter:
+          type: string
+          enum: [webhook, jira, slack, teams]
+        url:
+          type: string
+          format: uri
+          maxLength: 2048
+        secret:
+          type: string
+          minLength: 16
+          maxLength: 2000
+          writeOnly: true
+        events:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+    IntegrationEndpoint:
+      type: object
+      required: [id, idProject, name, adapter, url, events, status, secretConfigured, schemaVersion, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        idProject:
+          type: integer
+          format: int64
+        name:
+          type: string
+        adapter:
+          type: string
+          enum: [webhook, jira, slack, teams]
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [active, disabled]
+        secretConfigured:
+          type: boolean
+        schemaVersion:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+    IntegrationDelivery:
+      type: object
+      required: [id, deliveryId, event, status, attempts, responseStatus, nextAttemptAt, sentAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        deliveryId:
+          type: string
+        event:
+          type: string
+        status:
+          type: string
+          enum: [pending, sent, failed, dead_letter]
+        attempts:
+          type: integer
+          minimum: 0
+        responseStatus:
+          type: integer
+          nullable: true
+        nextAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
     ArtifactDescriptor:
       type: object
       required:

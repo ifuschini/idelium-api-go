@@ -90,6 +90,13 @@ func NewRouter(
 	router.Post("/admin/grid/bulk-jobs", browserAuthHandler.CreateGridBulkJob)
 	router.Get("/admin/grid/bulk-jobs/{jobId}", browserAuthHandler.ShowGridBulkJob)
 	router.Get("/admin/grid/bulk-jobs/{jobId}/export", browserAuthHandler.ExportGridBulkJob)
+	router.Get("/admin/projects/{idProject}/integrations", browserAuthHandler.IntegrationEndpoints)
+	router.Post("/admin/projects/{idProject}/integrations", browserAuthHandler.CreateIntegrationEndpoint)
+	router.Post("/admin/projects/{idProject}/integrations/{integrationEndpoint}/test", browserAuthHandler.TestIntegrationEndpoint)
+	router.Put("/admin/projects/{idProject}/integrations/{integrationEndpoint}/status", browserAuthHandler.UpdateIntegrationEndpointStatus)
+	router.Post("/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret", browserAuthHandler.RotateIntegrationEndpointSecret)
+	router.Get("/admin/projects/{idProject}/integration-deliveries", browserAuthHandler.IntegrationDeliveries)
+	router.Post("/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay", browserAuthHandler.ReplayIntegrationDelivery)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)
