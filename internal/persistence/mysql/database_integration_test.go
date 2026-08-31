@@ -1909,6 +1909,36 @@ func TestParallelRunWorkerClaimsUseRowLocksAndTenantScopeIntegration(t *testing.
 	if err != nil || boundary.WorkerStatus != "" || boundary.Run.Status != "running" || boundary.Run.ActiveWorkers != 1 {
 		t.Fatalf("lease at the exact boundary should remain renewable: %#v err=%v", boundary, err)
 	}
+	mixedStates, _ := json.Marshal(map[string]any{
+		"completed": map[string]any{"workerId": "completed", "status": "completed", "result": map[string]any{"tests": 1}, "updatedAt": parallelRunISOString(now.Add(-time.Minute))},
+		"running":   map[string]any{"workerId": "running", "status": "running", "result": nil, "leaseExpiresAt": parallelRunISOString(now.Add(time.Minute)), "updatedAt": parallelRunISOString(now.Add(-time.Minute))},
+	})
+	if _, err := database.ExecContext(ctx, `INSERT INTO parallel_run_schedules
+		(id, idProject, testCycleId, idCostumer, idempotencyKey, status, requestedConcurrency, activeWorkers, totalWorkers,
+		completedWorkers, failedWorkers, cancelledWorkers, workerStates, resultSummary, metadata, scheduledAt, startedAt, created_at, updated_at)
+		VALUES (45, 5, 7, 11, 'mixed-cancel', 'running', 2, 1, 2, 1, 0, 0, ?, '[]', '{}', ?, ?, ?, ?),
+		(46, 5, 7, 11, 'empty-cancel', 'queued', 1, 0, 0, 0, 0, 0, '{}', '[]', '{}', ?, NULL, ?, ?)`,
+		string(mixedStates), now, now.Add(-time.Minute), now, now, now, now, now); err != nil {
+		t.Fatal(err)
+	}
+	foreignCancelRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/46/cancel", nil)
+	if _, err := repository.CancelParallelRun(foreignCancelRequest, 42, 5, 46, now); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-tenant cancellation to be hidden, got %v", err)
+	}
+	cancelRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/45/cancel", nil)
+	cancelled, err := repository.CancelParallelRun(cancelRequest, 11, 5, 45, now)
+	if err != nil || cancelled.Status != "failed" || cancelled.ActiveWorkers != 0 || cancelled.CompletedWorkers != 1 || cancelled.CancelledWorkers != 1 || cancelled.AggregateStatus == nil || *cancelled.AggregateStatus != 3 || cancelled.CancelledAt == nil || cancelled.CompletedAt == nil {
+		t.Fatalf("mixed worker cancellation did not converge: %#v err=%v", cancelled, err)
+	}
+	retryCancelRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/45/cancel", nil)
+	if _, err := repository.CancelParallelRun(retryCancelRequest, 11, 5, 45, now.Add(time.Second)); !errors.Is(err, browserauth.ErrParallelRunTerminal) {
+		t.Fatalf("expected terminal retry rejection, got %v", err)
+	}
+	emptyCancelRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/46/cancel", nil)
+	emptyCancelled, err := repository.CancelParallelRun(emptyCancelRequest, 11, 5, 46, now)
+	if err != nil || emptyCancelled.Status != "cancelled" || emptyCancelled.TotalWorkers != 0 || emptyCancelled.AggregateStatus == nil || *emptyCancelled.AggregateStatus != 3 {
+		t.Fatalf("empty schedule cancellation did not converge: %#v err=%v", emptyCancelled, err)
+	}
 }
 
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {

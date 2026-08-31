@@ -189,6 +189,41 @@ func (h *Handler) CLHeartbeatParallelRunWorker(writer http.ResponseWriter, reque
 	h.heartbeatParallelRunWorker(writer, request, tenant.CustomerID)
 }
 
+func (h *Handler) CancelParallelRun(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	h.cancelParallelRun(writer, request, user.ActiveTenant())
+}
+
+func (h *Handler) CLCancelParallelRun(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		h.unauthorized(writer)
+		return
+	}
+	h.cancelParallelRun(writer, request, tenant.CustomerID)
+}
+
+func (h *Handler) cancelParallelRun(writer http.ResponseWriter, request *http.Request, tenantID int64) {
+	projectID, runID, ok := parseAssetVersionPath(writer, request, "parallelRun")
+	if !ok {
+		return
+	}
+	run, err := h.sessions.CancelParallelRun(request, tenantID, projectID, runID, h.now().UTC())
+	switch {
+	case errors.Is(err, ErrNotFound):
+		h.notFound(writer)
+	case errors.Is(err, ErrParallelRunTerminal):
+		writeJSON(writer, http.StatusUnprocessableEntity, map[string]string{"message": "Parallel run is already terminal."})
+	case err != nil:
+		h.internalError(writer, request, "cancel parallel run", err)
+	default:
+		writeJSON(writer, http.StatusOK, run)
+	}
+}
+
 func (h *Handler) heartbeatParallelRunWorker(writer http.ResponseWriter, request *http.Request, tenantID int64) {
 	projectID, runID, ok := parseAssetVersionPath(writer, request, "parallelRun")
 	if !ok {

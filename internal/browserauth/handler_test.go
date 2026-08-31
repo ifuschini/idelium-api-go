@@ -90,6 +90,8 @@ type sessionsStub struct {
 	heartbeatRun      int64
 	heartbeatWorker   string
 	heartbeatLease    int
+	parallelCancel    ParallelRun
+	parallelCancelErr error
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -315,6 +317,9 @@ func (s *sessionsStub) HeartbeatParallelRunWorker(_ *http.Request, tenantID, _ i
 	s.heartbeatWorker = workerID
 	s.heartbeatLease = leaseSeconds
 	return s.parallelHeartbeat, s.parallelHeartErr
+}
+func (s *sessionsStub) CancelParallelRun(*http.Request, int64, int64, int64, time.Time) (ParallelRun, error) {
+	return s.parallelCancel, s.parallelCancelErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -1312,6 +1317,51 @@ func TestParallelRunHeartbeatSafeErrors(t *testing.T) {
 		if response.Code != test.status || !strings.Contains(response.Body.String(), test.contains) || (test.notContain != "" && strings.Contains(response.Body.String(), test.notContain)) {
 			t.Fatalf("unexpected heartbeat error response: %d %s", response.Code, response.Body.String())
 		}
+	}
+}
+
+func TestParallelRunCancellationContractsAndSafeErrors(t *testing.T) {
+	run := ParallelRun{ID: 40, IDProject: 5, TestCycleID: 7, IdempotencyKey: "release", Status: "cancelled", RequestedConcurrency: 1, TotalWorkers: 1, CancelledWorkers: 1, Metadata: map[string]any{}, ResultSummary: []any{}}
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11}, parallelCancel: run}
+	request := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs/40/cancel", nil)
+	request.SetPathValue("idProject", "5")
+	request.SetPathValue("parallelRun", "40")
+	request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	response := httptest.NewRecorder()
+	NewHandler(usersStub{}, sessions, testLogger()).CancelParallelRun(response, request)
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"status":"cancelled"`) {
+		t.Fatalf("unexpected cancellation response: %d %s", response.Code, response.Body.String())
+	}
+
+	for _, test := range []struct {
+		err        error
+		status     int
+		contains   string
+		notContain string
+	}{
+		{err: ErrParallelRunTerminal, status: http.StatusUnprocessableEntity, contains: "already terminal"},
+		{err: errors.New("database password must not be returned"), status: http.StatusInternalServerError, contains: "could not be completed", notContain: "database password"},
+	} {
+		sessions.parallelCancelErr = test.err
+		failure := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs/40/cancel", nil)
+		failure.SetPathValue("idProject", "5")
+		failure.SetPathValue("parallelRun", "40")
+		failure.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+		failureResponse := httptest.NewRecorder()
+		NewHandler(usersStub{}, sessions, testLogger()).CancelParallelRun(failureResponse, failure)
+		if failureResponse.Code != test.status || !strings.Contains(failureResponse.Body.String(), test.contains) || (test.notContain != "" && strings.Contains(failureResponse.Body.String(), test.notContain)) {
+			t.Fatalf("unexpected cancellation error response: %d %s", failureResponse.Code, failureResponse.Body.String())
+		}
+	}
+
+	invalid := httptest.NewRequest(http.MethodPost, "/admin/projects/not-an-id/parallel-runs/40/cancel", nil)
+	invalid.SetPathValue("idProject", "not-an-id")
+	invalid.SetPathValue("parallelRun", "40")
+	invalid.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	invalidResponse := httptest.NewRecorder()
+	NewHandler(usersStub{}, sessions, testLogger()).CancelParallelRun(invalidResponse, invalid)
+	if invalidResponse.Code != http.StatusNotFound {
+		t.Fatalf("expected invalid cancellation path to be hidden, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
 	}
 }
 

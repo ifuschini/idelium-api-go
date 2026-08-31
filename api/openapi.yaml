@@ -2297,6 +2297,54 @@ paths:
           $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel:
+    post:
+      operationId: cancelBrowserParallelRun
+      summary: Cancel a non-terminal parallel run and converge worker state
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/ParallelRunID"
+      responses:
+        "200":
+          $ref: "#/components/responses/ParallelRunResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel:
+    post:
+      operationId: cancelCLIParallelRun
+      summary: Cancel a non-terminal parallel run by customer API key
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "api-key"
+      x-idelium-authentication-mode: "api-key"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/ParallelRunID"
+      responses:
+        "200":
+          $ref: "#/components/responses/ParallelRunResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
   # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS
   /:
     get:
@@ -4437,53 +4485,6 @@ paths:
           $ref: "#/components/responses/Forbidden"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel:
-    post:
-      operationId: postAdminProjectsIdProjectParallelRunsParallelRunCancel
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@cancel"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: ["idelium-web"]
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: parallelRun
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
   /admin/projects/{idProject}/parallel-runs/{parallelRun}/results:
     get:
       operationId: getAdminProjectsIdProjectParallelRunsParallelRunResults
@@ -5700,53 +5701,6 @@ paths:
       x-idelium-authentication-mode: "api-key"
       x-idelium-tenant-context: false
       x-idelium-consumers: []
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel:
-    post:
-      operationId: postIdeliumclProjectsIdProjectParallelRunsParallelRunCancel
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@cancel"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "api-key"
-      x-idelium-authentication-mode: "api-key"
-      x-idelium-tenant-context: false
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: parallelRun
-          in: path
-          required: true
-          schema:
-            type: string
       requestBody:
         required: false
         content:

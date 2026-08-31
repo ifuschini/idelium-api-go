@@ -153,6 +153,7 @@ type AdminRepository interface {
 	GetParallelRun(request *http.Request, tenantID, projectID, runID int64) (ParallelRun, error)
 	ClaimParallelRun(request *http.Request, input ParallelRunClaim) (ParallelRun, error)
 	HeartbeatParallelRunWorker(request *http.Request, tenantID, projectID, runID int64, workerID string, leaseSeconds int, now time.Time) (ParallelRunHeartbeat, error)
+	CancelParallelRun(request *http.Request, tenantID, projectID, runID int64, now time.Time) (ParallelRun, error)
 }
 
 type CustomerQuery struct {

@@ -223,6 +223,59 @@ func (r *BrowserAuthRepository) HeartbeatParallelRunWorker(request *http.Request
 	return result, nil
 }
 
+func (r *BrowserAuthRepository) CancelParallelRun(request *http.Request, tenantID, projectID, runID int64, now time.Time) (browserauth.ParallelRun, error) {
+	ctx := request.Context()
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return browserauth.ParallelRun{}, safeDatabaseFailure("start parallel run cancellation transaction", err)
+	}
+	defer tx.Rollback()
+	var status string
+	var workerJSON sql.NullString
+	err = tx.QueryRowContext(ctx, `SELECT status, workerStates FROM parallel_run_schedules
+		WHERE id = ? AND idCostumer = ? AND idProject = ? FOR UPDATE`, runID, tenantID, projectID).Scan(&status, &workerJSON)
+	if err != nil {
+		return browserauth.ParallelRun{}, parallelRunNotFound("lock parallel run cancellation", err)
+	}
+	if parallelRunTerminal(status) {
+		return browserauth.ParallelRun{}, browserauth.ErrParallelRunTerminal
+	}
+	workers := decodeParallelMap(workerJSON)
+	for _, value := range workers {
+		worker, _ := value.(map[string]any)
+		if worker["status"] == "running" {
+			worker["status"] = "cancelled"
+			worker["updatedAt"] = parallelRunISOString(now)
+		}
+	}
+	counters, summary := recalculateParallelRunWorkers(workers, now)
+	nextStatus, nextAggregate, nextCompletedAt := parallelRunWorkerOutcome("cancelled", sql.NullInt64{Int64: 3, Valid: true}, sql.NullTime{Time: now, Valid: true}, counters, now)
+	workersJSON, err := json.Marshal(workers)
+	if err != nil {
+		return browserauth.ParallelRun{}, errors.New("parallel run worker state is invalid")
+	}
+	summaryJSON, err := json.Marshal(summary)
+	if err != nil {
+		return browserauth.ParallelRun{}, errors.New("parallel run result summary is invalid")
+	}
+	_, err = tx.ExecContext(ctx, `UPDATE parallel_run_schedules SET status = ?, aggregateStatus = ?, cancelledAt = ?, completedAt = ?,
+		workerStates = ?, resultSummary = ?, activeWorkers = ?, totalWorkers = ?, completedWorkers = ?, failedWorkers = ?,
+		cancelledWorkers = ?, updated_at = ? WHERE id = ? AND idCostumer = ? AND idProject = ?`,
+		nextStatus, nextAggregate, now, nextCompletedAt, string(workersJSON), string(summaryJSON), counters.active, counters.total,
+		counters.completed, counters.failed, counters.cancelled, now, runID, tenantID, projectID)
+	if err != nil {
+		return browserauth.ParallelRun{}, safeDatabaseFailure("update parallel run cancellation", err)
+	}
+	run, err := getParallelRun(ctx, tx, tenantID, projectID, runID)
+	if err != nil {
+		return browserauth.ParallelRun{}, err
+	}
+	if err := tx.Commit(); err != nil {
+		return browserauth.ParallelRun{}, safeDatabaseFailure("commit parallel run cancellation", err)
+	}
+	return run, nil
+}
+
 func (r *BrowserAuthRepository) recordParallelRunTokenAudit(request *http.Request, input browserauth.ParallelRunClaim, action, result string) error {
 	values, err := json.Marshal(map[string]any{"agentId": input.WorkerID, "tokenId": "[REDACTED]", "token": "[REDACTED]"})
 	if err != nil {
