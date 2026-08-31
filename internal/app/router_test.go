@@ -274,6 +274,18 @@ func (fakeBrowserAuthRepository) GetAssetVersion(*http.Request, browserauth.User
 func (fakeBrowserAuthRepository) TransitionAssetVersionReview(*http.Request, browserauth.User, int64, int64, string, *string, time.Time) (browserauth.AssetReviewEvent, error) {
 	return browserauth.AssetReviewEvent{}, nil
 }
+func (fakeBrowserAuthRepository) ListParallelRuns(*http.Request, int64, int64, map[string]string) ([]browserauth.ParallelRun, error) {
+	return nil, nil
+}
+func (fakeBrowserAuthRepository) CreateParallelRun(*http.Request, browserauth.ParallelRunCreate) (browserauth.ParallelRun, error) {
+	return browserauth.ParallelRun{}, nil
+}
+func (fakeBrowserAuthRepository) CreateParallelRunMatrix(*http.Request, browserauth.ParallelRunCreate, []map[string]string) ([]browserauth.ParallelRun, error) {
+	return nil, nil
+}
+func (fakeBrowserAuthRepository) GetParallelRun(*http.Request, int64, int64, int64) (browserauth.ParallelRun, error) {
+	return browserauth.ParallelRun{}, nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {

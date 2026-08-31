@@ -1663,6 +1663,83 @@ func TestIntegrationDeliveryWorkerLeaseAllowsOnlyOneConsumerIntegration(t *testi
 	}
 }
 
+func TestParallelRunSchedulesAndMatricesAreTenantScopedAndIdempotentIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS parallel_run_schedules",
+		"DROP TABLE IF EXISTS asset_versions",
+		"DROP TABLE IF EXISTS test_cycles",
+		"DROP TABLE IF EXISTS projects",
+		`CREATE TABLE projects (id BIGINT PRIMARY KEY, name VARCHAR(255) NOT NULL, idCostumer BIGINT NOT NULL)`,
+		`CREATE TABLE test_cycles (id BIGINT PRIMARY KEY, name VARCHAR(255) NOT NULL, description TEXT NULL, config JSON NOT NULL, idProject BIGINT NOT NULL, idCostumer BIGINT NOT NULL)`,
+		`CREATE TABLE asset_versions (id BIGINT PRIMARY KEY AUTO_INCREMENT, idCostumer BIGINT NOT NULL, idProject BIGINT NOT NULL, assetType VARCHAR(64) NOT NULL, assetId BIGINT NOT NULL, version INT NOT NULL, actorUserId BIGINT NULL, reason VARCHAR(255) NOT NULL, snapshot JSON NOT NULL, created_at TIMESTAMP NULL, UNIQUE KEY asset_versions_unique_version (idCostumer, assetType, assetId, version))`,
+		`CREATE TABLE parallel_run_schedules (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT, idProject BIGINT NOT NULL, testCycleId BIGINT NOT NULL,
+			performedTestCycleId BIGINT NULL, idCostumer BIGINT NOT NULL, idempotencyKey VARCHAR(128) NOT NULL,
+			status VARCHAR(32) NOT NULL DEFAULT 'queued', requestedConcurrency SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+			activeWorkers SMALLINT UNSIGNED NOT NULL DEFAULT 0, totalWorkers SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+			completedWorkers SMALLINT UNSIGNED NOT NULL DEFAULT 0, failedWorkers SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+			cancelledWorkers SMALLINT UNSIGNED NOT NULL DEFAULT 0, aggregateStatus SMALLINT UNSIGNED NULL,
+			workerStates JSON NULL, resultSummary JSON NULL, metadata JSON NULL, scheduledAt TIMESTAMP NULL,
+			startedAt TIMESTAMP NULL, completedAt TIMESTAMP NULL, cancelledAt TIMESTAMP NULL,
+			created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL,
+			UNIQUE KEY parallel_run_tenant_project_key (idCostumer, idProject, idempotencyKey)
+		)`,
+		`INSERT INTO projects (id, name, idCostumer) VALUES (5, 'Primary', 11), (6, 'Foreign', 42)`,
+		`INSERT INTO test_cycles (id, name, config, idProject, idCostumer) VALUES
+			(7, 'Release', '{"tests":[21],"steps":[{"id":22}],"environments":[{"assetId":23}]}', 5, 11),
+			(8, 'Foreign', '{}', 6, 42)`,
+		`INSERT INTO asset_versions (id, idCostumer, idProject, assetType, assetId, version, reason, snapshot) VALUES
+			(30, 11, 5, 'test_cycle', 7, 1, 'asset.created', '{}'),
+			(31, 11, 5, 'test', 21, 3, 'asset.updated', '{}'),
+			(32, 11, 5, 'step', 22, 2, 'asset.updated', '{}'),
+			(33, 11, 5, 'environment', 23, 4, 'asset.updated', '{}')`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare parallel run fixture %q: %v", statement, err)
+		}
+	}
+	repository := NewBrowserAuthRepository(database)
+	request := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs", nil)
+	now := time.Date(2026, time.August, 31, 15, 0, 0, 0, time.UTC)
+	input := browserauth.ParallelRunCreate{TenantID: 11, ProjectID: 5, TestCycleID: 7, IdempotencyKey: "release", RequestedConcurrency: 2, Metadata: map[string]any{"run": map[string]any{"pipeline": "release"}}, Now: now}
+	created, err := repository.CreateParallelRun(request, input)
+	if err != nil || created.Status != "queued" || created.RequestedConcurrency != 2 || created.Metadata["executionSnapshot"] == nil {
+		t.Fatalf("unexpected created parallel run: %#v err=%v", created, err)
+	}
+	repeated, err := repository.CreateParallelRun(request, input)
+	if err != nil || repeated.ID != created.ID {
+		t.Fatalf("parallel run was not idempotent: %#v err=%v", repeated, err)
+	}
+	combinations := []map[string]string{{"browser": "chrome", "environment": "demo"}, {"browser": "chrome", "environment": "prod"}, {"browser": "firefox", "environment": "demo"}, {"browser": "firefox", "environment": "prod"}}
+	matrixInput := input
+	matrixInput.IdempotencyKey = "matrix-release"
+	matrix, err := repository.CreateParallelRunMatrix(request, matrixInput, combinations)
+	if err != nil || len(matrix) != 4 || matrix[0].Metadata["matrix"].(map[string]any)["total"] != float64(4) {
+		t.Fatalf("unexpected matrix schedules: %#v err=%v", matrix, err)
+	}
+	repeatedMatrix, err := repository.CreateParallelRunMatrix(request, matrixInput, combinations)
+	if err != nil || repeatedMatrix[0].ID != matrix[0].ID {
+		t.Fatalf("matrix schedules were not idempotent: %#v err=%v", repeatedMatrix, err)
+	}
+	listed, err := repository.ListParallelRuns(request, 11, 5, map[string]string{"pipeline": "release"})
+	if err != nil || len(listed) != 5 {
+		t.Fatalf("unexpected filtered parallel run list: %#v err=%v", listed, err)
+	}
+	if _, err := repository.GetParallelRun(request, 11, 6, created.ID); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-tenant project schedule to be hidden, got %v", err)
+	}
+	foreignInput := input
+	foreignInput.ProjectID = 6
+	foreignInput.TestCycleID = 8
+	if _, err := repository.CreateParallelRun(request, foreignInput); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected foreign schedule create to be hidden, got %v", err)
+	}
+}
+
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

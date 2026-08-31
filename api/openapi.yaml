@@ -1951,6 +1951,218 @@ paths:
           $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/parallel-runs:
+    get:
+      operationId: listBrowserParallelRuns
+      summary: List project parallel run schedules
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/parallel-runs"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/RunBuildFilter"
+        - $ref: "#/components/parameters/RunCommitFilter"
+        - $ref: "#/components/parameters/RunBranchFilter"
+        - $ref: "#/components/parameters/RunRepositoryFilter"
+        - $ref: "#/components/parameters/RunInitiatorFilter"
+        - $ref: "#/components/parameters/RunPipelineFilter"
+      responses:
+        "200":
+          $ref: "#/components/responses/ParallelRunList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+    post:
+      operationId: createBrowserParallelRun
+      summary: Schedule one idempotent parallel run
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/parallel-runs"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParallelRunCreate"
+      responses:
+        "201":
+          $ref: "#/components/responses/ParallelRunCreated"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/parallel-runs/matrix:
+    post:
+      operationId: createBrowserParallelRunMatrix
+      summary: Schedule a bounded deterministic run matrix
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/parallel-runs/matrix"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParallelRunMatrixCreate"
+      responses:
+        "201":
+          $ref: "#/components/responses/ParallelRunMatrixCreated"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/parallel-runs/{parallelRun}:
+    get:
+      operationId: showBrowserParallelRun
+      summary: Show one project parallel run schedule
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/ParallelRunID"
+      responses:
+        "200":
+          $ref: "#/components/responses/ParallelRunResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /ideliumcl/projects/{idProject}/parallel-runs:
+    get:
+      operationId: listCLIParallelRuns
+      summary: List project parallel run schedules by customer API key
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "api-key"
+      x-idelium-authentication-mode: "api-key"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/RunBuildFilter"
+        - $ref: "#/components/parameters/RunCommitFilter"
+        - $ref: "#/components/parameters/RunBranchFilter"
+        - $ref: "#/components/parameters/RunRepositoryFilter"
+        - $ref: "#/components/parameters/RunInitiatorFilter"
+        - $ref: "#/components/parameters/RunPipelineFilter"
+      responses:
+        "200":
+          $ref: "#/components/responses/ParallelRunList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+    post:
+      operationId: createCLIParallelRun
+      summary: Schedule one idempotent parallel run by customer API key
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "api-key"
+      x-idelium-authentication-mode: "api-key"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParallelRunCreate"
+      responses:
+        "201":
+          $ref: "#/components/responses/ParallelRunCreated"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /ideliumcl/projects/{idProject}/parallel-runs/matrix:
+    post:
+      operationId: createCLIParallelRunMatrix
+      summary: Schedule a bounded deterministic run matrix by customer API key
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs/matrix"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "api-key"
+      x-idelium-authentication-mode: "api-key"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParallelRunMatrixCreate"
+      responses:
+        "201":
+          $ref: "#/components/responses/ParallelRunMatrixCreated"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}:
+    get:
+      operationId: showCLIParallelRun
+      summary: Show one project parallel run schedule by customer API key
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "api-key"
+      x-idelium-authentication-mode: "api-key"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/ParallelRunID"
+      responses:
+        "200":
+          $ref: "#/components/responses/ParallelRunResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
   # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS
   /:
     get:
@@ -4091,156 +4303,6 @@ paths:
           $ref: "#/components/responses/Forbidden"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/parallel-runs:
-    get:
-      operationId: getAdminProjectsIdProjectParallelRuns
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/parallel-runs"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@index"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: ["idelium-web"]
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-    post:
-      operationId: postAdminProjectsIdProjectParallelRuns
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/parallel-runs"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@store"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: ["idelium-web"]
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/parallel-runs/matrix:
-    post:
-      operationId: postAdminProjectsIdProjectParallelRunsMatrix
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/parallel-runs/matrix"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@storeMatrix"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: ["idelium-web"]
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/parallel-runs/{parallelRun}:
-    get:
-      operationId: getAdminProjectsIdProjectParallelRunsParallelRun
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@show"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: ["idelium-web"]
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: parallelRun
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
   /admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel:
     post:
       operationId: postAdminProjectsIdProjectParallelRunsParallelRunCancel
@@ -5623,156 +5685,6 @@ paths:
           $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
-  /ideliumcl/projects/{idProject}/parallel-runs:
-    get:
-      operationId: getIdeliumclProjectsIdProjectParallelRuns
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@index"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "api-key"
-      x-idelium-authentication-mode: "api-key"
-      x-idelium-tenant-context: false
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-    post:
-      operationId: postIdeliumclProjectsIdProjectParallelRuns
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@store"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "api-key"
-      x-idelium-authentication-mode: "api-key"
-      x-idelium-tenant-context: false
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /ideliumcl/projects/{idProject}/parallel-runs/matrix:
-    post:
-      operationId: postIdeliumclProjectsIdProjectParallelRunsMatrix
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs/matrix"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@storeMatrix"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "api-key"
-      x-idelium-authentication-mode: "api-key"
-      x-idelium-tenant-context: false
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}:
-    get:
-      operationId: getIdeliumclProjectsIdProjectParallelRunsParallelRun
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@show"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "api-key"
-      x-idelium-authentication-mode: "api-key"
-      x-idelium-tenant-context: false
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: parallelRun
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
   /ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel:
     post:
       operationId: postIdeliumclProjectsIdProjectParallelRunsParallelRunCancel
@@ -6681,6 +6593,38 @@ components:
       schema:
         type: string
         format: uuid
+    ParallelRunID:
+      name: parallelRun
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    RunBuildFilter:
+      name: build
+      in: query
+      schema: {type: string}
+    RunCommitFilter:
+      name: commit
+      in: query
+      schema: {type: string}
+    RunBranchFilter:
+      name: branch
+      in: query
+      schema: {type: string}
+    RunRepositoryFilter:
+      name: repository
+      in: query
+      schema: {type: string}
+    RunInitiatorFilter:
+      name: initiator
+      in: query
+      schema: {type: string}
+    RunPipelineFilter:
+      name: pipeline
+      in: query
+      schema: {type: string}
   responses:
     LegacyCompatibilityResponse:
       description: >-
@@ -6751,6 +6695,46 @@ components:
                 maxItems: 100
                 items:
                   $ref: "#/components/schemas/IntegrationDelivery"
+    ParallelRunResponse:
+      description: Tenant-and-project-scoped parallel run schedule.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ParallelRun"
+    ParallelRunCreated:
+      description: Idempotently created or existing parallel run schedule.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ParallelRun"
+    ParallelRunList:
+      description: At most 50 newest project schedules after metadata filtering.
+      content:
+        application/json:
+          schema:
+            type: array
+            maxItems: 50
+            items:
+              $ref: "#/components/schemas/ParallelRun"
+    ParallelRunMatrixCreated:
+      description: Idempotently scheduled matrix expansion.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data, summary]
+            properties:
+              data:
+                type: array
+                maxItems: 64
+                items:
+                  $ref: "#/components/schemas/ParallelRun"
+              summary:
+                type: object
+                required: [requestedRuns, scheduledRuns]
+                properties:
+                  requestedRuns: {type: integer, minimum: 1, maximum: 64}
+                  scheduledRuns: {type: integer, minimum: 1, maximum: 64}
     LegacyCompatibilityError:
       description: Laravel-compatible error response.
       headers:
@@ -6800,6 +6784,82 @@ components:
     LegacyCompatibilityPayload:
       type: object
       additionalProperties: true
+    ParallelRunCreate:
+      type: object
+      required: [testCycleId, idempotencyKey]
+      properties:
+        testCycleId:
+          type: integer
+          format: int64
+          minimum: 1
+        idempotencyKey:
+          type: string
+          minLength: 1
+          maxLength: 128
+        requestedConcurrency:
+          type: integer
+          minimum: 1
+          maximum: 32
+          default: 1
+        metadata:
+          type: object
+          additionalProperties: true
+    ParallelRunMatrixCreate:
+      allOf:
+        - $ref: "#/components/schemas/ParallelRunCreate"
+        - type: object
+          required: [matrix]
+          properties:
+            idempotencyKey:
+              type: string
+              minLength: 1
+              maxLength: 96
+            matrix:
+              type: object
+              properties:
+                platforms:
+                  type: array
+                  maxItems: 16
+                  items: {}
+                browsers:
+                  type: array
+                  maxItems: 16
+                  items: {}
+                devices:
+                  type: array
+                  maxItems: 16
+                  items: {}
+                environments:
+                  type: array
+                  maxItems: 16
+                  items: {}
+    ParallelRun:
+      type: object
+      required: [id, runUrl, idProject, testCycleId, performedTestCycleId, idempotencyKey, status, requestedConcurrency, activeWorkers, totalWorkers, completedWorkers, failedWorkers, cancelledWorkers, lostWorkers, aggregateStatus, metadata, resultSummary, scheduledAt, startedAt, completedAt, cancelledAt]
+      properties:
+        id: {type: integer, format: int64}
+        runUrl: {type: string}
+        idProject: {type: integer, format: int64}
+        testCycleId: {type: integer, format: int64}
+        performedTestCycleId: {type: integer, format: int64, nullable: true}
+        idempotencyKey: {type: string, maxLength: 128}
+        status:
+          type: string
+          enum: [queued, running, cancelling, cancelled, completed, failed, lost]
+        requestedConcurrency: {type: integer, minimum: 1, maximum: 32}
+        activeWorkers: {type: integer, minimum: 0}
+        totalWorkers: {type: integer, minimum: 0}
+        completedWorkers: {type: integer, minimum: 0}
+        failedWorkers: {type: integer, minimum: 0}
+        cancelledWorkers: {type: integer, minimum: 0}
+        lostWorkers: {type: integer, minimum: 0}
+        aggregateStatus: {type: integer, nullable: true}
+        metadata: {type: object, additionalProperties: true}
+        resultSummary: {type: object, additionalProperties: true}
+        scheduledAt: {type: string, format: date-time, nullable: true}
+        startedAt: {type: string, format: date-time, nullable: true}
+        completedAt: {type: string, format: date-time, nullable: true}
+        cancelledAt: {type: string, format: date-time, nullable: true}
     GridQuerySnapshotCreate:
       type: object
       required: [resourceType]

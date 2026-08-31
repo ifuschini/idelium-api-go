@@ -78,6 +78,10 @@ type sessionsStub struct {
 	assetVersion      AssetVersion
 	reviewEvent       AssetReviewEvent
 	reviewErr         error
+	parallelRuns      []ParallelRun
+	parallelRun       ParallelRun
+	parallelInput     ParallelRunCreate
+	parallelMatrix    []map[string]string
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -277,6 +281,21 @@ func (s *sessionsStub) GetAssetVersion(*http.Request, User, int64, int64) (Asset
 }
 func (s *sessionsStub) TransitionAssetVersionReview(*http.Request, User, int64, int64, string, *string, time.Time) (AssetReviewEvent, error) {
 	return s.reviewEvent, s.reviewErr
+}
+func (s *sessionsStub) ListParallelRuns(*http.Request, int64, int64, map[string]string) ([]ParallelRun, error) {
+	return s.parallelRuns, s.accountErr
+}
+func (s *sessionsStub) CreateParallelRun(_ *http.Request, input ParallelRunCreate) (ParallelRun, error) {
+	s.parallelInput = input
+	return s.parallelRun, s.accountErr
+}
+func (s *sessionsStub) CreateParallelRunMatrix(_ *http.Request, input ParallelRunCreate, combinations []map[string]string) ([]ParallelRun, error) {
+	s.parallelInput = input
+	s.parallelMatrix = combinations
+	return s.parallelRuns, s.accountErr
+}
+func (s *sessionsStub) GetParallelRun(*http.Request, int64, int64, int64) (ParallelRun, error) {
+	return s.parallelRun, s.accountErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -1079,6 +1098,69 @@ func TestAssetReviewTransitionAndDiffContracts(t *testing.T) {
 	changes := diff["changes"].(map[string]any)
 	if changes["added"].(map[string]any)["added"] != 2.0 || changes["removed"].(map[string]any)["removed"] != true || changes["changed"].(map[string]any)["changed"].(map[string]any)["to"] != "new" {
 		t.Fatalf("unexpected asset diff: %#v", diff)
+	}
+}
+
+func TestParallelRunScheduleAndMatrixHandlersPreserveContracts(t *testing.T) {
+	run := ParallelRun{ID: 40, IDProject: 5, TestCycleID: 7, IdempotencyKey: "release", Status: "queued", RequestedConcurrency: 2, Metadata: map[string]any{"run": map[string]any{"pipeline": "release"}}, ResultSummary: map[string]any{}}
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3}, parallelRun: run, parallelRuns: []ParallelRun{run, run, run, run}}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+
+	create := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs", strings.NewReader(`{"testCycleId":7,"idempotencyKey":"release","requestedConcurrency":2,"metadata":{"pipeline":"release","token":"remove-me"}}`))
+	create.SetPathValue("idProject", "5")
+	create.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	created := httptest.NewRecorder()
+	handler.CreateParallelRun(created, create)
+	if created.Code != http.StatusCreated || sessions.parallelInput.TenantID != 11 || sessions.parallelInput.ProjectID != 5 || sessions.parallelInput.Metadata["token"] != nil {
+		t.Fatalf("unexpected parallel run create: %d %s %#v", created.Code, created.Body.String(), sessions.parallelInput)
+	}
+
+	matrix := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs/matrix", strings.NewReader(`{"testCycleId":7,"idempotencyKey":"matrix-release","matrix":{"platforms":["linux"],"browsers":["chrome","firefox"],"environments":["demo","prod"]}}`))
+	matrix.SetPathValue("idProject", "5")
+	matrix.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	matrixResponse := httptest.NewRecorder()
+	handler.CreateParallelRunMatrix(matrixResponse, matrix)
+	if matrixResponse.Code != http.StatusCreated || len(sessions.parallelMatrix) != 4 || !strings.Contains(matrixResponse.Body.String(), `"requestedRuns":4`) {
+		t.Fatalf("unexpected matrix create: %d %s %#v", matrixResponse.Code, matrixResponse.Body.String(), sessions.parallelMatrix)
+	}
+
+	tooLarge := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs/matrix", strings.NewReader(`{"testCycleId":7,"idempotencyKey":"large","matrix":{"platforms":[1,2,3,4,5,6,7,8],"browsers":[1,2,3,4,5,6,7,8,9]}}`))
+	tooLarge.SetPathValue("idProject", "5")
+	tooLarge.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	tooLargeResponse := httptest.NewRecorder()
+	handler.CreateParallelRunMatrix(tooLargeResponse, tooLarge)
+	if tooLargeResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(tooLargeResponse.Body.String(), `"requestedRuns":72`) {
+		t.Fatalf("expected matrix bound, got %d %s", tooLargeResponse.Code, tooLargeResponse.Body.String())
+	}
+
+	invalid := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs", strings.NewReader(`{"testCycleId":7,"idempotencyKey":"release","requestedConcurrency":33}`))
+	invalid.SetPathValue("idProject", "5")
+	invalid.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	invalidResponse := httptest.NewRecorder()
+	handler.CreateParallelRun(invalidResponse, invalid)
+	if invalidResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(invalidResponse.Body.String(), `"requestedConcurrency"`) {
+		t.Fatalf("expected concurrency validation error, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
+	}
+
+	sessions.accountErr = errors.New("database password must not be returned")
+	failure := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs", strings.NewReader(`{"testCycleId":7,"idempotencyKey":"safe-error"}`))
+	failure.SetPathValue("idProject", "5")
+	failure.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	failureResponse := httptest.NewRecorder()
+	handler.CreateParallelRun(failureResponse, failure)
+	if failureResponse.Code != http.StatusInternalServerError || strings.Contains(failureResponse.Body.String(), "database password") {
+		t.Fatalf("expected redacted internal error, got %d %s", failureResponse.Code, failureResponse.Body.String())
+	}
+}
+
+func TestParallelRunMetadataRecursivelyRemovesSensitiveValues(t *testing.T) {
+	metadata := normalizeRunMetadata(map[string]any{"build": 1042.0, "token": "remove", "nested": []any{map[string]any{"password": "remove", "safe": "keep"}}, "workloadIdentity": map[string]any{"provider": "github-actions", "authorization": "remove"}})
+	encoded, err := json.Marshal(metadata)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(encoded), "remove") || !strings.Contains(string(encoded), `"build":"1042"`) || !strings.Contains(string(encoded), `"safe":"keep"`) {
+		t.Fatalf("unexpected normalized metadata: %s", encoded)
 	}
 }
 

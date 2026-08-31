@@ -147,6 +147,10 @@ type AdminRepository interface {
 	ListAssetVersions(request *http.Request, actor User, projectID int64, assetType string, assetID int64) ([]AssetVersion, error)
 	GetAssetVersion(request *http.Request, actor User, projectID, versionID int64) (AssetVersion, error)
 	TransitionAssetVersionReview(request *http.Request, actor User, projectID, versionID int64, toStatus string, comment *string, now time.Time) (AssetReviewEvent, error)
+	ListParallelRuns(request *http.Request, tenantID, projectID int64, filters map[string]string) ([]ParallelRun, error)
+	CreateParallelRun(request *http.Request, input ParallelRunCreate) (ParallelRun, error)
+	CreateParallelRunMatrix(request *http.Request, input ParallelRunCreate, combinations []map[string]string) ([]ParallelRun, error)
+	GetParallelRun(request *http.Request, tenantID, projectID, runID int64) (ParallelRun, error)
 }
 
 type CustomerQuery struct {

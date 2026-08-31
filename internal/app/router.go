@@ -103,6 +103,10 @@ func NewRouter(
 	router.Get("/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}", browserAuthHandler.DiffAssetVersions)
 	router.Post("/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events", browserAuthHandler.TransitionAssetVersionReview)
 	router.Get("/admin/projects/{idProject}/asset-versions/{assetVersion}", browserAuthHandler.ShowAssetVersion)
+	router.Get("/admin/projects/{idProject}/parallel-runs", browserAuthHandler.ParallelRuns)
+	router.Post("/admin/projects/{idProject}/parallel-runs", browserAuthHandler.CreateParallelRun)
+	router.Post("/admin/projects/{idProject}/parallel-runs/matrix", browserAuthHandler.CreateParallelRunMatrix)
+	router.Get("/admin/projects/{idProject}/parallel-runs/{parallelRun}", browserAuthHandler.ShowParallelRun)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)
@@ -158,6 +162,10 @@ func NewRouter(
 		router.Get("/ideliumcl/plugin/{idPlugin}", cliHandler.Plugin)
 		router.Get("/ideliumcl/environments/{idProject}", cliHandler.Environments)
 		router.Get("/ideliumcl/environment/{idEnvironment}", cliHandler.Environment)
+		router.Get("/ideliumcl/projects/{idProject}/parallel-runs", browserAuthHandler.CLParallelRuns)
+		router.Post("/ideliumcl/projects/{idProject}/parallel-runs", browserAuthHandler.CLCreateParallelRun)
+		router.Post("/ideliumcl/projects/{idProject}/parallel-runs/matrix", browserAuthHandler.CLCreateParallelRunMatrix)
+		router.Get("/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}", browserAuthHandler.CLShowParallelRun)
 	})
 
 	router.NotFound(func(writer http.ResponseWriter, request *http.Request) {

@@ -60,6 +60,14 @@ type ServerInterface interface {
 	ShowAssetVersion(http.ResponseWriter, *http.Request)
 	TransitionAssetVersionReview(http.ResponseWriter, *http.Request)
 	DiffAssetVersions(http.ResponseWriter, *http.Request)
+	ListBrowserParallelRuns(http.ResponseWriter, *http.Request)
+	CreateBrowserParallelRun(http.ResponseWriter, *http.Request)
+	CreateBrowserParallelRunMatrix(http.ResponseWriter, *http.Request)
+	ShowBrowserParallelRun(http.ResponseWriter, *http.Request)
+	ListCLIParallelRuns(http.ResponseWriter, *http.Request)
+	CreateCLIParallelRun(http.ResponseWriter, *http.Request)
+	CreateCLIParallelRunMatrix(http.ResponseWriter, *http.Request)
+	ShowCLIParallelRun(http.ResponseWriter, *http.Request)
 	Get(http.ResponseWriter, *http.Request)
 	GetAdminAccounts(http.ResponseWriter, *http.Request)
 	PostAdminAccounts(http.ResponseWriter, *http.Request)
@@ -122,10 +130,6 @@ type ServerInterface interface {
 	GetAdminProjects(http.ResponseWriter, *http.Request)
 	PostAdminProjects(http.ResponseWriter, *http.Request)
 	GetAdminProjectsCreate(http.ResponseWriter, *http.Request)
-	GetAdminProjectsIdProjectParallelRuns(http.ResponseWriter, *http.Request)
-	PostAdminProjectsIdProjectParallelRuns(http.ResponseWriter, *http.Request)
-	PostAdminProjectsIdProjectParallelRunsMatrix(http.ResponseWriter, *http.Request)
-	GetAdminProjectsIdProjectParallelRunsParallelRun(http.ResponseWriter, *http.Request)
 	PostAdminProjectsIdProjectParallelRunsParallelRunCancel(http.ResponseWriter, *http.Request)
 	PostAdminProjectsIdProjectParallelRunsParallelRunClaim(http.ResponseWriter, *http.Request)
 	GetAdminProjectsIdProjectParallelRunsParallelRunResults(http.ResponseWriter, *http.Request)
@@ -164,10 +168,6 @@ type ServerInterface interface {
 	GetClear(http.ResponseWriter, *http.Request)
 	GetCsrfCookie(http.ResponseWriter, *http.Request)
 	PostIdeliumclAgentsRegister(http.ResponseWriter, *http.Request)
-	GetIdeliumclProjectsIdProjectParallelRuns(http.ResponseWriter, *http.Request)
-	PostIdeliumclProjectsIdProjectParallelRuns(http.ResponseWriter, *http.Request)
-	PostIdeliumclProjectsIdProjectParallelRunsMatrix(http.ResponseWriter, *http.Request)
-	GetIdeliumclProjectsIdProjectParallelRunsParallelRun(http.ResponseWriter, *http.Request)
 	PostIdeliumclProjectsIdProjectParallelRunsParallelRunCancel(http.ResponseWriter, *http.Request)
 	PostIdeliumclProjectsIdProjectParallelRunsParallelRunClaim(http.ResponseWriter, *http.Request)
 	GetIdeliumclProjectsIdProjectParallelRunsParallelRunResults(http.ResponseWriter, *http.Request)
@@ -653,6 +653,94 @@ var Operations = []Operation{
 		LaravelRoute:       "/api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}",
 		AuthenticationMode: "browser-session",
 		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/projects/{idProject}/parallel-runs",
+		OperationID:        "listBrowserParallelRuns",
+		Tags:               []string{"Parallel Runs"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/parallel-runs",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/admin/projects/{idProject}/parallel-runs",
+		OperationID:        "createBrowserParallelRun",
+		Tags:               []string{"Parallel Runs"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/parallel-runs",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/admin/projects/{idProject}/parallel-runs/matrix",
+		OperationID:        "createBrowserParallelRunMatrix",
+		Tags:               []string{"Parallel Runs"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/parallel-runs/matrix",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/projects/{idProject}/parallel-runs/{parallelRun}",
+		OperationID:        "showBrowserParallelRun",
+		Tags:               []string{"Parallel Runs"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/ideliumcl/projects/{idProject}/parallel-runs",
+		OperationID:        "listCLIParallelRuns",
+		Tags:               []string{"Parallel Runs"},
+		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs",
+		AuthenticationMode: "api-key",
+		TrustPath:          "api-key",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/ideliumcl/projects/{idProject}/parallel-runs",
+		OperationID:        "createCLIParallelRun",
+		Tags:               []string{"Parallel Runs"},
+		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs",
+		AuthenticationMode: "api-key",
+		TrustPath:          "api-key",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/ideliumcl/projects/{idProject}/parallel-runs/matrix",
+		OperationID:        "createCLIParallelRunMatrix",
+		Tags:               []string{"Parallel Runs"},
+		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/matrix",
+		AuthenticationMode: "api-key",
+		TrustPath:          "api-key",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}",
+		OperationID:        "showCLIParallelRun",
+		Tags:               []string{"Parallel Runs"},
+		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}",
+		AuthenticationMode: "api-key",
+		TrustPath:          "api-key",
 		TenantContext:      true,
 		Consumers:          nil,
 	},
@@ -1339,50 +1427,6 @@ var Operations = []Operation{
 		Consumers:          []string{"idelium-web"},
 	},
 	{
-		Method:             "GET",
-		Path:               "/admin/projects/{idProject}/parallel-runs",
-		OperationID:        "getAdminProjectsIdProjectParallelRuns",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/parallel-runs",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          []string{"idelium-web"},
-	},
-	{
-		Method:             "POST",
-		Path:               "/admin/projects/{idProject}/parallel-runs",
-		OperationID:        "postAdminProjectsIdProjectParallelRuns",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/parallel-runs",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          []string{"idelium-web"},
-	},
-	{
-		Method:             "POST",
-		Path:               "/admin/projects/{idProject}/parallel-runs/matrix",
-		OperationID:        "postAdminProjectsIdProjectParallelRunsMatrix",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/parallel-runs/matrix",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          []string{"idelium-web"},
-	},
-	{
-		Method:             "GET",
-		Path:               "/admin/projects/{idProject}/parallel-runs/{parallelRun}",
-		OperationID:        "getAdminProjectsIdProjectParallelRunsParallelRun",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          []string{"idelium-web"},
-	},
-	{
 		Method:             "POST",
 		Path:               "/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
 		OperationID:        "postAdminProjectsIdProjectParallelRunsParallelRunCancel",
@@ -1795,50 +1839,6 @@ var Operations = []Operation{
 		OperationID:        "postIdeliumclAgentsRegister",
 		Tags:               []string{"Laravel Compatibility"},
 		LaravelRoute:       "/api/ideliumcl/agents/register",
-		AuthenticationMode: "api-key",
-		TrustPath:          "api-key",
-		TenantContext:      false,
-		Consumers:          nil,
-	},
-	{
-		Method:             "GET",
-		Path:               "/ideliumcl/projects/{idProject}/parallel-runs",
-		OperationID:        "getIdeliumclProjectsIdProjectParallelRuns",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs",
-		AuthenticationMode: "api-key",
-		TrustPath:          "api-key",
-		TenantContext:      false,
-		Consumers:          nil,
-	},
-	{
-		Method:             "POST",
-		Path:               "/ideliumcl/projects/{idProject}/parallel-runs",
-		OperationID:        "postIdeliumclProjectsIdProjectParallelRuns",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs",
-		AuthenticationMode: "api-key",
-		TrustPath:          "api-key",
-		TenantContext:      false,
-		Consumers:          nil,
-	},
-	{
-		Method:             "POST",
-		Path:               "/ideliumcl/projects/{idProject}/parallel-runs/matrix",
-		OperationID:        "postIdeliumclProjectsIdProjectParallelRunsMatrix",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/matrix",
-		AuthenticationMode: "api-key",
-		TrustPath:          "api-key",
-		TenantContext:      false,
-		Consumers:          nil,
-	},
-	{
-		Method:             "GET",
-		Path:               "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}",
-		OperationID:        "getIdeliumclProjectsIdProjectParallelRunsParallelRun",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}",
 		AuthenticationMode: "api-key",
 		TrustPath:          "api-key",
 		TenantContext:      false,
