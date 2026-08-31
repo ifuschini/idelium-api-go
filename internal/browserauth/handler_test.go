@@ -68,6 +68,7 @@ type sessionsStub struct {
 	artifacts         []ArtifactDescriptor
 	artifact          ArtifactDescriptor
 	createdArtifact   ArtifactDescriptorCreate
+	lifecycleUpdate   ArtifactLifecycleUpdate
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -198,6 +199,22 @@ func (s *sessionsStub) GetArtifactDescriptor(*http.Request, User, int64, int64, 
 }
 func (s *sessionsStub) RegisterArtifactDescriptor(_ *http.Request, _ User, input ArtifactDescriptorCreate) (ArtifactDescriptor, error) {
 	s.createdArtifact = input
+	return s.artifact, s.accountErr
+}
+func (s *sessionsStub) SetArtifactLegalHold(_ *http.Request, _ User, input ArtifactLifecycleUpdate) (ArtifactDescriptor, error) {
+	s.lifecycleUpdate = input
+	return s.artifact, s.accountErr
+}
+func (s *sessionsStub) MarkArtifactDeleted(_ *http.Request, _ User, input ArtifactLifecycleUpdate) (ArtifactDescriptor, error) {
+	s.lifecycleUpdate = input
+	return s.artifact, s.accountErr
+}
+func (s *sessionsStub) ArchiveArtifact(_ *http.Request, _ User, input ArtifactLifecycleUpdate) (ArtifactDescriptor, error) {
+	s.lifecycleUpdate = input
+	return s.artifact, s.accountErr
+}
+func (s *sessionsStub) RestoreArtifact(_ *http.Request, _ User, input ArtifactLifecycleUpdate) (ArtifactDescriptor, error) {
+	s.lifecycleUpdate = input
 	return s.artifact, s.accountErr
 }
 
@@ -740,6 +757,38 @@ func TestArtifactDescriptorsRequireReadCapabilityAndPreserveEnvelope(t *testing.
 	forbiddenHandler.ArtifactDescriptors(forbiddenResponse, forbiddenRequest)
 	if forbiddenResponse.Code != http.StatusForbidden {
 		t.Fatalf("expected artifacts.read to be required, got %d %s", forbiddenResponse.Code, forbiddenResponse.Body.String())
+	}
+}
+
+func TestArtifactLifecycleHandlersValidateAndPreserveLaravelEnvelope(t *testing.T) {
+	sessions := &sessionsStub{
+		user:     User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 2},
+		artifact: ArtifactDescriptor{ID: 99, IDCostumer: 11, IDProject: 5, PerformedTestCycleID: 44, ArtifactType: "json", Name: "summary.json", ContentType: "application/json", SizeBytes: 12, ChecksumSHA256: strings.Repeat("a", 64), StorageKey: "tenant/11/summary.json", State: "archived", Metadata: json.RawMessage(`{"legalHold":{"enabled":true}}`)},
+	}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	handler.now = func() time.Time { return time.Date(2026, time.August, 31, 12, 0, 0, 0, time.UTC) }
+
+	holdRequest := httptest.NewRequest(http.MethodPut, "/admin/projects/5/performed-test-cycles/44/artifacts/99/legal-hold", strings.NewReader(`{"enabled":true,"reason":"Investigation hold"}`))
+	holdRequest.SetPathValue("idProject", "5")
+	holdRequest.SetPathValue("performedTestCycleId", "44")
+	holdRequest.SetPathValue("artifactDescriptor", "99")
+	holdRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	holdResponse := httptest.NewRecorder()
+	handler.SetArtifactLegalHold(holdResponse, holdRequest)
+	if holdResponse.Code != http.StatusOK || !strings.Contains(holdResponse.Body.String(), `"data":{`) || sessions.lifecycleUpdate.ProjectID != 5 || sessions.lifecycleUpdate.ArtifactDescriptorID != 99 || sessions.lifecycleUpdate.Reason == nil {
+		t.Fatalf("unexpected legal hold response/update: %d %s %#v", holdResponse.Code, holdResponse.Body.String(), sessions.lifecycleUpdate)
+	}
+
+	sessions.accountErr = ValidationFailure{Errors: map[string][]string{"artifact": {"Artifact is under legal hold and cannot be archived."}}}
+	archiveRequest := httptest.NewRequest(http.MethodPost, "/admin/projects/5/performed-test-cycles/44/artifacts/99/archive", strings.NewReader(`{}`))
+	archiveRequest.SetPathValue("idProject", "5")
+	archiveRequest.SetPathValue("performedTestCycleId", "44")
+	archiveRequest.SetPathValue("artifactDescriptor", "99")
+	archiveRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	archiveResponse := httptest.NewRecorder()
+	handler.ArchiveArtifact(archiveResponse, archiveRequest)
+	if archiveResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(archiveResponse.Body.String(), "legal hold") {
+		t.Fatalf("expected Laravel-compatible validation response, got %d %s", archiveResponse.Code, archiveResponse.Body.String())
 	}
 }
 

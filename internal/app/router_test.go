@@ -214,6 +214,18 @@ func (fakeBrowserAuthRepository) GetArtifactDescriptor(*http.Request, browseraut
 func (fakeBrowserAuthRepository) RegisterArtifactDescriptor(*http.Request, browserauth.User, browserauth.ArtifactDescriptorCreate) (browserauth.ArtifactDescriptor, error) {
 	return browserauth.ArtifactDescriptor{}, nil
 }
+func (fakeBrowserAuthRepository) SetArtifactLegalHold(*http.Request, browserauth.User, browserauth.ArtifactLifecycleUpdate) (browserauth.ArtifactDescriptor, error) {
+	return browserauth.ArtifactDescriptor{}, nil
+}
+func (fakeBrowserAuthRepository) MarkArtifactDeleted(*http.Request, browserauth.User, browserauth.ArtifactLifecycleUpdate) (browserauth.ArtifactDescriptor, error) {
+	return browserauth.ArtifactDescriptor{}, nil
+}
+func (fakeBrowserAuthRepository) ArchiveArtifact(*http.Request, browserauth.User, browserauth.ArtifactLifecycleUpdate) (browserauth.ArtifactDescriptor, error) {
+	return browserauth.ArtifactDescriptor{}, nil
+}
+func (fakeBrowserAuthRepository) RestoreArtifact(*http.Request, browserauth.User, browserauth.ArtifactLifecycleUpdate) (browserauth.ArtifactDescriptor, error) {
+	return browserauth.ArtifactDescriptor{}, nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {

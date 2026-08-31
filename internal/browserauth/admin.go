@@ -15,6 +15,14 @@ var ErrForbidden = errors.New("browser admin action is forbidden")
 var ErrConflict = errors.New("browser admin resource is not ready")
 var ErrGone = errors.New("browser admin resource is gone")
 
+type ValidationFailure struct {
+	Errors map[string][]string
+}
+
+func (failure ValidationFailure) Error() string {
+	return "browser admin validation failed"
+}
+
 type Role struct {
 	ID        int64      `json:"id"`
 	Name      string     `json:"name"`
@@ -114,6 +122,10 @@ type AdminRepository interface {
 	ListArtifactDescriptors(request *http.Request, actor User, projectID int64, performedTestCycleID int64) ([]ArtifactDescriptor, error)
 	GetArtifactDescriptor(request *http.Request, actor User, projectID int64, performedTestCycleID int64, artifactDescriptorID int64) (ArtifactDescriptor, error)
 	RegisterArtifactDescriptor(request *http.Request, actor User, input ArtifactDescriptorCreate) (ArtifactDescriptor, error)
+	SetArtifactLegalHold(request *http.Request, actor User, input ArtifactLifecycleUpdate) (ArtifactDescriptor, error)
+	MarkArtifactDeleted(request *http.Request, actor User, input ArtifactLifecycleUpdate) (ArtifactDescriptor, error)
+	ArchiveArtifact(request *http.Request, actor User, input ArtifactLifecycleUpdate) (ArtifactDescriptor, error)
+	RestoreArtifact(request *http.Request, actor User, input ArtifactLifecycleUpdate) (ArtifactDescriptor, error)
 }
 
 type CustomerQuery struct {
@@ -354,6 +366,16 @@ type ArtifactDescriptorCreate struct {
 	State                string
 	RetentionUntil       *time.Time
 	Metadata             json.RawMessage
+	Now                  time.Time
+}
+
+type ArtifactLifecycleUpdate struct {
+	ProjectID            int64
+	PerformedTestCycleID int64
+	ArtifactDescriptorID int64
+	Enabled              bool
+	Reason               *string
+	RestoreBy            *string
 	Now                  time.Time
 }
 
@@ -1108,6 +1130,107 @@ func (h *Handler) ShowArtifactDescriptor(writer http.ResponseWriter, request *ht
 	}
 	if err != nil {
 		h.internalError(writer, request, "show browser artifact descriptor", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"data": descriptor})
+}
+
+func (h *Handler) SetArtifactLegalHold(writer http.ResponseWriter, request *http.Request) {
+	user, input, ok := h.artifactLifecycleInput(writer, request)
+	if !ok {
+		return
+	}
+	var body struct {
+		Enabled *bool   `json:"enabled"`
+		Reason  *string `json:"reason"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil || body.Enabled == nil {
+		validationError(writer, "enabled", "The enabled field is required.")
+		return
+	}
+	input.Enabled = *body.Enabled
+	if body.Reason != nil {
+		reason := strings.TrimSpace(*body.Reason)
+		input.Reason = &reason
+	}
+	descriptor, err := h.sessions.SetArtifactLegalHold(request, user, input)
+	h.writeArtifactLifecycleResult(writer, request, "set browser artifact legal hold", descriptor, err)
+}
+
+func (h *Handler) MarkArtifactDeleted(writer http.ResponseWriter, request *http.Request) {
+	user, input, ok := h.artifactLifecycleInput(writer, request)
+	if !ok {
+		return
+	}
+	descriptor, err := h.sessions.MarkArtifactDeleted(request, user, input)
+	h.writeArtifactLifecycleResult(writer, request, "mark browser artifact deleted", descriptor, err)
+}
+
+func (h *Handler) ArchiveArtifact(writer http.ResponseWriter, request *http.Request) {
+	user, input, ok := h.artifactLifecycleInput(writer, request)
+	if !ok {
+		return
+	}
+	var body struct {
+		Reason    *string `json:"reason"`
+		RestoreBy *string `json:"restoreBy"`
+	}
+	if request.Body != nil && request.ContentLength != 0 {
+		if err := decodeJSON(writer, request, &body); err != nil {
+			validationError(writer, "payload", "The request payload is invalid.")
+			return
+		}
+	}
+	if body.Reason != nil {
+		reason := strings.TrimSpace(*body.Reason)
+		input.Reason = &reason
+	}
+	if body.RestoreBy != nil {
+		restoreBy := strings.TrimSpace(*body.RestoreBy)
+		input.RestoreBy = &restoreBy
+	}
+	descriptor, err := h.sessions.ArchiveArtifact(request, user, input)
+	h.writeArtifactLifecycleResult(writer, request, "archive browser artifact", descriptor, err)
+}
+
+func (h *Handler) RestoreArtifact(writer http.ResponseWriter, request *http.Request) {
+	user, input, ok := h.artifactLifecycleInput(writer, request)
+	if !ok {
+		return
+	}
+	descriptor, err := h.sessions.RestoreArtifact(request, user, input)
+	h.writeArtifactLifecycleResult(writer, request, "restore browser artifact", descriptor, err)
+}
+
+func (h *Handler) artifactLifecycleInput(writer http.ResponseWriter, request *http.Request) (User, ArtifactLifecycleUpdate, bool) {
+	user, ok := h.requireCapability(writer, request, "artifacts.manage")
+	if !ok {
+		return User{}, ArtifactLifecycleUpdate{}, false
+	}
+	projectID, performedTestCycleID, ok := parseProjectPerformedCyclePath(writer, request)
+	if !ok {
+		return User{}, ArtifactLifecycleUpdate{}, false
+	}
+	artifactDescriptorID, err := parsePathID(request.PathValue("artifactDescriptor"))
+	if err != nil {
+		h.notFound(writer)
+		return User{}, ArtifactLifecycleUpdate{}, false
+	}
+	return user, ArtifactLifecycleUpdate{ProjectID: projectID, PerformedTestCycleID: performedTestCycleID, ArtifactDescriptorID: artifactDescriptorID, Now: h.now().UTC()}, true
+}
+
+func (h *Handler) writeArtifactLifecycleResult(writer http.ResponseWriter, request *http.Request, action string, descriptor ArtifactDescriptor, err error) {
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	var validationFailure ValidationFailure
+	if errors.As(err, &validationFailure) {
+		validationErrors(writer, validationFailure.Errors)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, action, err)
 		return
 	}
 	writeJSON(writer, http.StatusOK, map[string]any{"data": descriptor})

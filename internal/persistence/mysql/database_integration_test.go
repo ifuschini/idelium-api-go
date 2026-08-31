@@ -1059,6 +1059,7 @@ func TestBrowserArtifactDescriptorsIntegration(t *testing.T) {
 	defer cancel()
 
 	for _, statement := range []string{
+		"DROP TABLE IF EXISTS audit_events",
 		"DROP TABLE IF EXISTS artifact_descriptors",
 		"DROP TABLE IF EXISTS performed_test_cycles",
 		`CREATE TABLE performed_test_cycles (
@@ -1086,6 +1087,23 @@ func TestBrowserArtifactDescriptorsIntegration(t *testing.T) {
 			metadata JSON NULL,
 			created_at TIMESTAMP NULL,
 			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE audit_events (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			actorUserId BIGINT NULL,
+			actorTenantId BIGINT NULL,
+			activeTenantId BIGINT NOT NULL,
+			idProject BIGINT NULL,
+			action VARCHAR(128) NOT NULL,
+			targetType VARCHAR(128) NOT NULL,
+			targetId VARCHAR(128) NULL,
+			beforeValues JSON NULL,
+			afterValues JSON NULL,
+			result VARCHAR(32) NOT NULL,
+			sourceIp VARCHAR(64) NULL,
+			correlationId CHAR(36) NOT NULL,
+			metadata JSON NULL,
+			created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
 		)`,
 		`INSERT INTO performed_test_cycles (id, testCycleId, date, status, idCostumer) VALUES
 			(44, 5, '2026-08-31 09:00:00', 1, 11),
@@ -1144,6 +1162,30 @@ func TestBrowserArtifactDescriptorsIntegration(t *testing.T) {
 	}
 	if _, err := repository.RegisterArtifactDescriptor(request, actor, browserauth.ArtifactDescriptorCreate{IDProject: 5, PerformedTestCycleID: 45, ArtifactType: "json", Name: "foreign.json", ContentType: "application/json", SizeBytes: 1, ChecksumSHA256: strings.Repeat("a", 64), StorageKey: "tenant/42/foreign.json", Now: now}); !errors.Is(err, browserauth.ErrNotFound) {
 		t.Fatalf("expected foreign run write to be hidden, got %v", err)
+	}
+	held, err := repository.SetArtifactLegalHold(request, actor, browserauth.ArtifactLifecycleUpdate{ProjectID: 5, PerformedTestCycleID: 44, ArtifactDescriptorID: 90, Enabled: true, Reason: stringPtr("Investigation hold"), Now: now})
+	if err != nil || !strings.Contains(string(held.Metadata), "legalHold") {
+		t.Fatalf("unexpected legal hold descriptor: %#v err=%v", held, err)
+	}
+	var validationFailure browserauth.ValidationFailure
+	if _, err := repository.MarkArtifactDeleted(request, actor, browserauth.ArtifactLifecycleUpdate{ProjectID: 5, PerformedTestCycleID: 44, ArtifactDescriptorID: 90, Now: now}); !errors.As(err, &validationFailure) {
+		t.Fatalf("expected legal hold delete validation, got %v", err)
+	}
+	released, err := repository.SetArtifactLegalHold(request, actor, browserauth.ArtifactLifecycleUpdate{ProjectID: 5, PerformedTestCycleID: 44, ArtifactDescriptorID: 90, Enabled: false, Now: now})
+	if err != nil || !strings.Contains(string(released.Metadata), `"enabled":false`) {
+		t.Fatalf("unexpected legal hold release: %#v err=%v", released, err)
+	}
+	archived, err := repository.ArchiveArtifact(request, actor, browserauth.ArtifactLifecycleUpdate{ProjectID: 5, PerformedTestCycleID: 44, ArtifactDescriptorID: 90, Reason: stringPtr("Retention grace period"), RestoreBy: stringPtr("2026-09-30T00:00:00Z"), Now: now})
+	if err != nil || archived.State != "archived" || !strings.Contains(string(archived.Metadata), "Retention grace period") {
+		t.Fatalf("unexpected archived descriptor: %#v err=%v", archived, err)
+	}
+	restored, err := repository.RestoreArtifact(request, actor, browserauth.ArtifactLifecycleUpdate{ProjectID: 5, PerformedTestCycleID: 44, ArtifactDescriptorID: 90, Now: now})
+	if err != nil || restored.State != "available" || !strings.Contains(string(restored.Metadata), "restoredAt") {
+		t.Fatalf("unexpected restored descriptor: %#v err=%v", restored, err)
+	}
+	var auditCount int
+	if err := database.QueryRowContext(ctx, "SELECT COUNT(*) FROM audit_events WHERE activeTenantId = ? AND targetType = 'artifact_descriptor' AND targetId = ?", 11, "90").Scan(&auditCount); err != nil || auditCount != 4 {
+		t.Fatalf("expected four lifecycle audit events, count=%d err=%v", auditCount, err)
 	}
 }
 
@@ -2111,4 +2153,8 @@ func TestCLIEnvironmentRepositoryIntegration(t *testing.T) {
 	if !errors.Is(err, cliapi.ErrNotFound) {
 		t.Fatalf("expected missing environment to be hidden, got %v", err)
 	}
+}
+
+func stringPtr(value string) *string {
+	return &value
 }

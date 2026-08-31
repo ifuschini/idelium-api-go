@@ -153,6 +153,190 @@ paths:
           $ref: "#/components/responses/NotFound"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive:
+    post:
+      operationId: postAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorArchive
+      summary: Archive an artifact descriptor
+      description: >-
+        Archives a tenant-owned artifact descriptor unless it is under legal
+        hold or already marked deleted. The response preserves the Laravel data
+        envelope and records an append-only audit event.
+      tags: [Browser Results]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive"
+      x-idelium-controller: "App\\Http\\Controllers\\ArtifactDescriptorController@archive"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      x-idelium-consumers: []
+      parameters:
+        - name: idProject
+          in: path
+          required: true
+          schema: {type: string}
+        - name: performedTestCycleId
+          in: path
+          required: true
+          schema: {type: string}
+        - name: artifactDescriptor
+          in: path
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: {type: string, nullable: true, maxLength: 1000}
+                restoreBy: {type: string, nullable: true}
+      responses:
+        "200":
+          $ref: "#/components/responses/ArtifactDescriptorEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker:
+    post:
+      operationId: postAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorDeleteMarker
+      summary: Mark an artifact descriptor as deleted
+      description: >-
+        Marks a tenant-owned artifact descriptor as deleted unless legal hold
+        blocks deletion, preserving Laravel validation and audit semantics.
+      tags: [Browser Results]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker"
+      x-idelium-controller: "App\\Http\\Controllers\\ArtifactDescriptorController@markDeleted"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      x-idelium-consumers: []
+      parameters:
+        - name: idProject
+          in: path
+          required: true
+          schema: {type: string}
+        - name: performedTestCycleId
+          in: path
+          required: true
+          schema: {type: string}
+        - name: artifactDescriptor
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        "200":
+          $ref: "#/components/responses/ArtifactDescriptorEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold:
+    put:
+      operationId: putAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorLegalHold
+      summary: Update artifact legal hold
+      description: >-
+        Enables or disables legal hold metadata for a tenant-owned artifact
+        descriptor and writes a matching append-only audit event.
+      tags: [Browser Results]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold"
+      x-idelium-controller: "App\\Http\\Controllers\\ArtifactDescriptorController@legalHold"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      x-idelium-consumers: []
+      parameters:
+        - name: idProject
+          in: path
+          required: true
+          schema: {type: string}
+        - name: performedTestCycleId
+          in: path
+          required: true
+          schema: {type: string}
+        - name: artifactDescriptor
+          in: path
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enabled]
+              properties:
+                enabled: {type: boolean}
+                reason: {type: string, nullable: true, maxLength: 1000}
+      responses:
+        "200":
+          $ref: "#/components/responses/ArtifactDescriptorEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore:
+    post:
+      operationId: postAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorRestore
+      summary: Restore an archived artifact descriptor
+      description: >-
+        Restores an archived tenant-owned artifact descriptor to available and
+        records restoredAt metadata plus an append-only audit event.
+      tags: [Browser Results]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore"
+      x-idelium-controller: "App\\Http\\Controllers\\ArtifactDescriptorController@restore"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      x-idelium-consumers: []
+      parameters:
+        - name: idProject
+          in: path
+          required: true
+          schema: {type: string}
+        - name: performedTestCycleId
+          in: path
+          required: true
+          schema: {type: string}
+        - name: artifactDescriptor
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        "200":
+          $ref: "#/components/responses/ArtifactDescriptorEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
   /admin/platforms/types:
     get:
       operationId: listPlatformTypes
@@ -4272,110 +4456,6 @@ paths:
           $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive:
-    post:
-      operationId: postAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorArchive
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive"
-      x-idelium-controller: "App\\Http\\Controllers\\ArtifactDescriptorController@archive"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: performedTestCycleId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: artifactDescriptor
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker:
-    post:
-      operationId: postAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorDeleteMarker
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker"
-      x-idelium-controller: "App\\Http\\Controllers\\ArtifactDescriptorController@markDeleted"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: performedTestCycleId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: artifactDescriptor
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
   /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact:
     get:
       operationId: getAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorImpact
@@ -4415,110 +4495,6 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold:
-    put:
-      operationId: putAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorLegalHold
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold"
-      x-idelium-controller: "App\\Http\\Controllers\\ArtifactDescriptorController@legalHold"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: performedTestCycleId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: artifactDescriptor
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore:
-    post:
-      operationId: postAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorRestore
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore"
-      x-idelium-controller: "App\\Http\\Controllers\\ArtifactDescriptorController@restore"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: performedTestCycleId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: artifactDescriptor
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
   /admin/projects/{project}:
@@ -6691,6 +6667,19 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/LegacyCompatibilityPayload"
+    ArtifactDescriptorEnvelope:
+      description: Laravel-compatible artifact descriptor data envelope.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationID"
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                $ref: "#/components/schemas/ArtifactDescriptor"
     LegacyCompatibilityError:
       description: Laravel-compatible error response.
       headers:

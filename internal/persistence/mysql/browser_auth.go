@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -804,6 +805,102 @@ func (r *BrowserAuthRepository) RegisterArtifactDescriptor(request *http.Request
 	return r.GetArtifactDescriptor(request, actor, input.IDProject, input.PerformedTestCycleID, id)
 }
 
+func (r *BrowserAuthRepository) SetArtifactLegalHold(request *http.Request, actor browserauth.User, input browserauth.ArtifactLifecycleUpdate) (browserauth.ArtifactDescriptor, error) {
+	return r.updateArtifactLifecycle(request, actor, input, "artifact.legal_hold", func(descriptor browserauth.ArtifactDescriptor) (map[string]any, map[string]any, string, error) {
+		metadata := artifactMetadataMap(descriptor.Metadata)
+		before := metadata
+		updated := cloneMap(metadata)
+		reason := any(nil)
+		if input.Enabled && input.Reason != nil {
+			reason = *input.Reason
+		}
+		updated["legalHold"] = map[string]any{"enabled": input.Enabled, "reason": reason, "changedAt": input.Now.Format(time.RFC3339)}
+		return map[string]any{"metadata": before}, map[string]any{"metadata": updated}, descriptor.State, nil
+	})
+}
+
+func (r *BrowserAuthRepository) MarkArtifactDeleted(request *http.Request, actor browserauth.User, input browserauth.ArtifactLifecycleUpdate) (browserauth.ArtifactDescriptor, error) {
+	return r.updateArtifactLifecycle(request, actor, input, "artifact.mark_deleted", func(descriptor browserauth.ArtifactDescriptor) (map[string]any, map[string]any, string, error) {
+		if artifactLegalHoldEnabled(descriptor.Metadata) {
+			return nil, nil, "", browserauth.ValidationFailure{Errors: map[string][]string{"artifact": {"Artifact is under legal hold and cannot be deleted."}}}
+		}
+		return map[string]any{"state": descriptor.State}, map[string]any{"state": "deleted"}, "deleted", nil
+	})
+}
+
+func (r *BrowserAuthRepository) ArchiveArtifact(request *http.Request, actor browserauth.User, input browserauth.ArtifactLifecycleUpdate) (browserauth.ArtifactDescriptor, error) {
+	return r.updateArtifactLifecycle(request, actor, input, "artifact.archive", func(descriptor browserauth.ArtifactDescriptor) (map[string]any, map[string]any, string, error) {
+		if artifactLegalHoldEnabled(descriptor.Metadata) {
+			return nil, nil, "", browserauth.ValidationFailure{Errors: map[string][]string{"artifact": {"Artifact is under legal hold and cannot be archived."}}}
+		}
+		if descriptor.State == "deleted" {
+			return nil, nil, "", browserauth.ValidationFailure{Errors: map[string][]string{"state": {"Deleted artifacts cannot be archived."}}}
+		}
+		metadata := artifactMetadataMap(descriptor.Metadata)
+		before := map[string]any{"state": descriptor.State, "metadata": metadata}
+		updated := cloneMap(metadata)
+		updated["archive"] = map[string]any{"reason": nullableString(input.Reason), "archivedAt": input.Now.Format(time.RFC3339), "restoreBy": nullableString(input.RestoreBy)}
+		return before, map[string]any{"state": "archived", "metadata": updated}, "archived", nil
+	})
+}
+
+func (r *BrowserAuthRepository) RestoreArtifact(request *http.Request, actor browserauth.User, input browserauth.ArtifactLifecycleUpdate) (browserauth.ArtifactDescriptor, error) {
+	return r.updateArtifactLifecycle(request, actor, input, "artifact.restore", func(descriptor browserauth.ArtifactDescriptor) (map[string]any, map[string]any, string, error) {
+		if descriptor.State != "archived" {
+			return nil, nil, "", browserauth.ValidationFailure{Errors: map[string][]string{"state": {"Only archived artifacts can be restored."}}}
+		}
+		metadata := artifactMetadataMap(descriptor.Metadata)
+		before := map[string]any{"state": descriptor.State, "metadata": metadata}
+		updated := cloneMap(metadata)
+		archive, _ := updated["archive"].(map[string]any)
+		if archive == nil {
+			archive = map[string]any{}
+		}
+		archive["restoredAt"] = input.Now.Format(time.RFC3339)
+		updated["archive"] = archive
+		return before, map[string]any{"state": "available", "metadata": updated}, "available", nil
+	})
+}
+
+type artifactLifecycleMutation func(browserauth.ArtifactDescriptor) (before map[string]any, after map[string]any, nextState string, err error)
+
+func (r *BrowserAuthRepository) updateArtifactLifecycle(request *http.Request, actor browserauth.User, input browserauth.ArtifactLifecycleUpdate, action string, mutate artifactLifecycleMutation) (browserauth.ArtifactDescriptor, error) {
+	ctx := request.Context()
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return browserauth.ArtifactDescriptor{}, safeDatabaseFailure("start browser artifact lifecycle update", err)
+	}
+	defer tx.Rollback()
+	descriptor, err := loadArtifactDescriptorTx(ctx, tx, actor.ActiveTenant(), input.ProjectID, input.PerformedTestCycleID, input.ArtifactDescriptorID)
+	if err != nil {
+		return browserauth.ArtifactDescriptor{}, err
+	}
+	before, after, nextState, err := mutate(descriptor)
+	if err != nil {
+		return browserauth.ArtifactDescriptor{}, err
+	}
+	metadataJSON := any(nil)
+	if metadata, ok := after["metadata"].(map[string]any); ok {
+		metadataJSON = nullableMetadataMap(metadata)
+	} else {
+		metadataJSON = nullableRawJSON(descriptor.Metadata)
+	}
+	if nextState == "" {
+		nextState = descriptor.State
+	}
+	_, err = tx.ExecContext(ctx, `UPDATE artifact_descriptors SET state = ?, metadata = ?, updated_at = ? WHERE id = ? AND idCostumer = ? AND idProject = ? AND performedTestCycleId = ?`, nextState, metadataJSON, input.Now, descriptor.ID, actor.ActiveTenant(), input.ProjectID, input.PerformedTestCycleID)
+	if err != nil {
+		return browserauth.ArtifactDescriptor{}, safeDatabaseFailure("update browser artifact lifecycle", err)
+	}
+	if err := recordArtifactLifecycleAudit(ctx, tx, request, actor, descriptor, action, before, after); err != nil {
+		return browserauth.ArtifactDescriptor{}, err
+	}
+	if err := tx.Commit(); err != nil {
+		return browserauth.ArtifactDescriptor{}, safeDatabaseFailure("commit browser artifact lifecycle update", err)
+	}
+	return r.GetArtifactDescriptor(request, actor, input.ProjectID, input.PerformedTestCycleID, input.ArtifactDescriptorID)
+}
+
 func (r *BrowserAuthRepository) accountTarget(request *http.Request, actor browserauth.User, accountID int64) (browserauth.Account, error) {
 	where, args := accountScope(actor)
 	where += ` AND users.id = ?`
@@ -1179,6 +1276,10 @@ type artifactDescriptorScanner interface {
 }
 
 func scanArtifactDescriptor(scanner artifactDescriptorScanner) (browserauth.ArtifactDescriptor, error) {
+	return scanArtifactDescriptorWithRedaction(scanner, true)
+}
+
+func scanArtifactDescriptorWithRedaction(scanner artifactDescriptorScanner, redact bool) (browserauth.ArtifactDescriptor, error) {
 	var descriptor browserauth.ArtifactDescriptor
 	var performedTestID sql.NullInt64
 	var performedStepID sql.NullInt64
@@ -1196,9 +1297,110 @@ func scanArtifactDescriptor(scanner artifactDescriptorScanner) (browserauth.Arti
 		descriptor.PerformedStepID = &performedStepID.Int64
 	}
 	if metadata.Valid {
-		descriptor.Metadata = json.RawMessage(redactResultJSONString(metadata.String))
+		value := metadata.String
+		if redact {
+			value = redactResultJSONString(value)
+		}
+		descriptor.Metadata = json.RawMessage(value)
 	}
 	return descriptor, nil
+}
+
+func loadArtifactDescriptorTx(ctx context.Context, tx *sql.Tx, tenantID int64, projectID int64, performedTestCycleID int64, artifactDescriptorID int64) (browserauth.ArtifactDescriptor, error) {
+	row := tx.QueryRowContext(ctx, `SELECT id, idCostumer, idProject, performedTestCycleId, performedTestId, performedStepId, artifactType, name, contentType, sizeBytes, checksumSha256, storageKey, state, retentionUntil, metadata, created_at, updated_at
+		FROM artifact_descriptors
+		WHERE id = ? AND idCostumer = ? AND idProject = ? AND performedTestCycleId = ?
+		LIMIT 1 FOR UPDATE`, artifactDescriptorID, tenantID, projectID, performedTestCycleID)
+	descriptor, err := scanArtifactDescriptorWithRedaction(row, false)
+	if errors.Is(err, sql.ErrNoRows) {
+		return browserauth.ArtifactDescriptor{}, browserauth.ErrNotFound
+	}
+	return descriptor, err
+}
+
+func artifactMetadataMap(metadata json.RawMessage) map[string]any {
+	values := map[string]any{}
+	if len(metadata) == 0 {
+		return values
+	}
+	_ = json.Unmarshal(metadata, &values)
+	return values
+}
+
+func cloneMap(values map[string]any) map[string]any {
+	clone := make(map[string]any, len(values))
+	for key, value := range values {
+		clone[key] = value
+	}
+	return clone
+}
+
+func nullableString(value *string) any {
+	if value == nil {
+		return nil
+	}
+	return *value
+}
+
+func nullableMetadataMap(values map[string]any) any {
+	if values == nil {
+		return nil
+	}
+	encoded, err := json.Marshal(values)
+	if err != nil {
+		return nil
+	}
+	return string(encoded)
+}
+
+func artifactLegalHoldEnabled(metadata json.RawMessage) bool {
+	values := artifactMetadataMap(metadata)
+	legalHold, ok := values["legalHold"].(map[string]any)
+	if !ok {
+		return false
+	}
+	enabled, _ := legalHold["enabled"].(bool)
+	return enabled
+}
+
+func recordArtifactLifecycleAudit(ctx context.Context, tx *sql.Tx, request *http.Request, actor browserauth.User, descriptor browserauth.ArtifactDescriptor, action string, before map[string]any, after map[string]any) error {
+	beforeValues, err := json.Marshal(redactResultJSONValue(before))
+	if err != nil {
+		return fmt.Errorf("encode browser artifact audit before values: %w", err)
+	}
+	afterValues, err := json.Marshal(redactResultJSONValue(after))
+	if err != nil {
+		return fmt.Errorf("encode browser artifact audit after values: %w", err)
+	}
+	_, err = tx.ExecContext(ctx, `INSERT INTO audit_events
+		(actorUserId, actorTenantId, activeTenantId, idProject, action, targetType, targetId, beforeValues, afterValues, result, sourceIp, correlationId, metadata)
+		VALUES (?, ?, ?, ?, ?, 'artifact_descriptor', ?, ?, ?, 'success', ?, ?, NULL)`, actor.ID, actor.TenantID, actor.ActiveTenant(), descriptor.IDProject, action, fmt.Sprint(descriptor.ID), string(beforeValues), string(afterValues), sourceIP(request), correlationID(request))
+	if err != nil {
+		return safeDatabaseFailure("record browser artifact lifecycle audit", err)
+	}
+	return nil
+}
+
+func sourceIP(request *http.Request) string {
+	host, _, err := net.SplitHostPort(request.RemoteAddr)
+	if err == nil {
+		return host
+	}
+	return request.RemoteAddr
+}
+
+func correlationID(request *http.Request) string {
+	if value := request.Header.Get("X-Correlation-ID"); value != "" {
+		return value
+	}
+	bytes := make([]byte, 16)
+	if _, err := rand.Read(bytes); err != nil {
+		return "00000000-0000-4000-8000-000000000000"
+	}
+	bytes[6] = (bytes[6] & 0x0f) | 0x40
+	bytes[8] = (bytes[8] & 0x3f) | 0x80
+	encoded := hex.EncodeToString(bytes)
+	return encoded[:8] + "-" + encoded[8:12] + "-" + encoded[12:16] + "-" + encoded[16:20] + "-" + encoded[20:]
 }
 
 func validateArtifactDescriptorCreate(input browserauth.ArtifactDescriptorCreate) error {

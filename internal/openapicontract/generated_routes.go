@@ -22,6 +22,10 @@ type ServerInterface interface {
 	GetReadiness(http.ResponseWriter, *http.Request)
 	GetAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifacts(http.ResponseWriter, *http.Request)
 	GetAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptor(http.ResponseWriter, *http.Request)
+	PostAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorArchive(http.ResponseWriter, *http.Request)
+	PostAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorDeleteMarker(http.ResponseWriter, *http.Request)
+	PutAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorLegalHold(http.ResponseWriter, *http.Request)
+	PostAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorRestore(http.ResponseWriter, *http.Request)
 	ListPlatformTypes(http.ResponseWriter, *http.Request)
 	ListPlatformStatuses(http.ResponseWriter, *http.Request)
 	GetCLITestCycle(http.ResponseWriter, *http.Request)
@@ -126,11 +130,7 @@ type ServerInterface interface {
 	GetAdminProjectsIdProjectParallelRunsParallelRunResults(http.ResponseWriter, *http.Request)
 	PutAdminProjectsIdProjectParallelRunsParallelRunWorkersWorkerId(http.ResponseWriter, *http.Request)
 	PostAdminProjectsIdProjectParallelRunsParallelRunWorkersWorkerIdHeartbeat(http.ResponseWriter, *http.Request)
-	PostAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorArchive(http.ResponseWriter, *http.Request)
-	PostAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorDeleteMarker(http.ResponseWriter, *http.Request)
 	GetAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorImpact(http.ResponseWriter, *http.Request)
-	PutAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorLegalHold(http.ResponseWriter, *http.Request)
-	PostAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorRestore(http.ResponseWriter, *http.Request)
 	DeleteAdminProjectsProject(http.ResponseWriter, *http.Request)
 	GetAdminProjectsProject(http.ResponseWriter, *http.Request)
 	PutAdminProjectsProject(http.ResponseWriter, *http.Request)
@@ -233,6 +233,50 @@ var Operations = []Operation{
 		OperationID:        "getAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptor",
 		Tags:               []string{"Browser Results"},
 		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive",
+		OperationID:        "postAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorArchive",
+		Tags:               []string{"Browser Results"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker",
+		OperationID:        "postAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorDeleteMarker",
+		Tags:               []string{"Browser Results"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "PUT",
+		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold",
+		OperationID:        "putAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorLegalHold",
+		Tags:               []string{"Browser Results"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore",
+		OperationID:        "postAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorRestore",
+		Tags:               []string{"Browser Results"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore",
 		AuthenticationMode: "browser-session",
 		TrustPath:          "browser-session",
 		TenantContext:      true,
@@ -1383,55 +1427,11 @@ var Operations = []Operation{
 		Consumers:          []string{"idelium-web"},
 	},
 	{
-		Method:             "POST",
-		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive",
-		OperationID:        "postAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorArchive",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "POST",
-		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker",
-		OperationID:        "postAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorDeleteMarker",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
 		Method:             "GET",
 		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact",
 		OperationID:        "getAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorImpact",
 		Tags:               []string{"Laravel Compatibility"},
 		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "PUT",
-		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold",
-		OperationID:        "putAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorLegalHold",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "POST",
-		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore",
-		OperationID:        "postAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorRestore",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore",
 		AuthenticationMode: "browser-session",
 		TrustPath:          "browser-session",
 		TenantContext:      true,

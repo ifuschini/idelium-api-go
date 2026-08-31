@@ -82,6 +82,10 @@ func NewRouter(
 	router.Get("/admin/result-exports/{resultExport}/download", browserAuthHandler.DownloadResultExport)
 	router.Get("/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts", browserAuthHandler.ArtifactDescriptors)
 	router.Get("/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}", browserAuthHandler.ShowArtifactDescriptor)
+	router.Post("/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive", browserAuthHandler.ArchiveArtifact)
+	router.Post("/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker", browserAuthHandler.MarkArtifactDeleted)
+	router.Put("/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold", browserAuthHandler.SetArtifactLegalHold)
+	router.Post("/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore", browserAuthHandler.RestoreArtifact)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)
