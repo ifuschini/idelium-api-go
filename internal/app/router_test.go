@@ -226,6 +226,18 @@ func (fakeBrowserAuthRepository) ArchiveArtifact(*http.Request, browserauth.User
 func (fakeBrowserAuthRepository) RestoreArtifact(*http.Request, browserauth.User, browserauth.ArtifactLifecycleUpdate) (browserauth.ArtifactDescriptor, error) {
 	return browserauth.ArtifactDescriptor{}, nil
 }
+func (fakeBrowserAuthRepository) CreateGridQuerySnapshot(*http.Request, browserauth.User, browserauth.GridQuerySnapshotCreate) (browserauth.GridQuerySnapshot, error) {
+	return browserauth.GridQuerySnapshot{}, nil
+}
+func (fakeBrowserAuthRepository) CreateGridBulkJob(*http.Request, browserauth.User, browserauth.GridBulkJobCreate) (browserauth.GridBulkJob, error) {
+	return browserauth.GridBulkJob{}, nil
+}
+func (fakeBrowserAuthRepository) GetGridBulkJob(*http.Request, browserauth.User, string) (browserauth.GridBulkJob, error) {
+	return browserauth.GridBulkJob{}, nil
+}
+func (fakeBrowserAuthRepository) ExportGridBulkJob(*http.Request, browserauth.User, string, time.Time) (browserauth.GridBulkExport, error) {
+	return browserauth.GridBulkExport{}, nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {

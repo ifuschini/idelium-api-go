@@ -1301,6 +1301,136 @@ paths:
           $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/grid/query-snapshots:
+    post:
+      operationId: createGridQuerySnapshot
+      summary: Capture a bounded project-grid query snapshot
+      tags: [Grid]
+      x-idelium-laravel-route: "/api/admin/grid/query-snapshots"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GridQuerySnapshotCreate"
+      responses:
+        "201":
+          description: Snapshot created for the authenticated actor and active tenant.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/GridQuerySnapshot"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/grid/bulk-jobs:
+    post:
+      operationId: createGridBulkJob
+      summary: Execute a project bulk operation from a query snapshot
+      tags: [Grid]
+      x-idelium-laravel-route: "/api/admin/grid/bulk-jobs"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GridBulkJobCreate"
+      responses:
+        "202":
+          description: Bulk operation completed synchronously and its job result persisted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/GridBulkJob"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/grid/bulk-jobs/{jobId}:
+    get:
+      operationId: getGridBulkJob
+      summary: Read an actor-owned project bulk job
+      tags: [Grid]
+      x-idelium-laravel-route: "/api/admin/grid/bulk-jobs/{jobId}"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/GridJobID"
+      responses:
+        "200":
+          description: Actor-owned bulk job.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/GridBulkJob"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/grid/bulk-jobs/{jobId}/export:
+    get:
+      operationId: exportGridBulkJob
+      summary: Download an actor-owned completed project export
+      tags: [Grid]
+      x-idelium-laravel-route: "/api/admin/grid/bulk-jobs/{jobId}/export"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/GridJobID"
+      responses:
+        "200":
+          description: CSV export with spreadsheet-formula prefixes neutralized.
+          content:
+            text/csv:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: The job is not a completed export.
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
   # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS
   /:
     get:
@@ -1886,140 +2016,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/grid/bulk-jobs:
-    post:
-      operationId: postAdminGridBulkJobs
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/grid/bulk-jobs"
-      x-idelium-controller: "App\\Http\\Controllers\\GridBulkOperationController@storeJob"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/grid/bulk-jobs/{jobId}:
-    get:
-      operationId: getAdminGridBulkJobsJobId
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/grid/bulk-jobs/{jobId}"
-      x-idelium-controller: "App\\Http\\Controllers\\GridBulkOperationController@showJob"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: jobId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/grid/bulk-jobs/{jobId}/export:
-    get:
-      operationId: getAdminGridBulkJobsJobIdExport
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/grid/bulk-jobs/{jobId}/export"
-      x-idelium-controller: "App\\Http\\Controllers\\GridBulkOperationController@exportJob"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: jobId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/grid/query-snapshots:
-    post:
-      operationId: postAdminGridQuerySnapshots
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/grid/query-snapshots"
-      x-idelium-controller: "App\\Http\\Controllers\\GridBulkOperationController@storeSnapshot"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
       requestBody:
         required: false
         content:
@@ -6655,6 +6651,14 @@ components:
       schema:
         type: string
         enum: [no-store]
+  parameters:
+    GridJobID:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   responses:
     LegacyCompatibilityResponse:
       description: >-
@@ -6707,6 +6711,15 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: The resource is missing or belongs to another tenant or actor.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationID"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
     ValidationError:
       description: The request failed Laravel-compatible validation.
       headers:
@@ -6720,6 +6733,117 @@ components:
     LegacyCompatibilityPayload:
       type: object
       additionalProperties: true
+    GridQuerySnapshotCreate:
+      type: object
+      required: [resourceType]
+      additionalProperties: false
+      properties:
+        resourceType:
+          type: string
+          enum: [projects]
+        query:
+          type: object
+          additionalProperties: false
+          properties:
+            q:
+              type: string
+              maxLength: 200
+            search:
+              type: string
+              maxLength: 200
+            sort:
+              type: string
+              enum: [id, name, description, created_at, updated_at]
+            direction:
+              type: string
+              enum: [asc, desc]
+            f:
+              type: object
+              additionalProperties: false
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  minimum: 1
+                name:
+                  type: string
+                  maxLength: 200
+    GridQuerySnapshot:
+      type: object
+      required: [id, resourceType, total, expiresAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        resourceType:
+          type: string
+          enum: [projects]
+        total:
+          type: integer
+          minimum: 0
+          maximum: 1000
+        expiresAt:
+          type: string
+          format: date-time
+    GridBulkJobCreate:
+      type: object
+      required: [querySnapshotId, action]
+      additionalProperties: false
+      properties:
+        querySnapshotId:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum: [archive, export, tag]
+        payload:
+          type: object
+          additionalProperties: false
+          properties:
+            tags:
+              type: array
+              minItems: 1
+              maxItems: 10
+              items:
+                type: string
+                maxLength: 40
+                pattern: "^[a-zA-Z0-9_.:-]+$"
+    GridBulkJob:
+      type: object
+      required: [id, resourceType, action, status, requestedCount, processedCount, failedCount, result]
+      properties:
+        id:
+          type: string
+          format: uuid
+        resourceType:
+          type: string
+          enum: [projects]
+        action:
+          type: string
+          enum: [archive, export, tag]
+        status:
+          type: string
+          enum: [completed, partial]
+        requestedCount:
+          type: integer
+          minimum: 0
+        processedCount:
+          type: integer
+          minimum: 0
+        failedCount:
+          type: integer
+          minimum: 0
+        result:
+          type: object
+          required: [failedEntityIds, exportAvailable]
+          properties:
+            failedEntityIds:
+              type: array
+              items:
+                type: integer
+                format: int64
+            exportAvailable:
+              type: boolean
     ArtifactDescriptor:
       type: object
       required:

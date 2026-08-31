@@ -86,6 +86,10 @@ func NewRouter(
 	router.Post("/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker", browserAuthHandler.MarkArtifactDeleted)
 	router.Put("/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold", browserAuthHandler.SetArtifactLegalHold)
 	router.Post("/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore", browserAuthHandler.RestoreArtifact)
+	router.Post("/admin/grid/query-snapshots", browserAuthHandler.CreateGridQuerySnapshot)
+	router.Post("/admin/grid/bulk-jobs", browserAuthHandler.CreateGridBulkJob)
+	router.Get("/admin/grid/bulk-jobs/{jobId}", browserAuthHandler.ShowGridBulkJob)
+	router.Get("/admin/grid/bulk-jobs/{jobId}/export", browserAuthHandler.ExportGridBulkJob)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)

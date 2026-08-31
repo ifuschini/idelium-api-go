@@ -43,6 +43,10 @@ type ServerInterface interface {
 	PutIdeliumclTestcycle(http.ResponseWriter, *http.Request)
 	PostIdeliumclStep(http.ResponseWriter, *http.Request)
 	PutIdeliumclStep(http.ResponseWriter, *http.Request)
+	CreateGridQuerySnapshot(http.ResponseWriter, *http.Request)
+	CreateGridBulkJob(http.ResponseWriter, *http.Request)
+	GetGridBulkJob(http.ResponseWriter, *http.Request)
+	ExportGridBulkJob(http.ResponseWriter, *http.Request)
 	Get(http.ResponseWriter, *http.Request)
 	GetAdminAccounts(http.ResponseWriter, *http.Request)
 	PostAdminAccounts(http.ResponseWriter, *http.Request)
@@ -61,10 +65,6 @@ type ServerInterface interface {
 	DeleteAdminEnvironmentsIdProjectEnvironment(http.ResponseWriter, *http.Request)
 	GetAdminEnvironmentsIdProjectEnvironment(http.ResponseWriter, *http.Request)
 	PutAdminEnvironmentsIdProjectEnvironment(http.ResponseWriter, *http.Request)
-	PostAdminGridBulkJobs(http.ResponseWriter, *http.Request)
-	GetAdminGridBulkJobsJobId(http.ResponseWriter, *http.Request)
-	GetAdminGridBulkJobsJobIdExport(http.ResponseWriter, *http.Request)
-	PostAdminGridQuerySnapshots(http.ResponseWriter, *http.Request)
 	PutAdminIdentityAccountsUserBreakGlass(http.ResponseWriter, *http.Request)
 	PostAdminIdentityAccountsUserBreakGlassTest(http.ResponseWriter, *http.Request)
 	GetAdminIdentityProviders(http.ResponseWriter, *http.Request)
@@ -470,6 +470,50 @@ var Operations = []Operation{
 		Consumers:          []string{"idelium-cli", "idelium-docker-wiki"},
 	},
 	{
+		Method:             "POST",
+		Path:               "/admin/grid/query-snapshots",
+		OperationID:        "createGridQuerySnapshot",
+		Tags:               []string{"Grid"},
+		LaravelRoute:       "/api/admin/grid/query-snapshots",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "POST",
+		Path:               "/admin/grid/bulk-jobs",
+		OperationID:        "createGridBulkJob",
+		Tags:               []string{"Grid"},
+		LaravelRoute:       "/api/admin/grid/bulk-jobs",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/grid/bulk-jobs/{jobId}",
+		OperationID:        "getGridBulkJob",
+		Tags:               []string{"Grid"},
+		LaravelRoute:       "/api/admin/grid/bulk-jobs/{jobId}",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/grid/bulk-jobs/{jobId}/export",
+		OperationID:        "exportGridBulkJob",
+		Tags:               []string{"Grid"},
+		LaravelRoute:       "/api/admin/grid/bulk-jobs/{jobId}/export",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
 		Method:             "GET",
 		Path:               "/",
 		OperationID:        "get",
@@ -666,50 +710,6 @@ var Operations = []Operation{
 		TrustPath:          "browser-session",
 		TenantContext:      true,
 		Consumers:          []string{"idelium-web"},
-	},
-	{
-		Method:             "POST",
-		Path:               "/admin/grid/bulk-jobs",
-		OperationID:        "postAdminGridBulkJobs",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/grid/bulk-jobs",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "GET",
-		Path:               "/admin/grid/bulk-jobs/{jobId}",
-		OperationID:        "getAdminGridBulkJobsJobId",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/grid/bulk-jobs/{jobId}",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "GET",
-		Path:               "/admin/grid/bulk-jobs/{jobId}/export",
-		OperationID:        "getAdminGridBulkJobsJobIdExport",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/grid/bulk-jobs/{jobId}/export",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "POST",
-		Path:               "/admin/grid/query-snapshots",
-		OperationID:        "postAdminGridQuerySnapshots",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/grid/query-snapshots",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
 	},
 	{
 		Method:             "PUT",
@@ -2079,7 +2079,7 @@ var Operations = []Operation{
 		Method:             "GET",
 		Path:               "/user",
 		OperationID:        "getUser",
-		Tags:               []string{"Laravel Compatibility"},
+		Tags:               nil,
 		LaravelRoute:       "/api/user",
 		AuthenticationMode: "browser-session",
 		TrustPath:          "browser-session",

@@ -1,10 +1,12 @@
 package mysql
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"database/sql"
+	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -21,6 +23,292 @@ type BrowserAuthRepository struct{ database *sql.DB }
 
 func NewBrowserAuthRepository(database *sql.DB) *BrowserAuthRepository {
 	return &BrowserAuthRepository{database: database}
+}
+
+const maxGridSnapshotRows = 1000
+
+type gridSnapshotRecord struct {
+	ID           string
+	ResourceType string
+	EntityIDs    []int64
+	Total        int
+	ExpiresAt    time.Time
+}
+
+func (r *BrowserAuthRepository) CreateGridQuerySnapshot(request *http.Request, actor browserauth.User, input browserauth.GridQuerySnapshotCreate) (browserauth.GridQuerySnapshot, error) {
+	ctx := request.Context()
+	where := " WHERE idCostumer = ? AND archivedAt IS NULL"
+	args := []any{actor.ActiveTenant()}
+	if input.Query.Search != "" {
+		where += " AND (name LIKE ? OR description LIKE ?)"
+		search := "%" + input.Query.Search + "%"
+		args = append(args, search, search)
+	}
+	if value, ok := input.Query.Filters["id"].(float64); ok {
+		where += " AND id = ?"
+		args = append(args, int64(value))
+	}
+	if value, ok := input.Query.Filters["name"].(string); ok {
+		where += " AND name = ?"
+		args = append(args, value)
+	}
+	columns := map[string]string{"id": "id", "name": "name", "description": "description", "created_at": "created_at", "updated_at": "updated_at"}
+	query := "SELECT id FROM projects" + where + " ORDER BY " + columns[input.Query.Sort] + " " + input.Query.Direction + ", id LIMIT 1001"
+	rows, err := r.database.QueryContext(ctx, query, args...)
+	if err != nil {
+		return browserauth.GridQuerySnapshot{}, safeDatabaseFailure("select browser grid snapshot projects", err)
+	}
+	defer rows.Close()
+	entityIDs := make([]int64, 0)
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return browserauth.GridQuerySnapshot{}, safeDatabaseFailure("scan browser grid snapshot project", err)
+		}
+		entityIDs = append(entityIDs, id)
+	}
+	if err := rows.Err(); err != nil {
+		return browserauth.GridQuerySnapshot{}, safeDatabaseFailure("read browser grid snapshot projects", err)
+	}
+	if len(entityIDs) > maxGridSnapshotRows {
+		return browserauth.GridQuerySnapshot{}, browserauth.ValidationFailure{Errors: map[string][]string{"query": {"The matching result exceeds the bulk operation limit."}}}
+	}
+	id := randomUUID()
+	expiresAt := input.Now.Add(15 * time.Minute)
+	queryJSON, err := json.Marshal(input.Query.Raw)
+	if err != nil {
+		return browserauth.GridQuerySnapshot{}, fmt.Errorf("encode browser grid snapshot query: %w", err)
+	}
+	entityJSON, err := json.Marshal(entityIDs)
+	if err != nil {
+		return browserauth.GridQuerySnapshot{}, fmt.Errorf("encode browser grid snapshot entities: %w", err)
+	}
+	_, err = r.database.ExecContext(ctx, `INSERT INTO grid_query_snapshots
+		(id, idCostumer, actorUserId, resourceType, query, entityIds, total, expiresAt, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, id, actor.ActiveTenant(), actor.ID, input.ResourceType, string(queryJSON), string(entityJSON), len(entityIDs), expiresAt, input.Now, input.Now)
+	if err != nil {
+		return browserauth.GridQuerySnapshot{}, safeDatabaseFailure("create browser grid query snapshot", err)
+	}
+	return browserauth.GridQuerySnapshot{ID: id, ResourceType: input.ResourceType, Total: len(entityIDs), ExpiresAt: expiresAt}, nil
+}
+
+func (r *BrowserAuthRepository) CreateGridBulkJob(request *http.Request, actor browserauth.User, input browserauth.GridBulkJobCreate) (browserauth.GridBulkJob, error) {
+	ctx := request.Context()
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return browserauth.GridBulkJob{}, safeDatabaseFailure("start browser grid bulk job", err)
+	}
+	defer tx.Rollback()
+	snapshot, err := loadGridSnapshot(ctx, tx, actor, input.QuerySnapshotID, input.Now, true)
+	if err != nil {
+		return browserauth.GridBulkJob{}, err
+	}
+	processedIDs := make([]int64, 0, len(snapshot.EntityIDs))
+	for _, entityID := range snapshot.EntityIDs {
+		var id int64
+		err := tx.QueryRowContext(ctx, "SELECT id FROM projects WHERE id = ? AND idCostumer = ?", entityID, actor.ActiveTenant()).Scan(&id)
+		if err == nil {
+			processedIDs = append(processedIDs, id)
+		} else if !errors.Is(err, sql.ErrNoRows) {
+			return browserauth.GridBulkJob{}, safeDatabaseFailure("check browser grid bulk project ownership", err)
+		}
+	}
+	if input.Action == "archive" {
+		for _, entityID := range processedIDs {
+			if _, err := tx.ExecContext(ctx, "UPDATE projects SET archivedAt = ?, updated_at = ? WHERE id = ? AND idCostumer = ?", input.Now, input.Now, entityID, actor.ActiveTenant()); err != nil {
+				return browserauth.GridBulkJob{}, safeDatabaseFailure("archive browser grid bulk project", err)
+			}
+		}
+	} else if input.Action == "tag" {
+		for _, entityID := range processedIDs {
+			var current sql.NullString
+			if err := tx.QueryRowContext(ctx, "SELECT tags FROM projects WHERE id = ? AND idCostumer = ? FOR UPDATE", entityID, actor.ActiveTenant()).Scan(&current); err != nil {
+				return browserauth.GridBulkJob{}, safeDatabaseFailure("load browser grid bulk project tags", err)
+			}
+			tags := []string{}
+			if current.Valid && current.String != "" {
+				_ = json.Unmarshal([]byte(current.String), &tags)
+			}
+			seen := map[string]bool{}
+			merged := make([]string, 0, len(tags)+len(input.Tags))
+			for _, tag := range append(tags, input.Tags...) {
+				if !seen[tag] {
+					seen[tag] = true
+					merged = append(merged, tag)
+				}
+			}
+			encoded, _ := json.Marshal(merged)
+			if _, err := tx.ExecContext(ctx, "UPDATE projects SET tags = ?, updated_at = ? WHERE id = ? AND idCostumer = ?", string(encoded), input.Now, entityID, actor.ActiveTenant()); err != nil {
+				return browserauth.GridBulkJob{}, safeDatabaseFailure("tag browser grid bulk project", err)
+			}
+		}
+	}
+	processed := len(processedIDs)
+	failed := snapshot.Total - processed
+	status := "completed"
+	if failed > 0 {
+		status = "partial"
+	}
+	processedSet := map[int64]bool{}
+	for _, id := range processedIDs {
+		processedSet[id] = true
+	}
+	missing := make([]int64, 0, failed)
+	for _, id := range snapshot.EntityIDs {
+		if !processedSet[id] {
+			missing = append(missing, id)
+		}
+	}
+	result := map[string]any{"failedEntityIds": missing, "exportAvailable": input.Action == "export"}
+	resultJSON, _ := json.Marshal(result)
+	payloadJSON, _ := json.Marshal(input.Payload)
+	jobID := randomUUID()
+	_, err = tx.ExecContext(ctx, `INSERT INTO grid_bulk_operation_jobs
+		(id, querySnapshotId, idCostumer, actorUserId, resourceType, action, status, payload, requestedCount, processedCount, failedCount, result, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, jobID, snapshot.ID, actor.ActiveTenant(), actor.ID, snapshot.ResourceType, input.Action, status, nullableJSON(payloadJSON, input.Payload != nil), snapshot.Total, processed, failed, string(resultJSON), input.Now, input.Now)
+	if err != nil {
+		return browserauth.GridBulkJob{}, safeDatabaseFailure("create browser grid bulk job", err)
+	}
+	beforeJSON := "{}"
+	afterJSON, _ := json.Marshal(map[string]any{"requestedCount": snapshot.Total, "processedCount": processed, "failedCount": failed, "status": status})
+	_, err = tx.ExecContext(ctx, `INSERT INTO audit_events
+		(actorUserId, actorTenantId, activeTenantId, action, targetType, targetId, beforeValues, afterValues, result, sourceIp, correlationId, metadata)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'success', ?, ?, NULL)`, actor.ID, actor.TenantID, actor.ActiveTenant(), "grid.bulk."+input.Action, snapshot.ResourceType, jobID, beforeJSON, string(afterJSON), sourceIP(request), correlationID(request))
+	if err != nil {
+		return browserauth.GridBulkJob{}, safeDatabaseFailure("record browser grid bulk audit", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return browserauth.GridBulkJob{}, safeDatabaseFailure("commit browser grid bulk job", err)
+	}
+	return browserauth.GridBulkJob{ID: jobID, ResourceType: snapshot.ResourceType, Action: input.Action, Status: status, RequestedCount: snapshot.Total, ProcessedCount: processed, FailedCount: failed, Result: result}, nil
+}
+
+func (r *BrowserAuthRepository) GetGridBulkJob(request *http.Request, actor browserauth.User, jobID string) (browserauth.GridBulkJob, error) {
+	return loadGridJob(request.Context(), r.database, actor, jobID)
+}
+
+func (r *BrowserAuthRepository) ExportGridBulkJob(request *http.Request, actor browserauth.User, jobID string, now time.Time) (browserauth.GridBulkExport, error) {
+	ctx := request.Context()
+	job, err := loadGridJob(ctx, r.database, actor, jobID)
+	if err != nil {
+		return browserauth.GridBulkExport{}, err
+	}
+	if job.Action != "export" || job.Status != "completed" {
+		return browserauth.GridBulkExport{}, browserauth.ErrConflict
+	}
+	var snapshotID string
+	if err := r.database.QueryRowContext(ctx, "SELECT querySnapshotId FROM grid_bulk_operation_jobs WHERE id = ? AND idCostumer = ? AND actorUserId = ?", jobID, actor.ActiveTenant(), actor.ID).Scan(&snapshotID); err != nil {
+		return browserauth.GridBulkExport{}, safeDatabaseFailure("load browser grid export snapshot id", err)
+	}
+	tx, err := r.database.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return browserauth.GridBulkExport{}, safeDatabaseFailure("start browser grid export", err)
+	}
+	defer tx.Rollback()
+	snapshot, err := loadGridSnapshot(ctx, tx, actor, snapshotID, now, false)
+	if err != nil {
+		return browserauth.GridBulkExport{}, err
+	}
+	buffer := &bytes.Buffer{}
+	writer := csv.NewWriter(buffer)
+	_ = writer.Write([]string{"id", "name", "description", "archivedAt", "tags"})
+	for _, entityID := range snapshot.EntityIDs {
+		var id int64
+		var name string
+		var description, tags sql.NullString
+		var archivedAt sql.NullTime
+		err := tx.QueryRowContext(ctx, "SELECT id, name, description, archivedAt, tags FROM projects WHERE id = ? AND idCostumer = ?", entityID, actor.ActiveTenant()).Scan(&id, &name, &description, &archivedAt, &tags)
+		if errors.Is(err, sql.ErrNoRows) {
+			continue
+		}
+		if err != nil {
+			return browserauth.GridBulkExport{}, safeDatabaseFailure("load browser grid export project", err)
+		}
+		archived := ""
+		if archivedAt.Valid {
+			archived = archivedAt.Time.Format(time.RFC3339)
+		}
+		tagValues := []string{}
+		if tags.Valid {
+			_ = json.Unmarshal([]byte(tags.String), &tagValues)
+		}
+		_ = writer.Write([]string{fmt.Sprint(id), safeCSVValue(name), safeCSVValue(description.String), archived, strings.Join(tagValues, ",")})
+	}
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return browserauth.GridBulkExport{}, fmt.Errorf("encode browser grid export: %w", err)
+	}
+	return browserauth.GridBulkExport{Filename: "idelium-projects-" + jobID + ".csv", Payload: buffer.String()}, nil
+}
+
+type gridSnapshotQuerier interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}
+
+func loadGridSnapshot(ctx context.Context, querier gridSnapshotQuerier, actor browserauth.User, snapshotID string, now time.Time, lock bool) (gridSnapshotRecord, error) {
+	query := "SELECT id, resourceType, entityIds, total, expiresAt FROM grid_query_snapshots WHERE id = ? AND idCostumer = ? AND actorUserId = ? AND expiresAt > ?"
+	if lock {
+		query += " FOR UPDATE"
+	}
+	var snapshot gridSnapshotRecord
+	var entityJSON string
+	err := querier.QueryRowContext(ctx, query, snapshotID, actor.ActiveTenant(), actor.ID, now).Scan(&snapshot.ID, &snapshot.ResourceType, &entityJSON, &snapshot.Total, &snapshot.ExpiresAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return gridSnapshotRecord{}, browserauth.ErrNotFound
+	}
+	if err != nil {
+		return gridSnapshotRecord{}, safeDatabaseFailure("load browser grid query snapshot", err)
+	}
+	if err := json.Unmarshal([]byte(entityJSON), &snapshot.EntityIDs); err != nil {
+		return gridSnapshotRecord{}, safeDatabaseFailure("decode browser grid query snapshot entities", err)
+	}
+	return snapshot, nil
+}
+
+type gridJobQuerier interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}
+
+func loadGridJob(ctx context.Context, querier gridJobQuerier, actor browserauth.User, jobID string) (browserauth.GridBulkJob, error) {
+	var job browserauth.GridBulkJob
+	var resultJSON string
+	err := querier.QueryRowContext(ctx, `SELECT id, resourceType, action, status, requestedCount, processedCount, failedCount, result
+		FROM grid_bulk_operation_jobs WHERE id = ? AND idCostumer = ? AND actorUserId = ?`, jobID, actor.ActiveTenant(), actor.ID).Scan(&job.ID, &job.ResourceType, &job.Action, &job.Status, &job.RequestedCount, &job.ProcessedCount, &job.FailedCount, &resultJSON)
+	if errors.Is(err, sql.ErrNoRows) {
+		return browserauth.GridBulkJob{}, browserauth.ErrNotFound
+	}
+	if err != nil {
+		return browserauth.GridBulkJob{}, safeDatabaseFailure("load browser grid bulk job", err)
+	}
+	if err := json.Unmarshal([]byte(resultJSON), &job.Result); err != nil {
+		return browserauth.GridBulkJob{}, safeDatabaseFailure("decode browser grid bulk job result", err)
+	}
+	return job, nil
+}
+
+func nullableJSON(encoded []byte, present bool) any {
+	if !present {
+		return nil
+	}
+	return string(encoded)
+}
+
+func randomUUID() string {
+	value := make([]byte, 16)
+	if _, err := rand.Read(value); err != nil {
+		return "00000000-0000-4000-8000-000000000000"
+	}
+	value[6] = (value[6] & 0x0f) | 0x40
+	value[8] = (value[8] & 0x3f) | 0x80
+	encoded := hex.EncodeToString(value)
+	return encoded[:8] + "-" + encoded[8:12] + "-" + encoded[12:16] + "-" + encoded[16:20] + "-" + encoded[20:]
+}
+
+func safeCSVValue(value string) string {
+	if value != "" && strings.ContainsRune("=+-@", rune(value[0])) {
+		return "'" + value
+	}
+	return value
 }
 
 func (r *BrowserAuthRepository) ListRoles(_ *http.Request, actor browserauth.User) ([]browserauth.Role, bool, error) {

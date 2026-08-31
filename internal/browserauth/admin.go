@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -126,6 +127,10 @@ type AdminRepository interface {
 	MarkArtifactDeleted(request *http.Request, actor User, input ArtifactLifecycleUpdate) (ArtifactDescriptor, error)
 	ArchiveArtifact(request *http.Request, actor User, input ArtifactLifecycleUpdate) (ArtifactDescriptor, error)
 	RestoreArtifact(request *http.Request, actor User, input ArtifactLifecycleUpdate) (ArtifactDescriptor, error)
+	CreateGridQuerySnapshot(request *http.Request, actor User, input GridQuerySnapshotCreate) (GridQuerySnapshot, error)
+	CreateGridBulkJob(request *http.Request, actor User, input GridBulkJobCreate) (GridBulkJob, error)
+	GetGridBulkJob(request *http.Request, actor User, jobID string) (GridBulkJob, error)
+	ExportGridBulkJob(request *http.Request, actor User, jobID string, now time.Time) (GridBulkExport, error)
 }
 
 type CustomerQuery struct {
@@ -378,6 +383,54 @@ type ArtifactLifecycleUpdate struct {
 	RestoreBy            *string
 	Now                  time.Time
 }
+
+type GridQuery struct {
+	Search    string         `json:"-"`
+	Sort      string         `json:"-"`
+	Direction string         `json:"-"`
+	Filters   map[string]any `json:"-"`
+	Raw       map[string]any `json:"-"`
+}
+
+type GridQuerySnapshotCreate struct {
+	ResourceType string
+	Query        GridQuery
+	Now          time.Time
+}
+
+type GridQuerySnapshot struct {
+	ID           string    `json:"id"`
+	ResourceType string    `json:"resourceType"`
+	Total        int       `json:"total"`
+	ExpiresAt    time.Time `json:"expiresAt"`
+}
+
+type GridBulkJobCreate struct {
+	QuerySnapshotID string
+	Action          string
+	Tags            []string
+	Payload         map[string]any
+	Now             time.Time
+}
+
+type GridBulkJob struct {
+	ID             string         `json:"id"`
+	ResourceType   string         `json:"resourceType"`
+	Action         string         `json:"action"`
+	Status         string         `json:"status"`
+	RequestedCount int            `json:"requestedCount"`
+	ProcessedCount int            `json:"processedCount"`
+	FailedCount    int            `json:"failedCount"`
+	Result         map[string]any `json:"result"`
+}
+
+type GridBulkExport struct {
+	Filename string
+	Payload  string
+}
+
+var gridUUIDPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$`)
+var gridTagPattern = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
 
 type StepReorder struct {
 	IDProject int64
@@ -1202,6 +1255,211 @@ func (h *Handler) RestoreArtifact(writer http.ResponseWriter, request *http.Requ
 	h.writeArtifactLifecycleResult(writer, request, "restore browser artifact", descriptor, err)
 }
 
+func (h *Handler) CreateGridQuerySnapshot(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireAnyCapability(writer, request, "projects.read", "projects.manage")
+	if !ok {
+		return
+	}
+	var body struct {
+		ResourceType string `json:"resourceType"`
+		Query        struct {
+			Q         string         `json:"q"`
+			Search    string         `json:"search"`
+			Sort      string         `json:"sort"`
+			Direction string         `json:"direction"`
+			Filters   map[string]any `json:"f"`
+		} `json:"query"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil {
+		return
+	}
+	errorsByField := validateGridSnapshotInput(body.ResourceType, body.Query.Q, body.Query.Search, body.Query.Sort, body.Query.Direction, body.Query.Filters)
+	if len(errorsByField) != 0 {
+		validationErrors(writer, errorsByField)
+		return
+	}
+	search := strings.TrimSpace(body.Query.Q)
+	if search == "" {
+		search = strings.TrimSpace(body.Query.Search)
+	}
+	sort := body.Query.Sort
+	if sort == "" {
+		sort = "id"
+	}
+	direction := body.Query.Direction
+	if direction == "" {
+		direction = "asc"
+	}
+	rawQuery := map[string]any{}
+	encoded, _ := json.Marshal(body.Query)
+	_ = json.Unmarshal(encoded, &rawQuery)
+	snapshot, err := h.sessions.CreateGridQuerySnapshot(request, user, GridQuerySnapshotCreate{ResourceType: body.ResourceType, Query: GridQuery{Search: search, Sort: sort, Direction: direction, Filters: body.Query.Filters, Raw: rawQuery}, Now: h.now().UTC()})
+	var validationFailure ValidationFailure
+	if errors.As(err, &validationFailure) {
+		writeJSON(writer, http.StatusUnprocessableEntity, map[string]any{"error": map[string]any{"code": "GRID_SNAPSHOT_TOO_LARGE", "message": "The matching result exceeds the bulk operation limit.", "details": map[string]int{"limit": 1000}}})
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "create browser grid query snapshot", err)
+		return
+	}
+	writeJSON(writer, http.StatusCreated, map[string]any{"data": snapshot})
+}
+
+func (h *Handler) CreateGridBulkJob(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	var body struct {
+		QuerySnapshotID string         `json:"querySnapshotId"`
+		Action          string         `json:"action"`
+		Payload         map[string]any `json:"payload"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil {
+		return
+	}
+	tags, validation := validateGridJobInput(body.QuerySnapshotID, body.Action, body.Payload)
+	if len(validation) != 0 {
+		validationErrors(writer, validation)
+		return
+	}
+	required := "projects.manage"
+	if body.Action == "export" {
+		required = "projects.read"
+	}
+	if _, ok := h.requireAnyCapabilityForUser(writer, user, required, "projects.manage"); !ok {
+		return
+	}
+	job, err := h.sessions.CreateGridBulkJob(request, user, GridBulkJobCreate{QuerySnapshotID: body.QuerySnapshotID, Action: body.Action, Tags: tags, Payload: body.Payload, Now: h.now().UTC()})
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "create browser grid bulk job", err)
+		return
+	}
+	writeJSON(writer, http.StatusAccepted, map[string]any{"data": job})
+}
+
+func (h *Handler) ShowGridBulkJob(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	jobID := request.PathValue("jobId")
+	if !gridUUIDPattern.MatchString(jobID) {
+		h.notFound(writer)
+		return
+	}
+	job, err := h.sessions.GetGridBulkJob(request, user, jobID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "show browser grid bulk job", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"data": job})
+}
+
+func (h *Handler) ExportGridBulkJob(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireAnyCapability(writer, request, "projects.read", "projects.manage")
+	if !ok {
+		return
+	}
+	jobID := request.PathValue("jobId")
+	if !gridUUIDPattern.MatchString(jobID) {
+		h.notFound(writer)
+		return
+	}
+	export, err := h.sessions.ExportGridBulkJob(request, user, jobID, h.now().UTC())
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if errors.Is(err, ErrConflict) {
+		writeJSON(writer, http.StatusConflict, map[string]string{"message": "The export is not available."})
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "export browser grid bulk job", err)
+		return
+	}
+	writer.Header().Set("Content-Type", "text/csv; charset=UTF-8")
+	writer.Header().Set("Content-Disposition", `attachment; filename="`+export.Filename+`"`)
+	writer.WriteHeader(http.StatusOK)
+	_, _ = writer.Write([]byte(export.Payload))
+}
+
+func validateGridSnapshotInput(resourceType, query, search, sort, direction string, filters map[string]any) map[string][]string {
+	failures := map[string][]string{}
+	if resourceType != "projects" {
+		failures["resourceType"] = []string{"The selected resource type is invalid."}
+	}
+	if len(query) > 200 || len(search) > 200 {
+		failures["query"] = []string{"The query must not exceed 200 characters."}
+	}
+	allowedSort := map[string]bool{"": true, "id": true, "name": true, "description": true, "created_at": true, "updated_at": true}
+	if !allowedSort[sort] {
+		failures["query.sort"] = []string{"The selected query sort is invalid."}
+	}
+	if direction != "" && direction != "asc" && direction != "desc" {
+		failures["query.direction"] = []string{"The selected query direction is invalid."}
+	}
+	for key, value := range filters {
+		if key != "id" && key != "name" {
+			failures["query.f"] = []string{"The query filter is invalid."}
+		}
+		if key == "name" {
+			name, valid := value.(string)
+			if !valid || len(name) > 200 {
+				failures["query.f.name"] = []string{"The query name filter is invalid."}
+			}
+		}
+		if key == "id" {
+			number, valid := value.(float64)
+			if !valid || number < 1 || number != float64(int64(number)) {
+				failures["query.f.id"] = []string{"The query id filter is invalid."}
+			}
+		}
+	}
+	return failures
+}
+
+func validateGridJobInput(snapshotID, action string, payload map[string]any) ([]string, map[string][]string) {
+	failures := map[string][]string{}
+	if !gridUUIDPattern.MatchString(snapshotID) {
+		failures["querySnapshotId"] = []string{"The query snapshot id must be a valid UUID."}
+	}
+	if action != "archive" && action != "export" && action != "tag" {
+		failures["action"] = []string{"The selected action is invalid."}
+	}
+	tags := []string{}
+	if action == "tag" {
+		rawTags, valid := payload["tags"].([]any)
+		if !valid || len(rawTags) < 1 || len(rawTags) > 10 {
+			failures["payload.tags"] = []string{"The payload tags field must contain between 1 and 10 items."}
+		} else {
+			seen := map[string]bool{}
+			for _, rawTag := range rawTags {
+				tag, valid := rawTag.(string)
+				if !valid || len(tag) > 40 || !gridTagPattern.MatchString(tag) {
+					failures["payload.tags"] = []string{"The payload tags format is invalid."}
+					break
+				}
+				if !seen[tag] {
+					seen[tag] = true
+					tags = append(tags, tag)
+				}
+			}
+		}
+	}
+	return tags, failures
+}
+
 func (h *Handler) artifactLifecycleInput(writer http.ResponseWriter, request *http.Request) (User, ArtifactLifecycleUpdate, bool) {
 	user, ok := h.requireCapability(writer, request, "artifacts.manage")
 	if !ok {
@@ -1244,6 +1502,26 @@ func (h *Handler) requireCapability(writer http.ResponseWriter, request *http.Re
 	for _, allowed := range capabilitiesForRole(user.Role) {
 		if allowed == capability {
 			return user, true
+		}
+	}
+	h.forbidden(writer)
+	return User{}, false
+}
+
+func (h *Handler) requireAnyCapability(writer http.ResponseWriter, request *http.Request, capabilities ...string) (User, bool) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return User{}, false
+	}
+	return h.requireAnyCapabilityForUser(writer, user, capabilities...)
+}
+
+func (h *Handler) requireAnyCapabilityForUser(writer http.ResponseWriter, user User, capabilities ...string) (User, bool) {
+	for _, allowed := range capabilitiesForRole(user.Role) {
+		for _, required := range capabilities {
+			if allowed == required {
+				return user, true
+			}
 		}
 	}
 	h.forbidden(writer)

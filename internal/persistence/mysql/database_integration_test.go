@@ -1189,6 +1189,128 @@ func TestBrowserArtifactDescriptorsIntegration(t *testing.T) {
 	}
 }
 
+func TestBrowserGridBulkOperationsIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS grid_bulk_operation_jobs",
+		"DROP TABLE IF EXISTS grid_query_snapshots",
+		"DROP TABLE IF EXISTS audit_events",
+		"DROP TABLE IF EXISTS projects",
+		`CREATE TABLE projects (
+			id BIGINT PRIMARY KEY,
+			name VARCHAR(255) NOT NULL,
+			description TEXT NULL,
+			idCostumer BIGINT NOT NULL,
+			archivedAt TIMESTAMP NULL,
+			tags JSON NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE grid_query_snapshots (
+			id CHAR(36) PRIMARY KEY,
+			idCostumer BIGINT NOT NULL,
+			actorUserId BIGINT NOT NULL,
+			resourceType VARCHAR(64) NOT NULL,
+			query JSON NOT NULL,
+			entityIds JSON NOT NULL,
+			total INT UNSIGNED NOT NULL,
+			expiresAt TIMESTAMP NOT NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE grid_bulk_operation_jobs (
+			id CHAR(36) PRIMARY KEY,
+			querySnapshotId CHAR(36) NOT NULL,
+			idCostumer BIGINT NOT NULL,
+			actorUserId BIGINT NOT NULL,
+			resourceType VARCHAR(64) NOT NULL,
+			action VARCHAR(32) NOT NULL,
+			status VARCHAR(32) NOT NULL,
+			payload JSON NULL,
+			requestedCount INT UNSIGNED NOT NULL,
+			processedCount INT UNSIGNED NOT NULL,
+			failedCount INT UNSIGNED NOT NULL,
+			result JSON NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE audit_events (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			actorUserId BIGINT NULL,
+			actorTenantId BIGINT NULL,
+			activeTenantId BIGINT NOT NULL,
+			idProject BIGINT NULL,
+			action VARCHAR(128) NOT NULL,
+			targetType VARCHAR(128) NOT NULL,
+			targetId VARCHAR(128) NULL,
+			beforeValues JSON NULL,
+			afterValues JSON NULL,
+			result VARCHAR(32) NOT NULL,
+			sourceIp VARCHAR(64) NULL,
+			correlationId VARCHAR(128) NOT NULL,
+			metadata JSON NULL,
+			created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`INSERT INTO projects (id, name, description, idCostumer, archivedAt, tags, created_at, updated_at) VALUES
+			(1, 'Checkout', '=Protected formula', 11, NULL, NULL, NOW(), NOW()),
+			(2, 'Login', 'Login flow', 11, NULL, '["existing"]', NOW(), NOW()),
+			(3, 'Foreign', 'Other tenant', 42, NULL, NULL, NOW(), NOW())`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare grid fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewBrowserAuthRepository(database)
+	actor := browserauth.User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 2}
+	now := time.Date(2026, time.August, 31, 12, 0, 0, 0, time.UTC)
+	request := httptest.NewRequest(http.MethodPost, "/admin/grid/query-snapshots", nil)
+	request.RemoteAddr = "192.0.2.10:1234"
+	request.Header.Set("X-Correlation-ID", "grid-integration")
+	snapshot, err := repository.CreateGridQuerySnapshot(request, actor, browserauth.GridQuerySnapshotCreate{ResourceType: "projects", Query: browserauth.GridQuery{Sort: "id", Direction: "asc", Filters: map[string]any{}, Raw: map[string]any{}}, Now: now})
+	if err != nil || snapshot.Total != 2 {
+		t.Fatalf("unexpected tenant-scoped snapshot: %#v err=%v", snapshot, err)
+	}
+
+	tagJob, err := repository.CreateGridBulkJob(request, actor, browserauth.GridBulkJobCreate{QuerySnapshotID: snapshot.ID, Action: "tag", Tags: []string{"critical", "existing"}, Payload: map[string]any{"tags": []any{"critical", "existing"}}, Now: now})
+	if err != nil || tagJob.Status != "completed" || tagJob.ProcessedCount != 2 || tagJob.FailedCount != 0 {
+		t.Fatalf("unexpected grid tag job: %#v err=%v", tagJob, err)
+	}
+	var tags string
+	if err := database.QueryRowContext(ctx, "SELECT tags FROM projects WHERE id = 2 AND idCostumer = 11").Scan(&tags); err != nil || tags != `["existing","critical"]` {
+		t.Fatalf("expected stable unique project tags, got %q err=%v", tags, err)
+	}
+	foreignActor := browserauth.User{ID: 8, TenantID: 42, ActiveTenantID: 42, Role: 2}
+	if _, err := repository.CreateGridBulkJob(request, foreignActor, browserauth.GridBulkJobCreate{QuerySnapshotID: snapshot.ID, Action: "export", Now: now}); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-tenant snapshot to be hidden, got %v", err)
+	}
+	otherActor := browserauth.User{ID: 8, TenantID: 11, ActiveTenantID: 11, Role: 2}
+	if _, err := repository.GetGridBulkJob(request, otherActor, tagJob.ID); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-actor job to be hidden, got %v", err)
+	}
+
+	exportSnapshot, err := repository.CreateGridQuerySnapshot(request, actor, browserauth.GridQuerySnapshotCreate{ResourceType: "projects", Query: browserauth.GridQuery{Search: "Checkout", Sort: "name", Direction: "asc", Filters: map[string]any{}, Raw: map[string]any{"q": "Checkout"}}, Now: now})
+	if err != nil || exportSnapshot.Total != 1 {
+		t.Fatalf("unexpected export snapshot: %#v err=%v", exportSnapshot, err)
+	}
+	exportJob, err := repository.CreateGridBulkJob(request, actor, browserauth.GridBulkJobCreate{QuerySnapshotID: exportSnapshot.ID, Action: "export", Now: now})
+	if err != nil {
+		t.Fatalf("CreateGridBulkJob(export) returned an error: %v", err)
+	}
+	exported, err := repository.ExportGridBulkJob(request, actor, exportJob.ID, now)
+	if err != nil || !strings.Contains(exported.Payload, "'=Protected formula") || strings.Contains(exported.Payload, "Foreign") {
+		t.Fatalf("unexpected safe tenant-scoped grid export: %#v err=%v", exported, err)
+	}
+	var auditCount int
+	if err := database.QueryRowContext(ctx, "SELECT COUNT(*) FROM audit_events WHERE activeTenantId = 11 AND action IN ('grid.bulk.tag', 'grid.bulk.export')").Scan(&auditCount); err != nil || auditCount != 2 {
+		t.Fatalf("expected two grid audit events, count=%d err=%v", auditCount, err)
+	}
+}
+
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

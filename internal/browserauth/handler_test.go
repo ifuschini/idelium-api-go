@@ -69,6 +69,8 @@ type sessionsStub struct {
 	artifact          ArtifactDescriptor
 	createdArtifact   ArtifactDescriptorCreate
 	lifecycleUpdate   ArtifactLifecycleUpdate
+	gridSnapshotInput GridQuerySnapshotCreate
+	gridJobInput      GridBulkJobCreate
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -216,6 +218,20 @@ func (s *sessionsStub) ArchiveArtifact(_ *http.Request, _ User, input ArtifactLi
 func (s *sessionsStub) RestoreArtifact(_ *http.Request, _ User, input ArtifactLifecycleUpdate) (ArtifactDescriptor, error) {
 	s.lifecycleUpdate = input
 	return s.artifact, s.accountErr
+}
+func (s *sessionsStub) CreateGridQuerySnapshot(_ *http.Request, _ User, input GridQuerySnapshotCreate) (GridQuerySnapshot, error) {
+	s.gridSnapshotInput = input
+	return GridQuerySnapshot{ID: "123e4567-e89b-42d3-a456-426614174000", ResourceType: "projects", Total: 1, ExpiresAt: time.Now().Add(15 * time.Minute)}, s.accountErr
+}
+func (s *sessionsStub) CreateGridBulkJob(_ *http.Request, _ User, input GridBulkJobCreate) (GridBulkJob, error) {
+	s.gridJobInput = input
+	return GridBulkJob{ID: "123e4567-e89b-42d3-a456-426614174001", ResourceType: "projects", Action: "export", Status: "completed", RequestedCount: 1, ProcessedCount: 1, Result: map[string]any{"exportAvailable": true}}, s.accountErr
+}
+func (s *sessionsStub) GetGridBulkJob(*http.Request, User, string) (GridBulkJob, error) {
+	return GridBulkJob{ID: "123e4567-e89b-42d3-a456-426614174001", ResourceType: "projects", Action: "export", Status: "completed", RequestedCount: 1, ProcessedCount: 1, Result: map[string]any{"exportAvailable": true}}, s.accountErr
+}
+func (s *sessionsStub) ExportGridBulkJob(*http.Request, User, string, time.Time) (GridBulkExport, error) {
+	return GridBulkExport{Filename: "idelium-projects-export.csv", Payload: "id,name\n1,Project\n"}, s.accountErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -789,6 +805,67 @@ func TestArtifactLifecycleHandlersValidateAndPreserveLaravelEnvelope(t *testing.
 	handler.ArchiveArtifact(archiveResponse, archiveRequest)
 	if archiveResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(archiveResponse.Body.String(), "legal hold") {
 		t.Fatalf("expected Laravel-compatible validation response, got %d %s", archiveResponse.Code, archiveResponse.Body.String())
+	}
+}
+
+func TestGridSnapshotAndBulkJobHandlersPreserveLaravelContracts(t *testing.T) {
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 2}}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	handler.now = func() time.Time { return time.Date(2026, time.August, 31, 12, 0, 0, 0, time.UTC) }
+
+	snapshotRequest := httptest.NewRequest(http.MethodPost, "/admin/grid/query-snapshots", strings.NewReader(`{"resourceType":"projects","query":{"q":"Checkout","sort":"name","direction":"desc","f":{"id":5}}}`))
+	snapshotRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	snapshotResponse := httptest.NewRecorder()
+	handler.CreateGridQuerySnapshot(snapshotResponse, snapshotRequest)
+	if snapshotResponse.Code != http.StatusCreated || sessions.gridSnapshotInput.Query.Search != "Checkout" || sessions.gridSnapshotInput.Query.Sort != "name" || !strings.Contains(snapshotResponse.Body.String(), `"data":{"id":`) {
+		t.Fatalf("unexpected grid snapshot response/input: %d %s %#v", snapshotResponse.Code, snapshotResponse.Body.String(), sessions.gridSnapshotInput)
+	}
+
+	jobRequest := httptest.NewRequest(http.MethodPost, "/admin/grid/bulk-jobs", strings.NewReader(`{"querySnapshotId":"123e4567-e89b-42d3-a456-426614174000","action":"tag","payload":{"tags":["critical","critical","release-1"]}}`))
+	jobRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	jobResponse := httptest.NewRecorder()
+	handler.CreateGridBulkJob(jobResponse, jobRequest)
+	if jobResponse.Code != http.StatusAccepted || len(sessions.gridJobInput.Tags) != 2 || sessions.gridJobInput.Tags[1] != "release-1" || !strings.Contains(jobResponse.Body.String(), `"status":"completed"`) {
+		t.Fatalf("unexpected grid job response/input: %d %s %#v", jobResponse.Code, jobResponse.Body.String(), sessions.gridJobInput)
+	}
+
+	invalidRequest := httptest.NewRequest(http.MethodPost, "/admin/grid/query-snapshots", strings.NewReader(`{"resourceType":"accounts","query":{"sort":"password"}}`))
+	invalidRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	invalidResponse := httptest.NewRecorder()
+	handler.CreateGridQuerySnapshot(invalidResponse, invalidRequest)
+	if invalidResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(invalidResponse.Body.String(), "resourceType") || !strings.Contains(invalidResponse.Body.String(), "query.sort") {
+		t.Fatalf("expected bounded grid validation, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
+	}
+}
+
+func TestGridBulkJobHandlersHideForeignResourcesAndExportCSV(t *testing.T) {
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3}}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	jobID := "123e4567-e89b-42d3-a456-426614174001"
+
+	showRequest := httptest.NewRequest(http.MethodGet, "/admin/grid/bulk-jobs/"+jobID, nil)
+	showRequest.SetPathValue("jobId", jobID)
+	showRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	showResponse := httptest.NewRecorder()
+	handler.ShowGridBulkJob(showResponse, showRequest)
+	if showResponse.Code != http.StatusOK || strings.Contains(showResponse.Body.String(), "querySnapshotId") {
+		t.Fatalf("unexpected grid job show response: %d %s", showResponse.Code, showResponse.Body.String())
+	}
+
+	exportRequest := httptest.NewRequest(http.MethodGet, "/admin/grid/bulk-jobs/"+jobID+"/export", nil)
+	exportRequest.SetPathValue("jobId", jobID)
+	exportRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	exportResponse := httptest.NewRecorder()
+	handler.ExportGridBulkJob(exportResponse, exportRequest)
+	if exportResponse.Code != http.StatusOK || exportResponse.Header().Get("Content-Type") != "text/csv; charset=UTF-8" || !strings.Contains(exportResponse.Body.String(), "Project") {
+		t.Fatalf("unexpected grid export response: %d %#v %s", exportResponse.Code, exportResponse.Header(), exportResponse.Body.String())
+	}
+
+	sessions.accountErr = ErrNotFound
+	foreignResponse := httptest.NewRecorder()
+	handler.ShowGridBulkJob(foreignResponse, showRequest)
+	if foreignResponse.Code != http.StatusNotFound {
+		t.Fatalf("expected hidden foreign grid job, got %d %s", foreignResponse.Code, foreignResponse.Body.String())
 	}
 }
 
