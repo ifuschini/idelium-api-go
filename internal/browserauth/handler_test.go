@@ -82,6 +82,8 @@ type sessionsStub struct {
 	parallelRun       ParallelRun
 	parallelInput     ParallelRunCreate
 	parallelMatrix    []map[string]string
+	parallelClaim     ParallelRunClaim
+	parallelClaimErr  error
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -296,6 +298,10 @@ func (s *sessionsStub) CreateParallelRunMatrix(_ *http.Request, input ParallelRu
 }
 func (s *sessionsStub) GetParallelRun(*http.Request, int64, int64, int64) (ParallelRun, error) {
 	return s.parallelRun, s.accountErr
+}
+func (s *sessionsStub) ClaimParallelRun(_ *http.Request, input ParallelRunClaim) (ParallelRun, error) {
+	s.parallelClaim = input
+	return s.parallelRun, s.parallelClaimErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -1161,6 +1167,74 @@ func TestParallelRunMetadataRecursivelyRemovesSensitiveValues(t *testing.T) {
 	}
 	if strings.Contains(string(encoded), "remove") || !strings.Contains(string(encoded), `"build":"1042"`) || !strings.Contains(string(encoded), `"safe":"keep"`) {
 		t.Fatalf("unexpected normalized metadata: %s", encoded)
+	}
+}
+
+func TestParallelRunClaimRequiresTokenAndPreservesWorkerContract(t *testing.T) {
+	run := ParallelRun{ID: 40, IDProject: 5, TestCycleID: 7, IdempotencyKey: "release", Status: "running", RequestedConcurrency: 1, ActiveWorkers: 1, TotalWorkers: 1, Metadata: map[string]any{}, ResultSummary: []any{}}
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3}, parallelRun: run}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+
+	missingToken := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs/40/claim", strings.NewReader(`{"workerId":"worker-a"}`))
+	missingToken.SetPathValue("idProject", "5")
+	missingToken.SetPathValue("parallelRun", "40")
+	missingToken.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	missingTokenResponse := httptest.NewRecorder()
+	handler.ClaimParallelRun(missingTokenResponse, missingToken)
+	if missingTokenResponse.Code != http.StatusUnauthorized || !strings.Contains(missingTokenResponse.Body.String(), "short-lived run token") {
+		t.Fatalf("expected required run token, got %d %s", missingTokenResponse.Code, missingTokenResponse.Body.String())
+	}
+
+	claim := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs/40/claim", strings.NewReader(`{"workerId":"worker-a","capabilities":["selenium"]}`))
+	claim.SetPathValue("idProject", "5")
+	claim.SetPathValue("parallelRun", "40")
+	claim.Header.Set("Idelium-Run-Token", "idrt_public.secret-value")
+	claim.Header.Set("Idelium-Agent-Cert-Sha256", strings.Repeat("a", 64))
+	claim.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	response := httptest.NewRecorder()
+	handler.ClaimParallelRun(response, claim)
+	if response.Code != http.StatusOK || sessions.parallelClaim.TenantID != 11 || sessions.parallelClaim.RunID != 40 || sessions.parallelClaim.WorkerID != "worker-a" || !sessions.parallelClaim.CapabilitiesSet {
+		t.Fatalf("unexpected parallel run claim: %d %s %#v", response.Code, response.Body.String(), sessions.parallelClaim)
+	}
+}
+
+func TestParallelRunClaimValidationAndSafeErrors(t *testing.T) {
+	t.Setenv("IDELIUM_RUN_TOKEN_REQUIRED_FOR_CLAIM", "false")
+	for _, test := range []struct {
+		name       string
+		err        error
+		status     int
+		contains   string
+		notContain string
+	}{
+		{name: "concurrency", err: ErrParallelRunConcurrency, status: http.StatusConflict, contains: "Concurrency limit reached."},
+		{name: "terminal", err: ErrParallelRunTerminal, status: http.StatusUnprocessableEntity, contains: "already terminal"},
+		{name: "token", err: ErrRunTokenInvalid, status: http.StatusUnprocessableEntity, contains: `"runToken"`},
+		{name: "internal", err: errors.New("database password must not be returned"), status: http.StatusInternalServerError, contains: "could not be completed", notContain: "database password"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3}, parallelClaimErr: test.err}
+			handler := NewHandler(usersStub{}, sessions, testLogger())
+			request := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs/40/claim", strings.NewReader(`{"workerId":"worker-a"}`))
+			request.SetPathValue("idProject", "5")
+			request.SetPathValue("parallelRun", "40")
+			request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+			response := httptest.NewRecorder()
+			handler.ClaimParallelRun(response, request)
+			if response.Code != test.status || !strings.Contains(response.Body.String(), test.contains) || (test.notContain != "" && strings.Contains(response.Body.String(), test.notContain)) {
+				t.Fatalf("unexpected claim error response: %d %s", response.Code, response.Body.String())
+			}
+		})
+	}
+
+	invalid := httptest.NewRequest(http.MethodPost, "/admin/projects/5/parallel-runs/40/claim", strings.NewReader(`{"workerId":""}`))
+	invalid.SetPathValue("idProject", "5")
+	invalid.SetPathValue("parallelRun", "40")
+	invalid.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	invalidResponse := httptest.NewRecorder()
+	NewHandler(usersStub{}, &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11}}, testLogger()).ClaimParallelRun(invalidResponse, invalid)
+	if invalidResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(invalidResponse.Body.String(), `"workerId"`) {
+		t.Fatalf("expected worker validation, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
 	}
 }
 

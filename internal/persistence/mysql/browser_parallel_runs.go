@@ -3,15 +3,19 @@ package mysql
 import (
 	"context"
 	"crypto/sha256"
+	"crypto/subtle"
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/idelium/idelium-api-go/internal/browserauth"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type parallelRunScanner interface {
@@ -65,6 +69,219 @@ func (r *BrowserAuthRepository) CreateParallelRun(request *http.Request, input b
 
 func (r *BrowserAuthRepository) CreateParallelRunMatrix(request *http.Request, input browserauth.ParallelRunCreate, combinations []map[string]string) ([]browserauth.ParallelRun, error) {
 	return r.createParallelRuns(request.Context(), input, combinations)
+}
+
+func (r *BrowserAuthRepository) ClaimParallelRun(request *http.Request, input browserauth.ParallelRunClaim) (browserauth.ParallelRun, error) {
+	ctx := request.Context()
+	if input.RunToken != "" {
+		if err := r.consumeParallelRunToken(ctx, input); err != nil {
+			if auditErr := r.recordParallelRunTokenAudit(request, input, "run_token.reject", "failure"); auditErr != nil {
+				return browserauth.ParallelRun{}, auditErr
+			}
+			return browserauth.ParallelRun{}, err
+		}
+		if err := r.recordParallelRunTokenAudit(request, input, "run_token.consume", "success"); err != nil {
+			return browserauth.ParallelRun{}, err
+		}
+	}
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return browserauth.ParallelRun{}, safeDatabaseFailure("start parallel run claim transaction", err)
+	}
+	defer tx.Rollback()
+	var status string
+	var requestedConcurrency, activeWorkers int
+	var workerJSON sql.NullString
+	err = tx.QueryRowContext(ctx, `SELECT status, requestedConcurrency, activeWorkers, workerStates
+		FROM parallel_run_schedules WHERE id = ? AND idCostumer = ? AND idProject = ? FOR UPDATE`,
+		input.RunID, input.TenantID, input.ProjectID).Scan(&status, &requestedConcurrency, &activeWorkers, &workerJSON)
+	if err != nil {
+		return browserauth.ParallelRun{}, parallelRunNotFound("lock parallel run worker claim", err)
+	}
+	if parallelRunTerminal(status) {
+		return browserauth.ParallelRun{}, browserauth.ErrParallelRunTerminal
+	}
+	if status == "cancelling" {
+		return browserauth.ParallelRun{}, browserauth.ErrParallelRunCancelling
+	}
+	if err := validateParallelRunAgent(ctx, tx, input); err != nil {
+		return browserauth.ParallelRun{}, err
+	}
+	workers := decodeParallelMap(workerJSON)
+	existing, _ := workers[input.WorkerID].(map[string]any)
+	if existing == nil && activeWorkers >= requestedConcurrency {
+		return browserauth.ParallelRun{}, browserauth.ErrParallelRunConcurrency
+	}
+	capabilities := any([]any{})
+	if input.CapabilitiesSet {
+		capabilities = input.Capabilities
+	} else if existing != nil && existing["capabilities"] != nil {
+		capabilities = existing["capabilities"]
+	}
+	now := parallelRunISOString(input.Now)
+	claimedAt := any(now)
+	result := any(nil)
+	if existing != nil {
+		if existing["claimedAt"] != nil {
+			claimedAt = existing["claimedAt"]
+		}
+		result = existing["result"]
+	}
+	workers[input.WorkerID] = map[string]any{
+		"workerId": input.WorkerID, "status": "running", "capabilities": capabilities,
+		"claimedAt": claimedAt, "lastHeartbeatAt": now,
+		"leaseExpiresAt": parallelRunISOString(input.Now.Add(120 * time.Second)), "updatedAt": now, "result": result,
+	}
+	counters, summary := recalculateParallelRunWorkers(workers, input.Now)
+	workersJSON, err := json.Marshal(workers)
+	if err != nil {
+		return browserauth.ParallelRun{}, errors.New("parallel run worker state is invalid")
+	}
+	summaryJSON, err := json.Marshal(summary)
+	if err != nil {
+		return browserauth.ParallelRun{}, errors.New("parallel run result summary is invalid")
+	}
+	_, err = tx.ExecContext(ctx, `UPDATE parallel_run_schedules SET status = 'running', workerStates = ?, resultSummary = ?,
+		activeWorkers = ?, totalWorkers = ?, completedWorkers = ?, failedWorkers = ?, cancelledWorkers = ?,
+		startedAt = COALESCE(startedAt, ?), updated_at = ? WHERE id = ? AND idCostumer = ? AND idProject = ?`,
+		string(workersJSON), string(summaryJSON), counters.active, counters.total, counters.completed, counters.failed, counters.cancelled,
+		input.Now, input.Now, input.RunID, input.TenantID, input.ProjectID)
+	if err != nil {
+		return browserauth.ParallelRun{}, safeDatabaseFailure("update parallel run worker claim", err)
+	}
+	run, err := getParallelRun(ctx, tx, input.TenantID, input.ProjectID, input.RunID)
+	if err != nil {
+		return browserauth.ParallelRun{}, err
+	}
+	if err := tx.Commit(); err != nil {
+		return browserauth.ParallelRun{}, safeDatabaseFailure("commit parallel run worker claim", err)
+	}
+	return run, nil
+}
+
+func (r *BrowserAuthRepository) recordParallelRunTokenAudit(request *http.Request, input browserauth.ParallelRunClaim, action, result string) error {
+	values, err := json.Marshal(map[string]any{"agentId": input.WorkerID, "tokenId": "[REDACTED]", "token": "[REDACTED]"})
+	if err != nil {
+		return errors.New("run token audit values are invalid")
+	}
+	_, err = r.database.ExecContext(request.Context(), `INSERT INTO audit_events
+		(actorUserId, actorTenantId, activeTenantId, idProject, action, targetType, targetId, beforeValues, afterValues, result, sourceIp, correlationId, metadata)
+		VALUES (?, ?, ?, ?, ?, 'parallel_run_schedule', ?, NULL, ?, ?, ?, ?, NULL)`,
+		input.ActorUserID, input.ActorTenantID, input.TenantID, input.ProjectID, action, input.RunID, string(values), result, sourceIP(request), correlationID(request))
+	if err != nil {
+		return safeDatabaseFailure("record run token claim audit", err)
+	}
+	return nil
+}
+
+func (r *BrowserAuthRepository) consumeParallelRunToken(ctx context.Context, input browserauth.ParallelRunClaim) error {
+	tokenID, secret, valid := strings.Cut(input.RunToken, ".")
+	if !valid || !strings.HasPrefix(tokenID, "idrt_") || secret == "" {
+		return browserauth.ErrRunTokenInvalid
+	}
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return safeDatabaseFailure("start run token consumption", err)
+	}
+	defer tx.Rollback()
+	var id int64
+	var hash string
+	var expiresAt time.Time
+	var usedAt, revokedAt sql.NullTime
+	err = tx.QueryRowContext(ctx, `SELECT id, tokenHash, expiresAt, usedAt, revokedAt FROM run_tokens
+		WHERE tokenId = ? AND idCostumer = ? AND idProject = ? AND parallelRunScheduleId = ? AND agentId = ? FOR UPDATE`,
+		tokenID, input.TenantID, input.ProjectID, input.RunID, input.WorkerID).Scan(&id, &hash, &expiresAt, &usedAt, &revokedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return browserauth.ErrRunTokenInvalid
+	}
+	if err != nil {
+		return safeDatabaseFailure("lock run token for claim", err)
+	}
+	if usedAt.Valid || revokedAt.Valid || !expiresAt.After(input.Now) || bcrypt.CompareHashAndPassword([]byte(hash), []byte(secret)) != nil {
+		return browserauth.ErrRunTokenInvalid
+	}
+	result, err := tx.ExecContext(ctx, "UPDATE run_tokens SET usedAt = ?, updated_at = ? WHERE id = ? AND usedAt IS NULL AND revokedAt IS NULL", input.Now, input.Now, id)
+	if err != nil {
+		return safeDatabaseFailure("consume run token for claim", err)
+	}
+	changed, err := result.RowsAffected()
+	if err != nil || changed != 1 {
+		return browserauth.ErrRunTokenInvalid
+	}
+	if err := tx.Commit(); err != nil {
+		return safeDatabaseFailure("commit run token consumption", err)
+	}
+	return nil
+}
+
+func validateParallelRunAgent(ctx context.Context, tx *sql.Tx, input browserauth.ParallelRunClaim) error {
+	var status, health string
+	var identityJSON sql.NullString
+	err := tx.QueryRowContext(ctx, "SELECT status, health, identityProof FROM agent_registrations WHERE idCostumer = ? AND agentId = ?", input.TenantID, input.WorkerID).Scan(&status, &health, &identityJSON)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return safeDatabaseFailure("validate parallel run agent", err)
+	}
+	identity := decodeParallelMap(identityJSON)
+	if expected, ok := identity["certificateSha256"].(string); ok && expected != "" {
+		if subtle.ConstantTimeCompare([]byte(strings.ToLower(expected)), []byte(strings.ToLower(input.CertificateHash))) != 1 {
+			return browserauth.ErrAgentProofInvalid
+		}
+	}
+	if status != "approved" || health == "unhealthy" {
+		return &browserauth.AgentUnavailableError{Status: status, Health: health}
+	}
+	return nil
+}
+
+type parallelWorkerCounters struct{ active, total, completed, failed, cancelled int }
+
+func recalculateParallelRunWorkers(workers map[string]any, now time.Time) (parallelWorkerCounters, []map[string]any) {
+	ids := make([]string, 0, len(workers))
+	for id := range workers {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	counters := parallelWorkerCounters{total: len(ids)}
+	summary := make([]map[string]any, 0, len(ids))
+	for _, id := range ids {
+		worker, _ := workers[id].(map[string]any)
+		status, _ := worker["status"].(string)
+		if status == "" {
+			status = "running"
+		}
+		if status == "running" {
+			if expiry, ok := worker["leaseExpiresAt"].(string); ok {
+				if parsed, err := time.Parse(time.RFC3339Nano, expiry); err == nil && !parsed.After(now) {
+					status = "lost"
+					worker["status"] = status
+					worker["updatedAt"] = parallelRunISOString(now)
+				}
+			}
+		}
+		switch status {
+		case "running":
+			counters.active++
+		case "completed":
+			counters.completed++
+		case "failed":
+			counters.failed++
+		case "cancelled":
+			counters.cancelled++
+		}
+		summary = append(summary, map[string]any{"workerId": id, "status": status, "result": worker["result"]})
+	}
+	return counters, summary
+}
+
+func parallelRunTerminal(status string) bool {
+	return status == "cancelled" || status == "completed" || status == "failed" || status == "lost"
+}
+
+func parallelRunISOString(value time.Time) string {
+	return value.UTC().Format("2006-01-02T15:04:05.000000Z")
 }
 
 func (r *BrowserAuthRepository) createParallelRuns(ctx context.Context, input browserauth.ParallelRunCreate, combinations []map[string]string) ([]browserauth.ParallelRun, error) {
@@ -160,7 +377,7 @@ func scanParallelRun(scanner parallelRunScanner) (browserauth.ParallelRun, error
 		run.AggregateStatus = &value
 	}
 	run.Metadata = decodeParallelMap(metadataJSON)
-	run.ResultSummary = decodeParallelMap(resultJSON)
+	run.ResultSummary = decodeParallelJSON(resultJSON, []any{})
 	workers := decodeParallelMap(workerJSON)
 	for _, value := range workers {
 		if worker, ok := value.(map[string]any); ok && worker["status"] == "lost" {
@@ -181,6 +398,17 @@ func decodeParallelMap(value sql.NullString) map[string]any {
 		_ = json.Unmarshal([]byte(value.String), &result)
 	}
 	return result
+}
+
+func decodeParallelJSON(value sql.NullString, fallback any) any {
+	if !value.Valid {
+		return fallback
+	}
+	var decoded any
+	if err := json.Unmarshal([]byte(value.String), &decoded); err != nil {
+		return fallback
+	}
+	return decoded
 }
 
 func parallelRunMatches(metadata map[string]any, filters map[string]string) bool {

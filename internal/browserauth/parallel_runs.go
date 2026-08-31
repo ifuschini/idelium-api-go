@@ -1,6 +1,7 @@
 package browserauth
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -11,6 +12,25 @@ import (
 )
 
 const maxMatrixRuns = 64
+
+var (
+	ErrParallelRunTerminal    = errors.New("parallel run is terminal")
+	ErrParallelRunCancelling  = errors.New("parallel run is cancelling")
+	ErrParallelRunConcurrency = errors.New("parallel run concurrency limit reached")
+	ErrRunTokenInvalid        = errors.New("run token is invalid")
+	ErrAgentProofInvalid      = errors.New("agent identity proof is invalid")
+	ErrAgentUnavailable       = errors.New("agent is unavailable")
+)
+
+type AgentUnavailableError struct {
+	Status string
+	Health string
+}
+
+func (e *AgentUnavailableError) Error() string { return ErrAgentUnavailable.Error() }
+func (e *AgentUnavailableError) Is(target error) bool {
+	return target == ErrAgentUnavailable
+}
 
 type ParallelRun struct {
 	ID                   int64          `json:"id"`
@@ -29,7 +49,7 @@ type ParallelRun struct {
 	LostWorkers          int            `json:"lostWorkers"`
 	AggregateStatus      *int           `json:"aggregateStatus"`
 	Metadata             map[string]any `json:"metadata"`
-	ResultSummary        map[string]any `json:"resultSummary"`
+	ResultSummary        any            `json:"resultSummary"`
 	ScheduledAt          *time.Time     `json:"scheduledAt"`
 	StartedAt            *time.Time     `json:"startedAt"`
 	CompletedAt          *time.Time     `json:"completedAt"`
@@ -44,6 +64,20 @@ type ParallelRunCreate struct {
 	RequestedConcurrency int
 	Metadata             map[string]any
 	Now                  time.Time
+}
+
+type ParallelRunClaim struct {
+	TenantID        int64
+	ActorUserID     *int64
+	ActorTenantID   int64
+	ProjectID       int64
+	RunID           int64
+	WorkerID        string
+	Capabilities    []any
+	CapabilitiesSet bool
+	RunToken        string
+	CertificateHash string
+	Now             time.Time
 }
 
 func (h *Handler) ParallelRuns(writer http.ResponseWriter, request *http.Request) {
@@ -112,6 +146,90 @@ func (h *Handler) CLShowParallelRun(writer http.ResponseWriter, request *http.Re
 		return
 	}
 	h.showParallelRun(writer, request, tenant.CustomerID)
+}
+
+func (h *Handler) ClaimParallelRun(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	h.claimParallelRun(writer, request, user.ActiveTenant(), &user)
+}
+
+func (h *Handler) CLClaimParallelRun(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		h.unauthorized(writer)
+		return
+	}
+	h.claimParallelRun(writer, request, tenant.CustomerID, nil)
+}
+
+func (h *Handler) claimParallelRun(writer http.ResponseWriter, request *http.Request, tenantID int64, actor *User) {
+	projectID, runID, ok := parseAssetVersionPath(writer, request, "parallelRun")
+	if !ok {
+		return
+	}
+	var body struct {
+		WorkerID     string          `json:"workerId"`
+		Capabilities json.RawMessage `json:"capabilities"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil {
+		return
+	}
+	body.WorkerID = strings.TrimSpace(body.WorkerID)
+	if body.WorkerID == "" || len(body.WorkerID) > 128 {
+		validationError(writer, "workerId", "The worker id field is invalid.")
+		return
+	}
+	runToken := request.Header.Get("Idelium-Run-Token")
+	if h.runTokenRequiredClaim && runToken == "" {
+		writeJSON(writer, http.StatusUnauthorized, map[string]string{"message": "A short-lived run token is required to claim a worker slot."})
+		return
+	}
+	input := ParallelRunClaim{
+		TenantID: tenantID, ProjectID: projectID, RunID: runID, WorkerID: body.WorkerID,
+		RunToken: runToken, CertificateHash: request.Header.Get("Idelium-Agent-Cert-Sha256"), Now: h.now().UTC(),
+	}
+	input.ActorTenantID = tenantID
+	if actor != nil {
+		input.ActorUserID = &actor.ID
+		input.ActorTenantID = actor.TenantID
+	}
+	if len(body.Capabilities) > 0 {
+		if json.Unmarshal(body.Capabilities, &input.Capabilities) != nil || input.Capabilities == nil {
+			validationError(writer, "capabilities", "The capabilities field must be an array.")
+			return
+		}
+		input.CapabilitiesSet = true
+	}
+	run, err := h.sessions.ClaimParallelRun(request, input)
+	switch {
+	case errors.Is(err, ErrNotFound):
+		h.notFound(writer)
+	case errors.Is(err, ErrRunTokenInvalid):
+		validationError(writer, "runToken", "The run token is invalid, expired, used, or not bound to this agent.")
+	case errors.Is(err, ErrAgentProofInvalid):
+		writeJSON(writer, http.StatusUnauthorized, map[string]string{"message": "Agent identity proof is invalid for this run ownership request."})
+	case errors.Is(err, ErrAgentUnavailable):
+		payload := map[string]string{"message": "Agent is not approved and healthy for new run ownership."}
+		var unavailable *AgentUnavailableError
+		if errors.As(err, &unavailable) {
+			payload["agentStatus"] = unavailable.Status
+			payload["agentHealth"] = unavailable.Health
+		}
+		writeJSON(writer, http.StatusConflict, payload)
+	case errors.Is(err, ErrParallelRunConcurrency):
+		writeJSON(writer, http.StatusConflict, map[string]string{"message": "Concurrency limit reached."})
+	case errors.Is(err, ErrParallelRunCancelling):
+		writeJSON(writer, http.StatusConflict, map[string]string{"message": "Parallel run is cancelling."})
+	case errors.Is(err, ErrParallelRunTerminal):
+		writeJSON(writer, http.StatusUnprocessableEntity, map[string]string{"message": "Parallel run is already terminal."})
+	case err != nil:
+		h.internalError(writer, request, "claim parallel run worker", err)
+	default:
+		writeJSON(writer, http.StatusOK, run)
+	}
 }
 
 func (h *Handler) listParallelRuns(writer http.ResponseWriter, request *http.Request, tenantID int64) {

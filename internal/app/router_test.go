@@ -286,6 +286,9 @@ func (fakeBrowserAuthRepository) CreateParallelRunMatrix(*http.Request, browsera
 func (fakeBrowserAuthRepository) GetParallelRun(*http.Request, int64, int64, int64) (browserauth.ParallelRun, error) {
 	return browserauth.ParallelRun{}, nil
 }
+func (fakeBrowserAuthRepository) ClaimParallelRun(*http.Request, browserauth.ParallelRunClaim) (browserauth.ParallelRun, error) {
+	return browserauth.ParallelRun{}, nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {

@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	"github.com/idelium/idelium-api-go/internal/health"
 	"github.com/idelium/idelium-api-go/internal/integrations"
 	"github.com/idelium/idelium-api-go/internal/platforms"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func openIntegrationDatabase(t *testing.T) *sql.DB {
@@ -1737,6 +1739,131 @@ func TestParallelRunSchedulesAndMatricesAreTenantScopedAndIdempotentIntegration(
 	foreignInput.TestCycleID = 8
 	if _, err := repository.CreateParallelRun(request, foreignInput); !errors.Is(err, browserauth.ErrNotFound) {
 		t.Fatalf("expected foreign schedule create to be hidden, got %v", err)
+	}
+}
+
+func TestParallelRunWorkerClaimsUseRowLocksAndTenantScopeIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS run_tokens",
+		"DROP TABLE IF EXISTS agent_registrations",
+		"DROP TABLE IF EXISTS audit_events",
+		"DROP TABLE IF EXISTS parallel_run_schedules",
+		`CREATE TABLE parallel_run_schedules (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT, idProject BIGINT NOT NULL, testCycleId BIGINT NOT NULL,
+			performedTestCycleId BIGINT NULL, idCostumer BIGINT NOT NULL, idempotencyKey VARCHAR(128) NOT NULL,
+			status VARCHAR(32) NOT NULL DEFAULT 'queued', requestedConcurrency SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+			activeWorkers SMALLINT UNSIGNED NOT NULL DEFAULT 0, totalWorkers SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+			completedWorkers SMALLINT UNSIGNED NOT NULL DEFAULT 0, failedWorkers SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+			cancelledWorkers SMALLINT UNSIGNED NOT NULL DEFAULT 0, aggregateStatus SMALLINT UNSIGNED NULL,
+			workerStates JSON NULL, resultSummary JSON NULL, metadata JSON NULL, scheduledAt TIMESTAMP NULL,
+			startedAt TIMESTAMP NULL, completedAt TIMESTAMP NULL, cancelledAt TIMESTAMP NULL,
+			created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL,
+			UNIQUE KEY parallel_run_tenant_project_key (idCostumer, idProject, idempotencyKey)
+		)`,
+		`CREATE TABLE run_tokens (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT, idCostumer BIGINT NOT NULL, idProject BIGINT NOT NULL,
+			parallelRunScheduleId BIGINT NOT NULL, agentId VARCHAR(128) NOT NULL, tokenId VARCHAR(64) NOT NULL UNIQUE,
+			tokenHash VARCHAR(255) NOT NULL, expiresAt TIMESTAMP NOT NULL, usedAt TIMESTAMP NULL, revokedAt TIMESTAMP NULL,
+			created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL
+		)`,
+		`CREATE TABLE agent_registrations (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT, idCostumer BIGINT NOT NULL, agentId VARCHAR(128) NOT NULL,
+			status VARCHAR(32) NOT NULL, health VARCHAR(32) NOT NULL, identityProof JSON NULL,
+			UNIQUE KEY agent_tenant_id (idCostumer, agentId)
+		)`,
+		`CREATE TABLE audit_events (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT, actorUserId BIGINT NULL, actorTenantId BIGINT NULL,
+			activeTenantId BIGINT NOT NULL, idProject BIGINT NULL, action VARCHAR(128) NOT NULL,
+			targetType VARCHAR(128) NOT NULL, targetId VARCHAR(128) NULL, beforeValues JSON NULL,
+			afterValues JSON NULL, result VARCHAR(32) NOT NULL, sourceIp VARCHAR(64) NULL,
+			correlationId VARCHAR(128) NOT NULL, metadata JSON NULL, created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`INSERT INTO parallel_run_schedules
+			(id, idProject, testCycleId, idCostumer, idempotencyKey, status, requestedConcurrency, activeWorkers, totalWorkers,
+			completedWorkers, failedWorkers, cancelledWorkers, workerStates, resultSummary, metadata, scheduledAt, created_at, updated_at)
+			VALUES
+			(40, 5, 7, 11, 'row-lock', 'queued', 1, 0, 0, 0, 0, 0, '{}', '[]', '{}', NOW(), NOW(), NOW()),
+			(41, 5, 7, 11, 'token-claim', 'queued', 1, 0, 0, 0, 0, 0, '{}', '[]', '{}', NOW(), NOW(), NOW()),
+			(42, 5, 7, 11, 'terminal', 'completed', 1, 0, 1, 1, 0, 0, '{"done":{"workerId":"done","status":"completed"}}', '[]', '{}', NOW(), NOW(), NOW())`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare claim fixture %q: %v", statement, err)
+		}
+	}
+	repository := NewBrowserAuthRepository(database)
+	now := time.Date(2026, time.August, 31, 16, 0, 0, 0, time.UTC)
+	start := make(chan struct{})
+	results := make([]error, 2)
+	var wait sync.WaitGroup
+	for index, workerID := range []string{"worker-a", "worker-b"} {
+		wait.Add(1)
+		go func(index int, workerID string) {
+			defer wait.Done()
+			<-start
+			request := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/40/claim", nil)
+			_, results[index] = repository.ClaimParallelRun(request, browserauth.ParallelRunClaim{TenantID: 11, ProjectID: 5, RunID: 40, WorkerID: workerID, Now: now})
+		}(index, workerID)
+	}
+	close(start)
+	wait.Wait()
+	succeeded, limited := 0, 0
+	winner := ""
+	for index, err := range results {
+		if err == nil {
+			succeeded++
+			winner = []string{"worker-a", "worker-b"}[index]
+		} else if errors.Is(err, browserauth.ErrParallelRunConcurrency) {
+			limited++
+		} else {
+			t.Fatalf("unexpected concurrent claim error: %v", err)
+		}
+	}
+	if succeeded != 1 || limited != 1 {
+		t.Fatalf("row lock did not enforce one slot: success=%d limited=%d errors=%v", succeeded, limited, results)
+	}
+	repeatRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/40/claim", nil)
+	repeated, err := repository.ClaimParallelRun(repeatRequest, browserauth.ParallelRunClaim{TenantID: 11, ProjectID: 5, RunID: 40, WorkerID: winner, Now: now.Add(time.Second)})
+	if err != nil || repeated.ActiveWorkers != 1 || repeated.TotalWorkers != 1 {
+		t.Fatalf("same-worker retry was not idempotent: %#v err=%v", repeated, err)
+	}
+	foreignRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/40/claim", nil)
+	if _, err := repository.ClaimParallelRun(foreignRequest, browserauth.ParallelRunClaim{TenantID: 42, ProjectID: 5, RunID: 40, WorkerID: "foreign", Now: now}); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected cross-tenant claim to be hidden, got %v", err)
+	}
+	terminalRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/42/claim", nil)
+	if _, err := repository.ClaimParallelRun(terminalRequest, browserauth.ParallelRunClaim{TenantID: 11, ProjectID: 5, RunID: 42, WorkerID: "worker-c", Now: now}); !errors.Is(err, browserauth.ErrParallelRunTerminal) {
+		t.Fatalf("expected terminal claim rejection, got %v", err)
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte("one-use-secret"), bcrypt.MinCost)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.ExecContext(ctx, `INSERT INTO run_tokens
+		(idCostumer, idProject, parallelRunScheduleId, agentId, tokenId, tokenHash, expiresAt, created_at, updated_at)
+		VALUES (11, 5, 41, 'worker-token', 'idrt_claim', ?, ?, ?, ?)`, string(hash), now.Add(5*time.Minute), now, now); err != nil {
+		t.Fatal(err)
+	}
+	tokenRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/41/claim", nil)
+	claimed, err := repository.ClaimParallelRun(tokenRequest, browserauth.ParallelRunClaim{TenantID: 11, ActorTenantID: 11, ProjectID: 5, RunID: 41, WorkerID: "worker-token", RunToken: "idrt_claim.one-use-secret", Now: now})
+	if err != nil || claimed.ActiveWorkers != 1 || claimed.ResultSummary == nil {
+		t.Fatalf("unexpected token-backed claim: %#v err=%v", claimed, err)
+	}
+	var usedAt sql.NullTime
+	if err := database.QueryRowContext(ctx, "SELECT usedAt FROM run_tokens WHERE tokenId = 'idrt_claim'").Scan(&usedAt); err != nil || !usedAt.Valid {
+		t.Fatalf("run token was not consumed: %v used=%v", err, usedAt.Valid)
+	}
+	secondTokenRequest := httptest.NewRequest(http.MethodPost, "/ideliumcl/projects/5/parallel-runs/41/claim", nil)
+	if _, err := repository.ClaimParallelRun(secondTokenRequest, browserauth.ParallelRunClaim{TenantID: 11, ActorTenantID: 11, ProjectID: 5, RunID: 41, WorkerID: "worker-token", RunToken: "idrt_claim.one-use-secret", Now: now}); !errors.Is(err, browserauth.ErrRunTokenInvalid) {
+		t.Fatalf("expected consumed token rejection, got %v", err)
+	}
+	var auditCount int
+	var auditValues string
+	if err := database.QueryRowContext(ctx, "SELECT COUNT(*), MAX(afterValues) FROM audit_events WHERE activeTenantId = 11 AND idProject = 5 AND action IN ('run_token.consume', 'run_token.reject')").Scan(&auditCount, &auditValues); err != nil || auditCount != 2 || strings.Contains(auditValues, "one-use-secret") {
+		t.Fatalf("unexpected redacted run token audit evidence: count=%d values=%s err=%v", auditCount, auditValues, err)
 	}
 }
 

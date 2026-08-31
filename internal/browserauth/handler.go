@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -69,10 +70,11 @@ type Repository interface {
 
 // Handler preserves the frontend-visible Laravel browser-auth response contract.
 type Handler struct {
-	users    UserRepository
-	sessions SessionRepository
-	logger   *slog.Logger
-	now      func() time.Time
+	users                 UserRepository
+	sessions              SessionRepository
+	logger                *slog.Logger
+	now                   func() time.Time
+	runTokenRequiredClaim bool
 }
 
 type Project struct {
@@ -115,7 +117,8 @@ type AuditEvent struct {
 }
 
 func NewHandler(users UserRepository, sessions SessionRepository, logger *slog.Logger) *Handler {
-	return &Handler{users: users, sessions: sessions, logger: logger, now: time.Now}
+	requireRunToken := !strings.EqualFold(strings.TrimSpace(os.Getenv("IDELIUM_RUN_TOKEN_REQUIRED_FOR_CLAIM")), "false")
+	return &Handler{users: users, sessions: sessions, logger: logger, now: time.Now, runTokenRequiredClaim: requireRunToken}
 }
 
 func (h *Handler) CSRF(writer http.ResponseWriter, request *http.Request) {

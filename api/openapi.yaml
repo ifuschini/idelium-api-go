@@ -2163,6 +2163,74 @@ paths:
           $ref: "#/components/responses/NotFound"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/parallel-runs/{parallelRun}/claim:
+    post:
+      operationId: claimBrowserParallelRunWorker
+      summary: Claim one concurrency-bounded worker slot
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/ParallelRunID"
+        - $ref: "#/components/parameters/RunTokenHeader"
+        - $ref: "#/components/parameters/AgentCertificateHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParallelRunClaim"
+      responses:
+        "200":
+          $ref: "#/components/responses/ParallelRunResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim:
+    post:
+      operationId: claimCLIParallelRunWorker
+      summary: Claim one concurrency-bounded worker slot by customer API key
+      tags: [Parallel Runs]
+      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "api-key"
+      x-idelium-authentication-mode: "api-key"
+      x-idelium-tenant-context: true
+      parameters:
+        - $ref: "#/components/parameters/ProjectID"
+        - $ref: "#/components/parameters/ParallelRunID"
+        - $ref: "#/components/parameters/RunTokenHeader"
+        - $ref: "#/components/parameters/AgentCertificateHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParallelRunClaim"
+      responses:
+        "200":
+          $ref: "#/components/responses/ParallelRunResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
   # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS
   /:
     get:
@@ -4350,53 +4418,6 @@ paths:
           $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/parallel-runs/{parallelRun}/claim:
-    post:
-      operationId: postAdminProjectsIdProjectParallelRunsParallelRunClaim
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@claimWorker"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: ["idelium-web"]
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: parallelRun
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
   /admin/projects/{idProject}/parallel-runs/{parallelRun}/results:
     get:
       operationId: getAdminProjectsIdProjectParallelRunsParallelRunResults
@@ -5732,53 +5753,6 @@ paths:
           $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
-  /ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim:
-    post:
-      operationId: postIdeliumclProjectsIdProjectParallelRunsParallelRunClaim
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim"
-      x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@claimWorker"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "api-key"
-      x-idelium-authentication-mode: "api-key"
-      x-idelium-tenant-context: false
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: parallelRun
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/LegacyCompatibilityPayload"
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
   /ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results:
     get:
       operationId: getIdeliumclProjectsIdProjectParallelRunsParallelRunResults
@@ -6601,6 +6575,21 @@ components:
         type: integer
         format: int64
         minimum: 1
+    RunTokenHeader:
+      name: Idelium-Run-Token
+      in: header
+      required: false
+      description: Short-lived, one-use token required by default for worker claims.
+      schema:
+        type: string
+    AgentCertificateHeader:
+      name: Idelium-Agent-Cert-Sha256
+      in: header
+      required: false
+      description: SHA-256 certificate thumbprint when the registered agent requires identity proof.
+      schema:
+        type: string
+        pattern: "^[A-Fa-f0-9]{64}$"
     RunBuildFilter:
       name: build
       in: query
@@ -6771,6 +6760,15 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: The worker slot, run state, or registered agent prevents the claim.
+      headers:
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationID"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
     ValidationError:
       description: The request failed Laravel-compatible validation.
       headers:
@@ -6833,6 +6831,18 @@ components:
                   type: array
                   maxItems: 16
                   items: {}
+    ParallelRunClaim:
+      type: object
+      required: [workerId]
+      additionalProperties: false
+      properties:
+        workerId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        capabilities:
+          type: array
+          items: {}
     ParallelRun:
       type: object
       required: [id, runUrl, idProject, testCycleId, performedTestCycleId, idempotencyKey, status, requestedConcurrency, activeWorkers, totalWorkers, completedWorkers, failedWorkers, cancelledWorkers, lostWorkers, aggregateStatus, metadata, resultSummary, scheduledAt, startedAt, completedAt, cancelledAt]
@@ -6855,7 +6865,15 @@ components:
         lostWorkers: {type: integer, minimum: 0}
         aggregateStatus: {type: integer, nullable: true}
         metadata: {type: object, additionalProperties: true}
-        resultSummary: {type: object, additionalProperties: true}
+        resultSummary:
+          type: array
+          items:
+            type: object
+            required: [workerId, status, result]
+            properties:
+              workerId: {type: string}
+              status: {type: string, enum: [running, completed, failed, cancelled, lost]}
+              result: {nullable: true}
         scheduledAt: {type: string, format: date-time, nullable: true}
         startedAt: {type: string, format: date-time, nullable: true}
         completedAt: {type: string, format: date-time, nullable: true}
