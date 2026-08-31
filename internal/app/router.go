@@ -80,6 +80,8 @@ func NewRouter(
 	router.Post("/admin/result-exports", browserAuthHandler.CreateResultExport)
 	router.Get("/admin/result-exports/{resultExport}", browserAuthHandler.ShowResultExport)
 	router.Get("/admin/result-exports/{resultExport}/download", browserAuthHandler.DownloadResultExport)
+	router.Get("/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts", browserAuthHandler.ArtifactDescriptors)
+	router.Get("/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}", browserAuthHandler.ShowArtifactDescriptor)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)

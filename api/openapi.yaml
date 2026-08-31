@@ -53,6 +53,106 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts:
+    get:
+      operationId: getAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifacts
+      summary: List artifact descriptors for a performed test cycle
+      description: >-
+        Returns Laravel-compatible artifact descriptor records for the active
+        browser-session tenant, scoped by project and performed test cycle. The
+        result preserves the legacy data envelope and ordering by artifactType
+        then name while redacting sensitive metadata values.
+      tags: [Browser Results]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts"
+      x-idelium-controller: "App\\Http\\Controllers\\ArtifactDescriptorController@index"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      x-idelium-consumers: []
+      parameters:
+        - name: idProject
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: performedTestCycleId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Artifact descriptors for the tenant-owned performed test cycle.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ArtifactDescriptor"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
+  /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}:
+    get:
+      operationId: getAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptor
+      summary: Show an artifact descriptor
+      description: >-
+        Returns a single Laravel-compatible artifact descriptor only when the
+        descriptor belongs to the active browser-session tenant, project, and
+        performed test cycle. Cross-tenant descriptors are hidden as not found.
+      tags: [Browser Results]
+      x-idelium-laravel-route: "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}"
+      x-idelium-controller: "App\\Http\\Controllers\\ArtifactDescriptorController@show"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      x-idelium-consumers: []
+      parameters:
+        - name: idProject
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: performedTestCycleId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: artifactDescriptor
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tenant-owned artifact descriptor.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ArtifactDescriptor"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
   /admin/platforms/types:
     get:
       operationId: listPlatformTypes
@@ -4172,83 +4272,6 @@ paths:
           $ref: "#/components/responses/ValidationError"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts:
-    get:
-      operationId: getAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifacts
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts"
-      x-idelium-controller: "App\\Http\\Controllers\\ArtifactDescriptorController@index"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: performedTestCycleId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
-  /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}:
-    get:
-      operationId: getAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptor
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}"
-      x-idelium-controller: "App\\Http\\Controllers\\ArtifactDescriptorController@show"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      parameters:
-        - name: idProject
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: performedTestCycleId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: artifactDescriptor
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
   /admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive:
     post:
       operationId: postAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorArchive
@@ -6708,6 +6731,77 @@ components:
     LegacyCompatibilityPayload:
       type: object
       additionalProperties: true
+    ArtifactDescriptor:
+      type: object
+      required:
+        - id
+        - idCostumer
+        - idProject
+        - performedTestCycleId
+        - artifactType
+        - name
+        - contentType
+        - sizeBytes
+        - checksumSha256
+        - storageKey
+        - state
+        - metadata
+      properties:
+        id:
+          type: integer
+          format: int64
+        idCostumer:
+          type: integer
+          format: int64
+        idProject:
+          type: integer
+          format: int64
+        performedTestCycleId:
+          type: integer
+          format: int64
+        performedTestId:
+          type: integer
+          format: int64
+          nullable: true
+        performedStepId:
+          type: integer
+          format: int64
+          nullable: true
+        artifactType:
+          type: string
+          enum: [json, junit, markdown, html, screenshot, log]
+        name:
+          type: string
+        contentType:
+          type: string
+        sizeBytes:
+          type: integer
+          format: int64
+          minimum: 0
+        checksumSha256:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+        storageKey:
+          type: string
+        state:
+          type: string
+          enum: [available, expired, quarantined, unavailable, archived, deleted]
+        retentionUntil:
+          type: string
+          format: date-time
+          nullable: true
+        metadata:
+          type: object
+          nullable: true
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
     BuildInfo:
       type: object
       required: [service, version, commit]

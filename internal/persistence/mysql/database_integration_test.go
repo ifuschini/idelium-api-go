@@ -1051,6 +1051,102 @@ func TestBrowserResultExportsIntegration(t *testing.T) {
 	}
 }
 
+func TestBrowserArtifactDescriptorsIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS artifact_descriptors",
+		"DROP TABLE IF EXISTS performed_test_cycles",
+		`CREATE TABLE performed_test_cycles (
+			id BIGINT PRIMARY KEY,
+			testCycleId BIGINT NULL,
+			date DATETIME NULL,
+			status INT NOT NULL DEFAULT 0,
+			idCostumer BIGINT NOT NULL
+		)`,
+		`CREATE TABLE artifact_descriptors (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			idCostumer BIGINT NOT NULL,
+			idProject BIGINT NOT NULL,
+			performedTestCycleId BIGINT NOT NULL,
+			performedTestId BIGINT NULL,
+			performedStepId BIGINT NULL,
+			artifactType VARCHAR(64) NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			contentType VARCHAR(128) NOT NULL,
+			sizeBytes BIGINT UNSIGNED NOT NULL,
+			checksumSha256 VARCHAR(64) NOT NULL,
+			storageKey VARCHAR(512) NOT NULL,
+			state VARCHAR(32) NOT NULL DEFAULT 'available',
+			retentionUntil TIMESTAMP NULL,
+			metadata JSON NULL,
+			created_at TIMESTAMP NULL,
+			updated_at TIMESTAMP NULL
+		)`,
+		`INSERT INTO performed_test_cycles (id, testCycleId, date, status, idCostumer) VALUES
+			(44, 5, '2026-08-31 09:00:00', 1, 11),
+			(45, 5, '2026-08-31 09:00:00', 1, 42)`,
+		`INSERT INTO artifact_descriptors (id, idCostumer, idProject, performedTestCycleId, performedTestId, performedStepId, artifactType, name, contentType, sizeBytes, checksumSha256, storageKey, state, retentionUntil, metadata, created_at, updated_at) VALUES
+			(90, 11, 5, 44, NULL, NULL, 'screenshot', 'z-last.png', 'image/png', 10, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'tenant/11/z-last.png', 'available', '2026-09-30 12:00:00', '{\"Authorization\":\"secret\",\"browser\":\"chrome\"}', NULL, NULL),
+			(91, 11, 5, 44, NULL, NULL, 'json', 'a-first.json', 'application/json', 12, 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 'tenant/11/a-first.json', 'available', '2026-09-30 12:00:00', NULL, NULL, NULL),
+			(92, 42, 5, 45, NULL, NULL, 'json', 'foreign.json', 'application/json', 12, 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc', 'tenant/42/foreign.json', 'available', '2026-09-30 12:00:00', NULL, NULL, NULL)`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare artifact descriptor fixture %q: %v", statement, err)
+		}
+	}
+
+	repository := NewBrowserAuthRepository(database)
+	actor := browserauth.User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3}
+	request := httptest.NewRequest(http.MethodGet, "/admin/projects/5/performed-test-cycles/44/artifacts", nil)
+	descriptors, err := repository.ListArtifactDescriptors(request, actor, 5, 44)
+	if err != nil {
+		t.Fatalf("ListArtifactDescriptors() returned an error: %v", err)
+	}
+	if len(descriptors) != 2 || descriptors[0].ID != 91 || descriptors[1].ID != 90 {
+		t.Fatalf("expected Laravel-compatible artifactType/name ordering, got %#v", descriptors)
+	}
+	if string(descriptors[1].Metadata) != `{"Authorization":"[REDACTED]","browser":"chrome"}` {
+		t.Fatalf("expected sensitive metadata to be redacted, got %s", descriptors[1].Metadata)
+	}
+	shown, err := repository.GetArtifactDescriptor(request, actor, 5, 44, 90)
+	if err != nil || shown.ID != 90 || shown.IDCostumer != 11 {
+		t.Fatalf("unexpected shown artifact descriptor: %#v err=%v", shown, err)
+	}
+	if _, err := repository.GetArtifactDescriptor(request, actor, 5, 45, 92); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected foreign artifact to be hidden, got %v", err)
+	}
+	now := time.Date(2026, time.August, 31, 12, 0, 0, 0, time.UTC)
+	created, err := repository.RegisterArtifactDescriptor(request, actor, browserauth.ArtifactDescriptorCreate{
+		IDProject:            5,
+		PerformedTestCycleID: 44,
+		ArtifactType:         "log",
+		Name:                 "runner.log",
+		ContentType:          "text/plain",
+		SizeBytes:            24,
+		ChecksumSHA256:       "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+		StorageKey:           "tenant/11/runner.log",
+		Metadata:             []byte(`{"sessionToken":"unsafe","source":"runner"}`),
+		Now:                  now,
+	})
+	if err != nil {
+		t.Fatalf("RegisterArtifactDescriptor() returned an error: %v", err)
+	}
+	if created.IDCostumer != 11 || created.State != "available" || created.ChecksumSHA256 != strings.Repeat("d", 64) {
+		t.Fatalf("unexpected created descriptor: %#v", created)
+	}
+	if string(created.Metadata) != `{"sessionToken":"[REDACTED]","source":"runner"}` {
+		t.Fatalf("expected created metadata redaction, got %s", created.Metadata)
+	}
+	if _, err := repository.RegisterArtifactDescriptor(request, actor, browserauth.ArtifactDescriptorCreate{IDProject: 5, PerformedTestCycleID: 45, ArtifactType: "json", Name: "foreign.json", ContentType: "application/json", SizeBytes: 1, ChecksumSHA256: strings.Repeat("a", 64), StorageKey: "tenant/42/foreign.json", Now: now}); !errors.Is(err, browserauth.ErrNotFound) {
+		t.Fatalf("expected foreign run write to be hidden, got %v", err)
+	}
+}
+
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

@@ -111,6 +111,9 @@ type AdminRepository interface {
 	CreateResultExport(request *http.Request, actor User, input ResultExportCreate) (ResultExportDescriptor, error)
 	GetResultExport(request *http.Request, actor User, exportID int64) (ResultExportDescriptor, error)
 	DownloadResultExport(request *http.Request, actor User, exportID int64, now time.Time) (ResultExportDownload, error)
+	ListArtifactDescriptors(request *http.Request, actor User, projectID int64, performedTestCycleID int64) ([]ArtifactDescriptor, error)
+	GetArtifactDescriptor(request *http.Request, actor User, projectID int64, performedTestCycleID int64, artifactDescriptorID int64) (ArtifactDescriptor, error)
+	RegisterArtifactDescriptor(request *http.Request, actor User, input ArtifactDescriptorCreate) (ArtifactDescriptor, error)
 }
 
 type CustomerQuery struct {
@@ -315,6 +318,43 @@ type ResultExportDownload struct {
 	Filename    string
 	ContentType string
 	Payload     string
+}
+
+type ArtifactDescriptor struct {
+	ID                   int64           `json:"id"`
+	IDCostumer           int64           `json:"idCostumer"`
+	IDProject            int64           `json:"idProject"`
+	PerformedTestCycleID int64           `json:"performedTestCycleId"`
+	PerformedTestID      *int64          `json:"performedTestId"`
+	PerformedStepID      *int64          `json:"performedStepId"`
+	ArtifactType         string          `json:"artifactType"`
+	Name                 string          `json:"name"`
+	ContentType          string          `json:"contentType"`
+	SizeBytes            uint64          `json:"sizeBytes"`
+	ChecksumSHA256       string          `json:"checksumSha256"`
+	StorageKey           string          `json:"storageKey"`
+	State                string          `json:"state"`
+	RetentionUntil       *time.Time      `json:"retentionUntil"`
+	Metadata             json.RawMessage `json:"metadata"`
+	CreatedAt            *time.Time      `json:"created_at,omitempty"`
+	UpdatedAt            *time.Time      `json:"updated_at,omitempty"`
+}
+
+type ArtifactDescriptorCreate struct {
+	IDProject            int64
+	PerformedTestCycleID int64
+	PerformedTestID      *int64
+	PerformedStepID      *int64
+	ArtifactType         string
+	Name                 string
+	ContentType          string
+	SizeBytes            uint64
+	ChecksumSHA256       string
+	StorageKey           string
+	State                string
+	RetentionUntil       *time.Time
+	Metadata             json.RawMessage
+	Now                  time.Time
 }
 
 type StepReorder struct {
@@ -1026,6 +1066,53 @@ func (h *Handler) DownloadResultExport(writer http.ResponseWriter, request *http
 	_, _ = writer.Write([]byte(download.Payload))
 }
 
+func (h *Handler) ArtifactDescriptors(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "artifacts.read")
+	if !ok {
+		return
+	}
+	projectID, performedTestCycleID, ok := parseProjectPerformedCyclePath(writer, request)
+	if !ok {
+		return
+	}
+	descriptors, err := h.sessions.ListArtifactDescriptors(request, user, projectID, performedTestCycleID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "list browser artifact descriptors", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"data": descriptors})
+}
+
+func (h *Handler) ShowArtifactDescriptor(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "artifacts.read")
+	if !ok {
+		return
+	}
+	projectID, performedTestCycleID, ok := parseProjectPerformedCyclePath(writer, request)
+	if !ok {
+		return
+	}
+	artifactDescriptorID, err := parsePathID(request.PathValue("artifactDescriptor"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	descriptor, err := h.sessions.GetArtifactDescriptor(request, user, projectID, performedTestCycleID, artifactDescriptorID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "show browser artifact descriptor", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"data": descriptor})
+}
+
 func (h *Handler) requireCapability(writer http.ResponseWriter, request *http.Request, capability string) (User, bool) {
 	user, ok := h.authenticatedUser(writer, request)
 	if !ok {
@@ -1211,6 +1298,20 @@ func parseProjectResourcePath(writer http.ResponseWriter, request *http.Request,
 		return 0, 0, false
 	}
 	return projectID, resourceID, true
+}
+
+func parseProjectPerformedCyclePath(writer http.ResponseWriter, request *http.Request) (int64, int64, bool) {
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		writeJSON(writer, http.StatusNotFound, map[string]string{"message": "Not found."})
+		return 0, 0, false
+	}
+	performedTestCycleID, err := parsePathID(request.PathValue("performedTestCycleId"))
+	if err != nil {
+		writeJSON(writer, http.StatusNotFound, map[string]string{"message": "Not found."})
+		return 0, 0, false
+	}
+	return projectID, performedTestCycleID, true
 }
 
 func accountValidation(name, email, password string, role int64) map[string][]string {

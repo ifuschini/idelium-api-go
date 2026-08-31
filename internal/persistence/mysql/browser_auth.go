@@ -736,6 +736,74 @@ func (r *BrowserAuthRepository) DownloadResultExport(request *http.Request, acto
 	return browserauth.ResultExportDownload{Filename: export.Filename, ContentType: export.ContentType, Payload: *export.Payload}, nil
 }
 
+func (r *BrowserAuthRepository) ListArtifactDescriptors(request *http.Request, actor browserauth.User, projectID int64, performedTestCycleID int64) ([]browserauth.ArtifactDescriptor, error) {
+	rows, err := r.database.QueryContext(request.Context(), `SELECT id, idCostumer, idProject, performedTestCycleId, performedTestId, performedStepId, artifactType, name, contentType, sizeBytes, checksumSha256, storageKey, state, retentionUntil, metadata, created_at, updated_at
+		FROM artifact_descriptors
+		WHERE idCostumer = ? AND idProject = ? AND performedTestCycleId = ?
+		ORDER BY artifactType ASC, name ASC`, actor.ActiveTenant(), projectID, performedTestCycleID)
+	if err != nil {
+		return nil, safeDatabaseFailure("list browser artifact descriptors", err)
+	}
+	defer rows.Close()
+	descriptors := []browserauth.ArtifactDescriptor{}
+	for rows.Next() {
+		descriptor, err := scanArtifactDescriptor(rows)
+		if err != nil {
+			return nil, err
+		}
+		descriptors = append(descriptors, descriptor)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, safeDatabaseFailure("read browser artifact descriptors", err)
+	}
+	return descriptors, nil
+}
+
+func (r *BrowserAuthRepository) GetArtifactDescriptor(request *http.Request, actor browserauth.User, projectID int64, performedTestCycleID int64, artifactDescriptorID int64) (browserauth.ArtifactDescriptor, error) {
+	row := r.database.QueryRowContext(request.Context(), `SELECT id, idCostumer, idProject, performedTestCycleId, performedTestId, performedStepId, artifactType, name, contentType, sizeBytes, checksumSha256, storageKey, state, retentionUntil, metadata, created_at, updated_at
+		FROM artifact_descriptors
+		WHERE id = ? AND idCostumer = ? AND idProject = ? AND performedTestCycleId = ?
+		LIMIT 1`, artifactDescriptorID, actor.ActiveTenant(), projectID, performedTestCycleID)
+	descriptor, err := scanArtifactDescriptor(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return browserauth.ArtifactDescriptor{}, browserauth.ErrNotFound
+	}
+	if err != nil {
+		return browserauth.ArtifactDescriptor{}, err
+	}
+	return descriptor, nil
+}
+
+func (r *BrowserAuthRepository) RegisterArtifactDescriptor(request *http.Request, actor browserauth.User, input browserauth.ArtifactDescriptorCreate) (browserauth.ArtifactDescriptor, error) {
+	if err := validateArtifactDescriptorCreate(input); err != nil {
+		return browserauth.ArtifactDescriptor{}, err
+	}
+	ctx := request.Context()
+	if _, err := r.performedCycle(ctx, actor.ActiveTenant(), input.PerformedTestCycleID); err != nil {
+		return browserauth.ArtifactDescriptor{}, err
+	}
+	if input.State == "" {
+		input.State = "available"
+	}
+	if input.RetentionUntil == nil {
+		retentionUntil := input.Now.Add(30 * 24 * time.Hour)
+		input.RetentionUntil = &retentionUntil
+	}
+	now := input.Now.UTC()
+	metadata := nullableRawJSON(input.Metadata)
+	result, err := r.database.ExecContext(ctx, `INSERT INTO artifact_descriptors (idCostumer, idProject, performedTestCycleId, performedTestId, performedStepId, artifactType, name, contentType, sizeBytes, checksumSha256, storageKey, state, retentionUntil, metadata, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		actor.ActiveTenant(), input.IDProject, input.PerformedTestCycleID, nullableInt64(input.PerformedTestID), nullableInt64(input.PerformedStepID), strings.TrimSpace(input.ArtifactType), strings.TrimSpace(input.Name), strings.TrimSpace(input.ContentType), input.SizeBytes, strings.ToLower(strings.TrimSpace(input.ChecksumSHA256)), strings.TrimSpace(input.StorageKey), strings.TrimSpace(input.State), input.RetentionUntil, metadata, now, now)
+	if err != nil {
+		return browserauth.ArtifactDescriptor{}, safeDatabaseFailure("register browser artifact descriptor", err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return browserauth.ArtifactDescriptor{}, safeDatabaseFailure("read registered browser artifact descriptor id", err)
+	}
+	return r.GetArtifactDescriptor(request, actor, input.IDProject, input.PerformedTestCycleID, id)
+}
+
 func (r *BrowserAuthRepository) accountTarget(request *http.Request, actor browserauth.User, accountID int64) (browserauth.Account, error) {
 	where, args := accountScope(actor)
 	where += ` AND users.id = ?`
@@ -1104,6 +1172,95 @@ func resultExportContentType(format string) string {
 
 func resultExportURL(exportID int64) string {
 	return fmt.Sprintf("/api/admin/result-exports/%d/download", exportID)
+}
+
+type artifactDescriptorScanner interface {
+	Scan(dest ...any) error
+}
+
+func scanArtifactDescriptor(scanner artifactDescriptorScanner) (browserauth.ArtifactDescriptor, error) {
+	var descriptor browserauth.ArtifactDescriptor
+	var performedTestID sql.NullInt64
+	var performedStepID sql.NullInt64
+	var metadata sql.NullString
+	if err := scanner.Scan(&descriptor.ID, &descriptor.IDCostumer, &descriptor.IDProject, &descriptor.PerformedTestCycleID, &performedTestID, &performedStepID, &descriptor.ArtifactType, &descriptor.Name, &descriptor.ContentType, &descriptor.SizeBytes, &descriptor.ChecksumSHA256, &descriptor.StorageKey, &descriptor.State, &descriptor.RetentionUntil, &metadata, &descriptor.CreatedAt, &descriptor.UpdatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return browserauth.ArtifactDescriptor{}, err
+		}
+		return browserauth.ArtifactDescriptor{}, safeDatabaseFailure("scan browser artifact descriptor", err)
+	}
+	if performedTestID.Valid {
+		descriptor.PerformedTestID = &performedTestID.Int64
+	}
+	if performedStepID.Valid {
+		descriptor.PerformedStepID = &performedStepID.Int64
+	}
+	if metadata.Valid {
+		descriptor.Metadata = json.RawMessage(redactResultJSONString(metadata.String))
+	}
+	return descriptor, nil
+}
+
+func validateArtifactDescriptorCreate(input browserauth.ArtifactDescriptorCreate) error {
+	missing := []string{}
+	if input.IDProject <= 0 {
+		missing = append(missing, "idProject")
+	}
+	if input.PerformedTestCycleID <= 0 {
+		missing = append(missing, "performedTestCycleId")
+	}
+	if strings.TrimSpace(input.ArtifactType) == "" {
+		missing = append(missing, "artifactType")
+	}
+	if strings.TrimSpace(input.Name) == "" {
+		missing = append(missing, "name")
+	}
+	if strings.TrimSpace(input.ContentType) == "" {
+		missing = append(missing, "contentType")
+	}
+	if input.SizeBytes == 0 {
+		missing = append(missing, "sizeBytes")
+	}
+	if strings.TrimSpace(input.ChecksumSHA256) == "" {
+		missing = append(missing, "checksumSha256")
+	}
+	if strings.TrimSpace(input.StorageKey) == "" {
+		missing = append(missing, "storageKey")
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("artifact descriptor fields are required: %s", strings.Join(missing, ", "))
+	}
+	if len(input.ChecksumSHA256) != 64 || !isHex(input.ChecksumSHA256) {
+		return fmt.Errorf("artifact descriptor checksum must be a SHA-256 hex digest")
+	}
+	if len(input.Metadata) > 0 && !json.Valid(input.Metadata) {
+		return fmt.Errorf("artifact descriptor metadata must be valid JSON")
+	}
+	return nil
+}
+
+func nullableInt64(value *int64) any {
+	if value == nil {
+		return nil
+	}
+	return *value
+}
+
+func nullableRawJSON(value json.RawMessage) any {
+	if len(value) == 0 {
+		return nil
+	}
+	return string(value)
+}
+
+func isHex(value string) bool {
+	for _, character := range value {
+		if (character >= '0' && character <= '9') || (character >= 'a' && character <= 'f') || (character >= 'A' && character <= 'F') {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 func redactResultJSONString(payload string) string {

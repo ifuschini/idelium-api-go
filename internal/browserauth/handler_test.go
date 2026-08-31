@@ -3,6 +3,7 @@ package browserauth
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"log/slog"
@@ -64,6 +65,9 @@ type sessionsStub struct {
 	createdExport     ResultExportCreate
 	exportDescriptor  ResultExportDescriptor
 	exportDownload    ResultExportDownload
+	artifacts         []ArtifactDescriptor
+	artifact          ArtifactDescriptor
+	createdArtifact   ArtifactDescriptorCreate
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -185,6 +189,16 @@ func (s *sessionsStub) GetResultExport(*http.Request, User, int64) (ResultExport
 }
 func (s *sessionsStub) DownloadResultExport(*http.Request, User, int64, time.Time) (ResultExportDownload, error) {
 	return s.exportDownload, s.accountErr
+}
+func (s *sessionsStub) ListArtifactDescriptors(*http.Request, User, int64, int64) ([]ArtifactDescriptor, error) {
+	return s.artifacts, s.accountErr
+}
+func (s *sessionsStub) GetArtifactDescriptor(*http.Request, User, int64, int64, int64) (ArtifactDescriptor, error) {
+	return s.artifact, s.accountErr
+}
+func (s *sessionsStub) RegisterArtifactDescriptor(_ *http.Request, _ User, input ArtifactDescriptorCreate) (ArtifactDescriptor, error) {
+	s.createdArtifact = input
+	return s.artifact, s.accountErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -683,6 +697,49 @@ func TestResultExportsCreateShowAndDownload(t *testing.T) {
 	handler.CreateResultExport(invalidResponse, invalidRequest)
 	if invalidResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(invalidResponse.Body.String(), "format") {
 		t.Fatalf("expected invalid format validation, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
+	}
+}
+
+func TestArtifactDescriptorsRequireReadCapabilityAndPreserveEnvelope(t *testing.T) {
+	metadata := json.RawMessage(`{"browser":"chrome","token":"[REDACTED]"}`)
+	sessions := &sessionsStub{
+		user:      User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 3},
+		artifacts: []ArtifactDescriptor{{ID: 99, IDCostumer: 11, IDProject: 5, PerformedTestCycleID: 44, ArtifactType: "json", Name: "summary.json", ContentType: "application/json", SizeBytes: 12, ChecksumSHA256: strings.Repeat("a", 64), StorageKey: "tenant/11/summary.json", State: "available", Metadata: metadata}},
+		artifact:  ArtifactDescriptor{ID: 99, IDCostumer: 11, IDProject: 5, PerformedTestCycleID: 44, ArtifactType: "json", Name: "summary.json", ContentType: "application/json", SizeBytes: 12, ChecksumSHA256: strings.Repeat("a", 64), StorageKey: "tenant/11/summary.json", State: "available", Metadata: metadata},
+	}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+
+	indexRequest := httptest.NewRequest(http.MethodGet, "/admin/projects/5/performed-test-cycles/44/artifacts", nil)
+	indexRequest.SetPathValue("idProject", "5")
+	indexRequest.SetPathValue("performedTestCycleId", "44")
+	indexRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	indexResponse := httptest.NewRecorder()
+	handler.ArtifactDescriptors(indexResponse, indexRequest)
+	if indexResponse.Code != http.StatusOK || !strings.Contains(indexResponse.Body.String(), `"data":[`) || !strings.Contains(indexResponse.Body.String(), `"artifactType":"json"`) {
+		t.Fatalf("unexpected artifact index response: %d %s", indexResponse.Code, indexResponse.Body.String())
+	}
+
+	showRequest := httptest.NewRequest(http.MethodGet, "/admin/projects/5/performed-test-cycles/44/artifacts/99", nil)
+	showRequest.SetPathValue("idProject", "5")
+	showRequest.SetPathValue("performedTestCycleId", "44")
+	showRequest.SetPathValue("artifactDescriptor", "99")
+	showRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	showResponse := httptest.NewRecorder()
+	handler.ShowArtifactDescriptor(showResponse, showRequest)
+	if showResponse.Code != http.StatusOK || !strings.Contains(showResponse.Body.String(), `"data":{`) || !strings.Contains(showResponse.Body.String(), `"name":"summary.json"`) {
+		t.Fatalf("unexpected artifact show response: %d %s", showResponse.Code, showResponse.Body.String())
+	}
+
+	forbiddenSessions := &sessionsStub{user: User{ID: 8, TenantID: 11, ActiveTenantID: 11, Role: 99}}
+	forbiddenHandler := NewHandler(usersStub{}, forbiddenSessions, testLogger())
+	forbiddenRequest := httptest.NewRequest(http.MethodGet, "/admin/projects/5/performed-test-cycles/44/artifacts", nil)
+	forbiddenRequest.SetPathValue("idProject", "5")
+	forbiddenRequest.SetPathValue("performedTestCycleId", "44")
+	forbiddenRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	forbiddenResponse := httptest.NewRecorder()
+	forbiddenHandler.ArtifactDescriptors(forbiddenResponse, forbiddenRequest)
+	if forbiddenResponse.Code != http.StatusForbidden {
+		t.Fatalf("expected artifacts.read to be required, got %d %s", forbiddenResponse.Code, forbiddenResponse.Body.String())
 	}
 }
 

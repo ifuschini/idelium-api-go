@@ -20,6 +20,8 @@ type Operation struct {
 type ServerInterface interface {
 	GetLiveness(http.ResponseWriter, *http.Request)
 	GetReadiness(http.ResponseWriter, *http.Request)
+	GetAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifacts(http.ResponseWriter, *http.Request)
+	GetAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptor(http.ResponseWriter, *http.Request)
 	ListPlatformTypes(http.ResponseWriter, *http.Request)
 	ListPlatformStatuses(http.ResponseWriter, *http.Request)
 	GetCLITestCycle(http.ResponseWriter, *http.Request)
@@ -124,8 +126,6 @@ type ServerInterface interface {
 	GetAdminProjectsIdProjectParallelRunsParallelRunResults(http.ResponseWriter, *http.Request)
 	PutAdminProjectsIdProjectParallelRunsParallelRunWorkersWorkerId(http.ResponseWriter, *http.Request)
 	PostAdminProjectsIdProjectParallelRunsParallelRunWorkersWorkerIdHeartbeat(http.ResponseWriter, *http.Request)
-	GetAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifacts(http.ResponseWriter, *http.Request)
-	GetAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptor(http.ResponseWriter, *http.Request)
 	PostAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorArchive(http.ResponseWriter, *http.Request)
 	PostAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorDeleteMarker(http.ResponseWriter, *http.Request)
 	GetAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptorImpact(http.ResponseWriter, *http.Request)
@@ -214,6 +214,28 @@ var Operations = []Operation{
 		AuthenticationMode: "",
 		TrustPath:          "",
 		TenantContext:      false,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts",
+		OperationID:        "getAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifacts",
+		Tags:               []string{"Browser Results"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}",
+		OperationID:        "getAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptor",
+		Tags:               []string{"Browser Results"},
+		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
 		Consumers:          nil,
 	},
 	{
@@ -1359,28 +1381,6 @@ var Operations = []Operation{
 		TrustPath:          "browser-session",
 		TenantContext:      true,
 		Consumers:          []string{"idelium-web"},
-	},
-	{
-		Method:             "GET",
-		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts",
-		OperationID:        "getAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifacts",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
-	},
-	{
-		Method:             "GET",
-		Path:               "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}",
-		OperationID:        "getAdminProjectsIdProjectPerformedTestCyclesPerformedTestCycleIdArtifactsArtifactDescriptor",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
 	},
 	{
 		Method:             "POST",
