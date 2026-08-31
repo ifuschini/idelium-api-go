@@ -54,6 +54,7 @@ type ServerInterface interface {
 	RotateIntegrationEndpointSecret(http.ResponseWriter, *http.Request)
 	ListIntegrationDeliveries(http.ResponseWriter, *http.Request)
 	ReplayIntegrationDelivery(http.ResponseWriter, *http.Request)
+	ListAuditEvents(http.ResponseWriter, *http.Request)
 	Get(http.ResponseWriter, *http.Request)
 	GetAdminAccounts(http.ResponseWriter, *http.Request)
 	PostAdminAccounts(http.ResponseWriter, *http.Request)
@@ -160,7 +161,6 @@ type ServerInterface interface {
 	GetAdminTestsIdProjectTest(http.ResponseWriter, *http.Request)
 	PutAdminTestsIdProjectTest(http.ResponseWriter, *http.Request)
 	GetAdminTestsperfomedIdTestPerformed(http.ResponseWriter, *http.Request)
-	GetAuditEvents(http.ResponseWriter, *http.Request)
 	GetClear(http.ResponseWriter, *http.Request)
 	GetCsrfCookie(http.ResponseWriter, *http.Request)
 	PostIdeliumclAgentsRegister(http.ResponseWriter, *http.Request)
@@ -585,6 +585,17 @@ var Operations = []Operation{
 		OperationID:        "replayIntegrationDelivery",
 		Tags:               []string{"Integrations"},
 		LaravelRoute:       "/api/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay",
+		AuthenticationMode: "browser-session",
+		TrustPath:          "browser-session",
+		TenantContext:      true,
+		Consumers:          nil,
+	},
+	{
+		Method:             "GET",
+		Path:               "/audit-events",
+		OperationID:        "listAuditEvents",
+		Tags:               []string{"Audit"},
+		LaravelRoute:       "/api/audit-events",
 		AuthenticationMode: "browser-session",
 		TrustPath:          "browser-session",
 		TenantContext:      true,
@@ -1755,17 +1766,6 @@ var Operations = []Operation{
 		TrustPath:          "browser-session",
 		TenantContext:      true,
 		Consumers:          []string{"idelium-web"},
-	},
-	{
-		Method:             "GET",
-		Path:               "/audit-events",
-		OperationID:        "getAuditEvents",
-		Tags:               []string{"Laravel Compatibility"},
-		LaravelRoute:       "/api/audit-events",
-		AuthenticationMode: "browser-session",
-		TrustPath:          "browser-session",
-		TenantContext:      true,
-		Consumers:          nil,
 	},
 	{
 		Method:             "GET",

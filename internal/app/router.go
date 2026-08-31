@@ -97,6 +97,7 @@ func NewRouter(
 	router.Post("/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret", browserAuthHandler.RotateIntegrationEndpointSecret)
 	router.Get("/admin/projects/{idProject}/integration-deliveries", browserAuthHandler.IntegrationDeliveries)
 	router.Post("/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay", browserAuthHandler.ReplayIntegrationDelivery)
+	router.Get("/audit-events", browserAuthHandler.AuditEvents)
 
 	platformHandler := platforms.NewHandler(catalogRepository, logger)
 	router.Get("/admin/platforms/types", platformHandler.Types)

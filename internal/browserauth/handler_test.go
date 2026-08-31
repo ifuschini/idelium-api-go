@@ -72,6 +72,7 @@ type sessionsStub struct {
 	gridSnapshotInput GridQuerySnapshotCreate
 	gridJobInput      GridBulkJobCreate
 	integrationInput  IntegrationEndpointCreate
+	auditFilter       AuditEventFilter
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -255,6 +256,10 @@ func (s *sessionsStub) ListIntegrationDeliveries(*http.Request, User, int64, str
 }
 func (s *sessionsStub) ReplayIntegrationDelivery(*http.Request, User, int64, int64, time.Time) (IntegrationDelivery, error) {
 	return IntegrationDelivery{ID: 20, DeliveryID: "idwh_test", Event: "integration.test", Status: "pending", Attempts: 3}, s.accountErr
+}
+func (s *sessionsStub) ListAuditEvents(_ *http.Request, _ User, filter AuditEventFilter) ([]AuditEventRecord, error) {
+	s.auditFilter = filter
+	return []AuditEventRecord{{ID: 30, ActiveTenantID: 11, Action: "secret.changed", TargetType: "environment", CorrelationID: "018fb9d0-1f16-7abc-9f2f-4e1d8457f001", AfterValues: map[string]any{"apiKey": "[REDACTED]"}, Result: "success", CreatedAt: time.Now()}}, s.accountErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -954,6 +959,35 @@ func TestIntegrationDeliveryHandlersPreserveStatusAndRetryEnvelopes(t *testing.T
 	handler.ReplayIntegrationDelivery(replayResponse, replayRequest)
 	if replayResponse.Code != http.StatusAccepted || !strings.Contains(replayResponse.Body.String(), `"status":"pending"`) {
 		t.Fatalf("unexpected delivery replay response: %d %s", replayResponse.Code, replayResponse.Body.String())
+	}
+}
+
+func TestAuditEventHandlerValidatesFiltersAndRequiresCapability(t *testing.T) {
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 2}}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	request := httptest.NewRequest(http.MethodGet, "/audit-events?action=secret.changed&correlationId=018fb9d0-1f16-7abc-9f2f-4e1d8457f001&from=2026-08-01&limit=50", nil)
+	request.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	response := httptest.NewRecorder()
+	handler.AuditEvents(response, request)
+	if response.Code != http.StatusOK || sessions.auditFilter.Action != "secret.changed" || sessions.auditFilter.Limit != 50 || sessions.auditFilter.From == nil || !strings.Contains(response.Body.String(), `"apiKey":"[REDACTED]"`) {
+		t.Fatalf("unexpected audit list response/filter: %d %s %#v", response.Code, response.Body.String(), sessions.auditFilter)
+	}
+
+	invalidRequest := httptest.NewRequest(http.MethodGet, "/audit-events?correlationId=not-a-uuid&limit=201", nil)
+	invalidRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	invalidResponse := httptest.NewRecorder()
+	handler.AuditEvents(invalidResponse, invalidRequest)
+	if invalidResponse.Code != http.StatusUnprocessableEntity || !strings.Contains(invalidResponse.Body.String(), "correlationId") || !strings.Contains(invalidResponse.Body.String(), "limit") {
+		t.Fatalf("expected audit filter validation, got %d %s", invalidResponse.Code, invalidResponse.Body.String())
+	}
+
+	forbiddenSessions := &sessionsStub{user: User{ID: 8, TenantID: 11, ActiveTenantID: 11, Role: 99}}
+	forbiddenRequest := httptest.NewRequest(http.MethodGet, "/audit-events", nil)
+	forbiddenRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	forbiddenResponse := httptest.NewRecorder()
+	NewHandler(usersStub{}, forbiddenSessions, testLogger()).AuditEvents(forbiddenResponse, forbiddenRequest)
+	if forbiddenResponse.Code != http.StatusForbidden {
+		t.Fatalf("expected audit_events.read capability enforcement, got %d", forbiddenResponse.Code)
 	}
 }
 

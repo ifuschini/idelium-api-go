@@ -1643,6 +1643,77 @@ paths:
           $ref: "#/components/responses/NotFound"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
+  /audit-events:
+    get:
+      operationId: listAuditEvents
+      summary: List active-tenant audit events
+      description: Returns at most 200 append-only events with defense-in-depth redaction of sensitive keys.
+      tags: [Audit]
+      x-idelium-laravel-route: "/api/audit-events"
+      x-idelium-current-owner: "go-service"
+      x-idelium-trust-path: "browser-session"
+      x-idelium-authentication-mode: "browser-session"
+      x-idelium-tenant-context: true
+      parameters:
+        - name: action
+          in: query
+          schema:
+            type: string
+            maxLength: 128
+        - name: targetType
+          in: query
+          schema:
+            type: string
+            maxLength: 128
+        - name: targetId
+          in: query
+          schema:
+            type: string
+            maxLength: 128
+        - name: correlationId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 100
+      responses:
+        "200":
+          description: Tenant-scoped newest-first audit event list.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    maxItems: 200
+                    items:
+                      $ref: "#/components/schemas/AuditEvent"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        default:
+          $ref: "#/components/responses/LegacyCompatibilityError"
   # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS
   /:
     get:
@@ -5443,31 +5514,6 @@ paths:
           $ref: "#/components/responses/Forbidden"
         default:
           $ref: "#/components/responses/LegacyCompatibilityError"
-  /audit-events:
-    get:
-      operationId: getAuditEvents
-      summary: Laravel compatibility contract
-      description: >-
-        Placeholder contract for an externally visible Laravel route. It keeps
-        consumers, authentication, tenant scope, and migration ownership visible
-        until this route is implemented natively in Go.
-      tags: [Laravel Compatibility]
-      x-idelium-laravel-route: "/api/audit-events"
-      x-idelium-controller: "App\\Http\\Controllers\\AuditEventController@index"
-      x-idelium-current-owner: "laravel-application"
-      x-idelium-trust-path: "browser-session"
-      x-idelium-authentication-mode: "browser-session"
-      x-idelium-tenant-context: true
-      x-idelium-consumers: []
-      responses:
-        "200":
-          $ref: "#/components/responses/LegacyCompatibilityResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        default:
-          $ref: "#/components/responses/LegacyCompatibilityError"
   /clear:
     get:
       operationId: getClear
@@ -6922,6 +6968,62 @@ components:
           type: string
           format: date-time
           nullable: true
+    AuditEvent:
+      type: object
+      required: [id, actorUserId, actorTenantId, activeTenantId, idProject, action, targetType, targetId, beforeValues, afterValues, result, sourceIp, correlationId, metadata, created_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        actorUserId:
+          type: integer
+          format: int64
+          nullable: true
+        actorTenantId:
+          type: integer
+          format: int64
+          nullable: true
+        activeTenantId:
+          type: integer
+          format: int64
+        idProject:
+          type: integer
+          format: int64
+          nullable: true
+        action:
+          type: string
+          maxLength: 128
+        targetType:
+          type: string
+          maxLength: 128
+        targetId:
+          type: string
+          maxLength: 128
+          nullable: true
+        beforeValues:
+          type: object
+          additionalProperties: true
+          nullable: true
+        afterValues:
+          type: object
+          additionalProperties: true
+          nullable: true
+        result:
+          type: string
+          enum: [success, failure]
+        sourceIp:
+          type: string
+          nullable: true
+        correlationId:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
     ArtifactDescriptor:
       type: object
       required:

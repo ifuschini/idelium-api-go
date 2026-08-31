@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/idelium/idelium-api-go/internal/auditlog"
 	"github.com/idelium/idelium-api-go/internal/integrations"
 )
 
@@ -67,8 +68,8 @@ func (r *BrowserAuthRepository) SaveDispatchOutcome(ctx context.Context, deliver
 	if count != 1 {
 		return integrations.ErrDeliveryNotFound
 	}
-	metadata, _ := json.Marshal(map[string]any{"responseStatus": nullableInt(outcome.ResponseStatus), "attempts": outcome.Attempts, "nextAttemptAt": nullableTime(outcome.NextAttemptAt), "reason": nullableString(outcome.LastError), "job": "go.integration-delivery"})
-	after, _ := json.Marshal(map[string]any{"status": outcome.Status, "deliveryId": delivery.DeliveryID})
+	metadata, _ := json.Marshal(auditlog.Redact(map[string]any{"responseStatus": nullableInt(outcome.ResponseStatus), "attempts": outcome.Attempts, "nextAttemptAt": nullableTime(outcome.NextAttemptAt), "reason": nullableString(outcome.LastError), "job": "go.integration-delivery"}))
+	after, _ := json.Marshal(auditlog.Redact(map[string]any{"status": outcome.Status, "deliveryId": delivery.DeliveryID}))
 	resultName := "failure"
 	if outcome.Status == "sent" {
 		resultName = "success"

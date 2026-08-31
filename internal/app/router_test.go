@@ -259,6 +259,9 @@ func (fakeBrowserAuthRepository) ListIntegrationDeliveries(*http.Request, browse
 func (fakeBrowserAuthRepository) ReplayIntegrationDelivery(*http.Request, browserauth.User, int64, int64, time.Time) (browserauth.IntegrationDelivery, error) {
 	return browserauth.IntegrationDelivery{}, nil
 }
+func (fakeBrowserAuthRepository) ListAuditEvents(*http.Request, browserauth.User, browserauth.AuditEventFilter) ([]browserauth.AuditEventRecord, error) {
+	return nil, nil
+}
 
 func (fakeLegacyKeyRepository) AuthenticateLegacyCustomerKey(ctx context.Context, key string, usedAt time.Time) (auth.Customer, error) {
 	if key != "valid-key" {

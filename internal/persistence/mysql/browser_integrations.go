@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/idelium/idelium-api-go/internal/auditlog"
 	"github.com/idelium/idelium-api-go/internal/browserauth"
 	"github.com/idelium/idelium-api-go/internal/integrations"
 )
@@ -351,8 +352,8 @@ func integrationDeliveryTx(ctx context.Context, tx *sql.Tx, tenantID, projectID,
 }
 
 func recordIntegrationAudit(ctx context.Context, tx *sql.Tx, request *http.Request, actor browserauth.User, projectID int64, action, targetType string, targetID int64, before, after map[string]any) error {
-	beforeJSON, _ := json.Marshal(before)
-	afterJSON, _ := json.Marshal(after)
+	beforeJSON, _ := json.Marshal(auditlog.Redact(before))
+	afterJSON, _ := json.Marshal(auditlog.Redact(after))
 	_, err := tx.ExecContext(ctx, `INSERT INTO audit_events
 		(actorUserId, actorTenantId, activeTenantId, idProject, action, targetType, targetId, beforeValues, afterValues, result, sourceIp, correlationId, metadata)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'success', ?, ?, NULL)`, actor.ID, actor.TenantID, actor.ActiveTenant(), projectID, action, targetType, fmt.Sprint(targetID), nullableJSON(beforeJSON, before != nil), nullableJSON(afterJSON, after != nil), sourceIP(request), correlationID(request))

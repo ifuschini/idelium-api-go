@@ -1438,6 +1438,47 @@ func TestBrowserIntegrationEndpointsAndDeliveriesIntegration(t *testing.T) {
 	}
 }
 
+func TestBrowserAuditEventReadsAreTenantScopedFilteredAndRedactedIntegration(t *testing.T) {
+	database := openIntegrationDatabase(t)
+	defer database.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	for _, statement := range []string{
+		"DROP TABLE IF EXISTS audit_events",
+		`CREATE TABLE audit_events (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT, actorUserId BIGINT NULL, actorTenantId BIGINT NULL,
+			activeTenantId BIGINT NOT NULL, idProject BIGINT NULL, action VARCHAR(128) NOT NULL,
+			targetType VARCHAR(128) NOT NULL, targetId VARCHAR(128) NULL, beforeValues JSON NULL,
+			afterValues JSON NULL, result VARCHAR(32) NOT NULL, sourceIp VARCHAR(64) NULL,
+			correlationId CHAR(36) NOT NULL, metadata JSON NULL, created_at TIMESTAMP NOT NULL
+		)`,
+		`INSERT INTO audit_events (actorUserId, actorTenantId, activeTenantId, idProject, action, targetType, targetId, beforeValues, afterValues, result, sourceIp, correlationId, metadata, created_at) VALUES
+			(7, 11, 11, 5, 'secret.changed', 'environment', '1', NULL, '{"apiKey":"legacy-unsafe","nested":{"password":"legacy-unsafe"}}', 'success', '192.0.2.1', '018fb9d0-1f16-7abc-9f2f-4e1d8457f001', '{"sessionToken":"legacy-unsafe"}', '2026-08-31 12:00:00'),
+			(NULL, 11, 11, NULL, 'project.read', 'project', '5', NULL, NULL, 'success', NULL, '018fb9d0-1f16-7abc-9f2f-4e1d8457f002', NULL, '2026-08-30 12:00:00'),
+			(8, 42, 42, 6, 'secret.changed', 'environment', '2', NULL, '{"apiKey":"foreign-unsafe"}', 'success', '192.0.2.2', '018fb9d0-1f16-7abc-9f2f-4e1d8457f003', NULL, '2026-08-31 13:00:00')`,
+	} {
+		if _, err := database.ExecContext(ctx, statement); err != nil {
+			t.Fatalf("prepare audit event fixture %q: %v", statement, err)
+		}
+	}
+	repository := NewBrowserAuthRepository(database)
+	actor := browserauth.User{ID: 7, TenantID: 11, ActiveTenantID: 11, Role: 2}
+	from := time.Date(2026, time.August, 31, 0, 0, 0, 0, time.UTC)
+	request := httptest.NewRequest(http.MethodGet, "/audit-events?action=secret.changed", nil)
+	events, err := repository.ListAuditEvents(request, actor, browserauth.AuditEventFilter{Action: "secret.changed", From: &from, Limit: 100})
+	if err != nil || len(events) != 1 || events[0].ActiveTenantID != 11 || events[0].TargetID == nil || *events[0].TargetID != "1" {
+		t.Fatalf("unexpected tenant-scoped audit events: %#v err=%v", events, err)
+	}
+	if events[0].AfterValues["apiKey"] != "[REDACTED]" || events[0].Metadata["sessionToken"] != "[REDACTED]" {
+		t.Fatalf("expected defense-in-depth audit redaction, got %#v", events[0])
+	}
+	allEvents, err := repository.ListAuditEvents(request, actor, browserauth.AuditEventFilter{Limit: 1})
+	if err != nil || len(allEvents) != 1 || allEvents[0].Action != "secret.changed" {
+		t.Fatalf("expected bounded newest-first audit list, got %#v err=%v", allEvents, err)
+	}
+}
+
 func TestPlatformCatalogRepositoryIntegration(t *testing.T) {
 	database := openIntegrationDatabase(t)
 	defer database.Close()

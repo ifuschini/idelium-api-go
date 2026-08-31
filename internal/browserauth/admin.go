@@ -140,6 +140,7 @@ type AdminRepository interface {
 	RotateIntegrationEndpointSecret(request *http.Request, actor User, projectID, endpointID int64, secret string, now time.Time) (IntegrationEndpoint, error)
 	ListIntegrationDeliveries(request *http.Request, actor User, projectID int64, status string) ([]IntegrationDelivery, error)
 	ReplayIntegrationDelivery(request *http.Request, actor User, projectID, deliveryID int64, now time.Time) (IntegrationDelivery, error)
+	ListAuditEvents(request *http.Request, actor User, filter AuditEventFilter) ([]AuditEventRecord, error)
 }
 
 type CustomerQuery struct {
@@ -472,8 +473,37 @@ type IntegrationDelivery struct {
 	SentAt         *time.Time `json:"sentAt"`
 }
 
+type AuditEventFilter struct {
+	Action        string
+	TargetType    string
+	TargetID      string
+	CorrelationID string
+	From          *time.Time
+	To            *time.Time
+	Limit         int
+}
+
+type AuditEventRecord struct {
+	ID             int64          `json:"id"`
+	ActorUserID    *int64         `json:"actorUserId"`
+	ActorTenantID  *int64         `json:"actorTenantId"`
+	ActiveTenantID int64          `json:"activeTenantId"`
+	IDProject      *int64         `json:"idProject"`
+	Action         string         `json:"action"`
+	TargetType     string         `json:"targetType"`
+	TargetID       *string        `json:"targetId"`
+	BeforeValues   map[string]any `json:"beforeValues"`
+	AfterValues    map[string]any `json:"afterValues"`
+	Result         string         `json:"result"`
+	SourceIP       *string        `json:"sourceIp"`
+	CorrelationID  string         `json:"correlationId"`
+	Metadata       map[string]any `json:"metadata"`
+	CreatedAt      time.Time      `json:"created_at"`
+}
+
 var gridUUIDPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$`)
 var gridTagPattern = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
+var auditUUIDPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$`)
 
 type StepReorder struct {
 	IDProject int64
@@ -1661,6 +1691,67 @@ func (h *Handler) ReplayIntegrationDelivery(writer http.ResponseWriter, request 
 	}
 	delivery, err := h.sessions.ReplayIntegrationDelivery(request, user, projectID, deliveryID, h.now().UTC())
 	h.writeIntegrationDelivery(writer, request, "replay browser integration delivery", delivery, err, http.StatusAccepted)
+}
+
+func (h *Handler) AuditEvents(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "audit_events.read")
+	if !ok {
+		return
+	}
+	values := request.URL.Query()
+	filter := AuditEventFilter{Action: values.Get("action"), TargetType: values.Get("targetType"), TargetID: values.Get("targetId"), CorrelationID: values.Get("correlationId"), Limit: 100}
+	validation := map[string][]string{}
+	for field, value := range map[string]string{"action": filter.Action, "targetType": filter.TargetType, "targetId": filter.TargetID} {
+		if len(value) > 128 {
+			validation[field] = []string{"The " + field + " field must not exceed 128 characters."}
+		}
+	}
+	if filter.CorrelationID != "" && !auditUUIDPattern.MatchString(filter.CorrelationID) {
+		validation["correlationId"] = []string{"The correlation id field must be a valid UUID."}
+	}
+	if value := values.Get("from"); value != "" {
+		parsed, valid := parseAuditDate(value)
+		if !valid {
+			validation["from"] = []string{"The from field must be a valid date."}
+		} else {
+			filter.From = &parsed
+		}
+	}
+	if value := values.Get("to"); value != "" {
+		parsed, valid := parseAuditDate(value)
+		if !valid {
+			validation["to"] = []string{"The to field must be a valid date."}
+		} else {
+			filter.To = &parsed
+		}
+	}
+	if value := values.Get("limit"); value != "" {
+		parsed, err := strconv.Atoi(value)
+		if err != nil || parsed < 1 || parsed > 200 {
+			validation["limit"] = []string{"The limit field must be between 1 and 200."}
+		} else {
+			filter.Limit = parsed
+		}
+	}
+	if len(validation) != 0 {
+		validationErrors(writer, validation)
+		return
+	}
+	events, err := h.sessions.ListAuditEvents(request, user, filter)
+	if err != nil {
+		h.internalError(writer, request, "list browser audit events", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"data": events})
+}
+
+func parseAuditDate(value string) (time.Time, bool) {
+	for _, format := range []string{time.RFC3339Nano, "2006-01-02 15:04:05", "2006-01-02"} {
+		if parsed, err := time.Parse(format, value); err == nil {
+			return parsed, true
+		}
+	}
+	return time.Time{}, false
 }
 
 func (h *Handler) integrationEndpointPath(writer http.ResponseWriter, request *http.Request, capability string) (User, int64, int64, bool) {

@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/idelium/idelium-api-go/internal/auditlog"
 	"github.com/idelium/idelium-api-go/internal/browserauth"
 )
 
@@ -170,7 +171,7 @@ func (r *BrowserAuthRepository) CreateGridBulkJob(request *http.Request, actor b
 		return browserauth.GridBulkJob{}, safeDatabaseFailure("create browser grid bulk job", err)
 	}
 	beforeJSON := "{}"
-	afterJSON, _ := json.Marshal(map[string]any{"requestedCount": snapshot.Total, "processedCount": processed, "failedCount": failed, "status": status})
+	afterJSON, _ := json.Marshal(auditlog.Redact(map[string]any{"requestedCount": snapshot.Total, "processedCount": processed, "failedCount": failed, "status": status}))
 	_, err = tx.ExecContext(ctx, `INSERT INTO audit_events
 		(actorUserId, actorTenantId, activeTenantId, action, targetType, targetId, beforeValues, afterValues, result, sourceIp, correlationId, metadata)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'success', ?, ?, NULL)`, actor.ID, actor.TenantID, actor.ActiveTenant(), "grid.bulk."+input.Action, snapshot.ResourceType, jobID, beforeJSON, string(afterJSON), sourceIP(request), correlationID(request))
@@ -1766,36 +1767,7 @@ func redactResultJSONString(payload string) string {
 }
 
 func redactResultJSONValue(value any) any {
-	switch typed := value.(type) {
-	case map[string]any:
-		redacted := make(map[string]any, len(typed))
-		for key, child := range typed {
-			if isSensitiveResultJSONKey(key) {
-				redacted[key] = "[REDACTED]"
-				continue
-			}
-			redacted[key] = redactResultJSONValue(child)
-		}
-		return redacted
-	case []any:
-		redacted := make([]any, len(typed))
-		for index, child := range typed {
-			redacted[index] = redactResultJSONValue(child)
-		}
-		return redacted
-	default:
-		return typed
-	}
-}
-
-func isSensitiveResultJSONKey(key string) bool {
-	normalized := strings.ToLower(strings.ReplaceAll(key, "_", "-"))
-	for _, marker := range []string{"authorization", "password", "secret", "token", "apikey", "api-key", "session", "csrf", "cookie"} {
-		if strings.Contains(normalized, marker) {
-			return true
-		}
-	}
-	return false
+	return auditlog.Redact(value)
 }
 
 func recordAssetVersion(ctx context.Context, execer interface {
@@ -1990,11 +1962,11 @@ func (r *BrowserAuthRepository) SwitchTenant(ctx context.Context, tenantSwitch b
 }
 
 func (r *BrowserAuthRepository) RecordTenantSwitch(ctx context.Context, event browserauth.AuditEvent) error {
-	beforeValues, err := json.Marshal(event.BeforeValues)
+	beforeValues, err := json.Marshal(auditlog.Redact(event.BeforeValues))
 	if err != nil {
 		return fmt.Errorf("encode tenant switch audit before values: %w", err)
 	}
-	afterValues, err := json.Marshal(event.AfterValues)
+	afterValues, err := json.Marshal(auditlog.Redact(event.AfterValues))
 	if err != nil {
 		return fmt.Errorf("encode tenant switch audit after values: %w", err)
 	}
