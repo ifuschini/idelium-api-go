@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "parallel-run-capture.v1",
+  "consumer": "idelium-api-go-differential",
+  "baseUrlEnv": "CAPTURE_LARAVEL_BASE_URL",
+  "tenantId": 9001,
+  "projectId": 9001,
+  "fixtures": {
+    "runId": 9001,
+    "workerId": "fixture-agent-smoke",
+    "testCycleId": 9001
+  },
+  "routes": [
+    {
+      "id": "browser-list-parallel-runs",
+      "method": "GET",
+      "path": "/api/admin/projects/9001/parallel-runs",
+      "authentication": "browser-session",
+      "operationKind": "read",
+      "expectedStatus": 200,
+      "output": "parallel-run-list.fixture.json"
+    }
+  ],
+  "sanitization": {
+    "removeHeaders": ["authorization", "cookie", "set-cookie", "x-xsrf-token"],
+    "redactKeys": ["apiKey", "token", "tokenHash", "password", "session", "cookie", "authorization"],
+    "normalizeTimestamps": true
+  }
+}
