@@ -677,6 +677,20 @@ func scanParallelRun(scanner parallelRunScanner) (browserauth.ParallelRun, error
 	run.Metadata = decodeParallelMap(metadataJSON)
 	run.ResultSummary = decodeParallelJSON(resultJSON, []any{})
 	workers := decodeParallelMap(workerJSON)
+	workerIDs := make([]string, 0, len(workers))
+	for workerID := range workers {
+		workerIDs = append(workerIDs, workerID)
+	}
+	sort.Strings(workerIDs)
+	for _, workerID := range workerIDs {
+		if worker, ok := workers[workerID].(map[string]any); ok {
+			workerCopy := map[string]any{"workerId": workerID}
+			for key, value := range worker {
+				workerCopy[key] = value
+			}
+			run.Workers = append(run.Workers, workerCopy)
+		}
+	}
 	for _, value := range workers {
 		if worker, ok := value.(map[string]any); ok && worker["status"] == "lost" {
 			run.LostWorkers++

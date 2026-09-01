@@ -35,27 +35,64 @@ func (e *AgentUnavailableError) Is(target error) bool {
 }
 
 type ParallelRun struct {
-	ID                   int64          `json:"id"`
-	RunURL               string         `json:"runUrl"`
-	IDProject            int64          `json:"idProject"`
-	TestCycleID          int64          `json:"testCycleId"`
-	PerformedTestCycleID *int64         `json:"performedTestCycleId"`
-	IdempotencyKey       string         `json:"idempotencyKey"`
-	Status               string         `json:"status"`
-	RequestedConcurrency int            `json:"requestedConcurrency"`
-	ActiveWorkers        int            `json:"activeWorkers"`
-	TotalWorkers         int            `json:"totalWorkers"`
-	CompletedWorkers     int            `json:"completedWorkers"`
-	FailedWorkers        int            `json:"failedWorkers"`
-	CancelledWorkers     int            `json:"cancelledWorkers"`
-	LostWorkers          int            `json:"lostWorkers"`
-	AggregateStatus      *int           `json:"aggregateStatus"`
-	Metadata             map[string]any `json:"metadata"`
-	ResultSummary        any            `json:"resultSummary"`
-	ScheduledAt          *time.Time     `json:"scheduledAt"`
-	StartedAt            *time.Time     `json:"startedAt"`
-	CompletedAt          *time.Time     `json:"completedAt"`
-	CancelledAt          *time.Time     `json:"cancelledAt"`
+	ID                   int64            `json:"id"`
+	RunURL               string           `json:"runUrl"`
+	IDProject            int64            `json:"idProject"`
+	TestCycleID          int64            `json:"testCycleId"`
+	PerformedTestCycleID *int64           `json:"performedTestCycleId"`
+	IdempotencyKey       string           `json:"idempotencyKey"`
+	Status               string           `json:"status"`
+	RequestedConcurrency int              `json:"requestedConcurrency"`
+	ActiveWorkers        int              `json:"activeWorkers"`
+	TotalWorkers         int              `json:"totalWorkers"`
+	CompletedWorkers     int              `json:"completedWorkers"`
+	FailedWorkers        int              `json:"failedWorkers"`
+	CancelledWorkers     int              `json:"cancelledWorkers"`
+	LostWorkers          int              `json:"lostWorkers"`
+	AggregateStatus      *int             `json:"aggregateStatus"`
+	Metadata             map[string]any   `json:"metadata"`
+	ResultSummary        any              `json:"resultSummary"`
+	Workers              []map[string]any `json:"workers,omitempty"`
+	ScheduledAt          *time.Time       `json:"scheduledAt"`
+	StartedAt            *time.Time       `json:"startedAt"`
+	CompletedAt          *time.Time       `json:"completedAt"`
+	CancelledAt          *time.Time       `json:"cancelledAt"`
+}
+
+// Results returns the Laravel-compatible execution summary for a run.
+func (h *Handler) Results(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	h.results(writer, request, user.ActiveTenant())
+}
+
+// CLResults returns the execution summary for an API-key authenticated run.
+func (h *Handler) CLResults(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		h.unauthorized(writer)
+		return
+	}
+	h.results(writer, request, tenant.CustomerID)
+}
+
+func (h *Handler) results(writer http.ResponseWriter, request *http.Request, tenantID int64) {
+	projectID, runID, ok := parseAssetVersionPath(writer, request, "parallelRun")
+	if !ok {
+		return
+	}
+	run, err := h.sessions.GetParallelRun(request, tenantID, projectID, runID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "show parallel run results", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"id": run.ID, "idProject": run.IDProject, "testCycleId": run.TestCycleID, "status": run.Status, "aggregateStatus": run.AggregateStatus, "resultSummary": run.ResultSummary, "workers": run.Workers})
 }
 
 type ParallelRunCreate struct {
