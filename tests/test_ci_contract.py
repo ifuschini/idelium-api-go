@@ -39,7 +39,7 @@ class CIContractTests(unittest.TestCase):
             self.workflow,
             r"image: mariadb:10\.6\.22@sha256:[0-9a-f]{64}",
         )
-        self.assertIn("go-version: 1.26.5", self.workflow)
+        self.assertIn("go-version: 1.26.6", self.workflow)
 
     def test_image_gate_builds_and_checks_non_root_user(self) -> None:
         self.assertIn("docker build", self.workflow)
