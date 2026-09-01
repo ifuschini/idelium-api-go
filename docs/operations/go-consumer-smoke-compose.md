@@ -14,8 +14,8 @@ export SMOKE_DB_ROOT_PASSWORD='disposable-root-password'
 docker compose -f compose.smoke.yml up -d --build
 ```
 
-The API is exposed on `http://127.0.0.1:18080` by default. Readiness can be
-checked with:
+The smoke gateway is exposed on `http://127.0.0.1:18080` by default. It removes
+the public `/api` prefix before forwarding to Go. Readiness can be checked with:
 
 ```sh
 curl --fail http://127.0.0.1:18080/health/live
