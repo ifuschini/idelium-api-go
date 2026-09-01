@@ -780,6 +780,82 @@ type EnvironmentDetail struct {
 	Config      any    `json:"config"`
 	IDProject   int64  `json:"idProject"`
 }
+
+type PluginDetail struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Code        any    `json:"code"`
+	IDProject   int64  `json:"idProject"`
+}
+type PluginInput struct {
+	IDProject, ID     int64
+	Name, Description string
+	Code              any
+}
+type BrowserPluginRepository interface {
+	ListBrowserPlugins(*http.Request, User, int64) ([]PluginDetail, error)
+	GetBrowserPlugin(*http.Request, User, int64, int64) (PluginDetail, error)
+	CreateBrowserPlugin(*http.Request, User, PluginInput) error
+	UpdateBrowserPlugin(*http.Request, User, PluginInput) error
+	DeleteBrowserPlugin(*http.Request, User, int64, int64) error
+}
+
+func validPluginCode(v any) bool { m, ok := v.(map[string]any); return ok && len(m) > 0 }
+func (h *Handler) Plugins(writer http.ResponseWriter, request *http.Request) {
+	u, ok := h.requireCapability(writer, request, "resources.read")
+	if !ok {
+		return
+	}
+	pid, e := parsePathID(request.PathValue("idProject"))
+	if e != nil {
+		h.notFound(writer)
+		return
+	}
+	r, ok := h.sessions.(BrowserPluginRepository)
+	if !ok {
+		h.internalError(writer, request, "list browser plugins", errors.New("plugin repository unavailable"))
+		return
+	}
+	v, e := r.ListBrowserPlugins(request, u, pid)
+	if e != nil {
+		h.internalError(writer, request, "list browser plugins", e)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"data": v})
+}
+func (h *Handler) ShowPlugin(writer http.ResponseWriter, request *http.Request) {
+	u, ok := h.requireCapability(writer, request, "resources.read")
+	if !ok {
+		return
+	}
+	pid, e := parsePathID(request.PathValue("idProject"))
+	if e != nil {
+		h.notFound(writer)
+		return
+	}
+	id, e := parsePathID(request.PathValue("plugin"))
+	if e != nil {
+		h.notFound(writer)
+		return
+	}
+	r, ok := h.sessions.(BrowserPluginRepository)
+	if !ok {
+		h.internalError(writer, request, "show browser plugin", errors.New("plugin repository unavailable"))
+		return
+	}
+	v, e := r.GetBrowserPlugin(request, u, pid, id)
+	if errors.Is(e, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if e != nil {
+		h.internalError(writer, request, "show browser plugin", e)
+		return
+	}
+	writeJSON(writer, http.StatusOK, v)
+}
+
 type EnvironmentRepository interface {
 	ListEnvironments(*http.Request, User, int64) ([]EnvironmentDetail, error)
 	GetEnvironment(*http.Request, User, int64, int64) (EnvironmentDetail, error)
