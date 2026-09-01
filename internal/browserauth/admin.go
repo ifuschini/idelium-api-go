@@ -769,6 +769,60 @@ func (h *Handler) Projects(writer http.ResponseWriter, request *http.Request) {
 
 type ProjectDetailRepository interface {
 	GetProject(context.Context, int64, int64) (Project, error)
+	CreateProject(context.Context, int64, string, string) error
+	UpdateProject(context.Context, int64, int64, string, string) error
+}
+
+func (h *Handler) CreateProject(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "projects.manage")
+	if !ok {
+		return
+	}
+	var body struct{ Name, Description string }
+	if err := decodeJSON(writer, request, &body); err != nil || strings.TrimSpace(body.Name) == "" {
+		validationError(writer, "name", "The name field is required.")
+		return
+	}
+	repo, ok := h.sessions.(ProjectDetailRepository)
+	if !ok {
+		h.internalError(writer, request, "create browser project", errors.New("project repository unavailable"))
+		return
+	}
+	if err := repo.CreateProject(request.Context(), user.ActiveTenant(), strings.ToUpper(strings.TrimSpace(body.Name)), strings.TrimSpace(body.Description)); err != nil {
+		h.internalError(writer, request, "create browser project", err)
+		return
+	}
+	h.Projects(writer, request)
+}
+func (h *Handler) UpdateProject(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "projects.manage")
+	if !ok {
+		return
+	}
+	id, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	var body struct{ Name, Description string }
+	if err := decodeJSON(writer, request, &body); err != nil || strings.TrimSpace(body.Name) == "" {
+		validationError(writer, "name", "The name field is required.")
+		return
+	}
+	repo, ok := h.sessions.(ProjectDetailRepository)
+	if !ok {
+		h.internalError(writer, request, "update browser project", errors.New("project repository unavailable"))
+		return
+	}
+	if err := repo.UpdateProject(request.Context(), user.ActiveTenant(), id, strings.TrimSpace(body.Name), strings.TrimSpace(body.Description)); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			h.notFound(writer)
+			return
+		}
+		h.internalError(writer, request, "update browser project", err)
+		return
+	}
+	h.Projects(writer, request)
 }
 
 func (h *Handler) ShowProject(writer http.ResponseWriter, request *http.Request) {
