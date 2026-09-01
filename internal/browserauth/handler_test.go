@@ -98,6 +98,7 @@ type sessionsStub struct {
 	runTokenErr       error
 	runTokenAgent     string
 	runTokenTTL       time.Duration
+	updatedRunner     RunnerWorkerUpdate
 }
 
 func (s *sessionsStub) Create(_ context.Context, session Session) error {
@@ -334,6 +335,11 @@ func (s *sessionsStub) IssueParallelRunToken(_ *http.Request, _, _, _ int64, age
 }
 func (s *sessionsStub) RevokeParallelRunToken(*http.Request, int64, int64, int64, string, time.Time) (RunTokenRevoked, error) {
 	return s.revokedRunToken, s.runTokenErr
+}
+
+func (s *sessionsStub) UpdateRunnerWorker(_ *http.Request, input RunnerWorkerUpdate) (ParallelRun, error) {
+	s.updatedRunner = input
+	return s.parallelRun, s.accountErr
 }
 
 func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
@@ -1188,6 +1194,31 @@ func TestParallelRunScheduleAndMatrixHandlersPreserveContracts(t *testing.T) {
 	handler.CreateParallelRun(failureResponse, failure)
 	if failureResponse.Code != http.StatusInternalServerError || strings.Contains(failureResponse.Body.String(), "database password") {
 		t.Fatalf("expected redacted internal error, got %d %s", failureResponse.Code, failureResponse.Body.String())
+	}
+}
+
+func TestParallelRunResultsAndWorkerUpdatePreserveTenantContract(t *testing.T) {
+	run := ParallelRun{ID: 40, IDProject: 5, TestCycleID: 7, Status: "running", ResultSummary: map[string]any{"completed": 1}, Workers: []map[string]any{{"workerId": "agent-a", "status": "running"}}}
+	sessions := &sessionsStub{user: User{ID: 7, TenantID: 11, ActiveTenantID: 11}, parallelRun: run}
+	handler := NewHandler(usersStub{}, sessions, testLogger())
+	resultsRequest := httptest.NewRequest(http.MethodGet, "/admin/projects/5/parallel-runs/40/results", nil)
+	resultsRequest.SetPathValue("idProject", "5")
+	resultsRequest.SetPathValue("parallelRun", "40")
+	resultsRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque"})
+	results := httptest.NewRecorder()
+	handler.Results(results, resultsRequest)
+	if results.Code != http.StatusOK || !strings.Contains(results.Body.String(), `"completed":1`) {
+		t.Fatalf("unexpected results response: %d %s", results.Code, results.Body.String())
+	}
+	updateRequest := httptest.NewRequest(http.MethodPut, "/admin/projects/5/parallel-runs/40/workers/agent-a", strings.NewReader(`{"status":"completed","result":{"ok":true}}`))
+	updateRequest.SetPathValue("idProject", "5")
+	updateRequest.SetPathValue("parallelRun", "40")
+	updateRequest.SetPathValue("workerId", "agent-a")
+	updateRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque"})
+	updated := httptest.NewRecorder()
+	handler.UpdateParallelRunWorker(updated, updateRequest)
+	if updated.Code != http.StatusOK || sessions.updatedRunner.TenantID != 11 || sessions.updatedRunner.WorkerID != "agent-a" {
+		t.Fatalf("unexpected worker update: %d %s %#v", updated.Code, updated.Body.String(), sessions.updatedRunner)
 	}
 }
 
