@@ -2563,7 +2563,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/agents"
       x-idelium-controller: "App\\Http\\Controllers\\AgentRegistrationController@index"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -2588,7 +2588,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/agents/{agentRegistration}/status"
       x-idelium-controller: "App\\Http\\Controllers\\AgentRegistrationController@updateStatus"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -5749,7 +5749,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/ideliumcl/agents/register"
       x-idelium-controller: "App\\Http\\Controllers\\AgentRegistrationController@register"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "api-key"
       x-idelium-authentication-mode: "api-key"
       x-idelium-tenant-context: false
@@ -6691,6 +6691,33 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
   schemas:
+    AgentRegistration:
+      type: object
+      required: [id, agentId, status, maxConcurrency, health]
+      properties:
+        id: {type: integer, format: int64}
+        agentId: {type: string, maxLength: 128}
+        status: {type: string, enum: [pending, approved, maintenance, draining, disabled]}
+        version: {type: string, nullable: true, maxLength: 64}
+        runtimes: {type: array, items: {type: string}}
+        capabilities: {type: object, additionalProperties: true}
+        identityProof: {type: object, additionalProperties: true}
+        maxConcurrency: {type: integer, minimum: 1, maximum: 256}
+        health: {type: string, enum: [unknown, healthy, unhealthy]}
+        lastSeenAt: {type: string, format: date-time, nullable: true}
+        createdAt: {type: string, format: date-time, nullable: true}
+        updatedAt: {type: string, format: date-time, nullable: true}
+    AgentRegistrationInput:
+      type: object
+      required: [agentId]
+      properties:
+        agentId: {type: string, minLength: 1, maxLength: 128}
+        version: {type: string, maxLength: 64}
+        runtimes: {type: array, items: {type: string}}
+        capabilities: {type: object, additionalProperties: true}
+        identityProof: {type: object, additionalProperties: true}
+        maxConcurrency: {type: integer, minimum: 1, maximum: 256}
+        health: {type: string, enum: [unknown, healthy, unhealthy]}
     LegacyCompatibilityPayload:
       type: object
       additionalProperties: true

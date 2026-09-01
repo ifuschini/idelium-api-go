@@ -57,6 +57,8 @@ func NewRouter(
 	router.Get("/admin/profile", browserAuthHandler.Profile)
 	router.Put("/admin/profile", browserAuthHandler.UpdateProfile)
 	router.Get("/admin/accounts", browserAuthHandler.Accounts)
+	router.Get("/admin/agents", browserAuthHandler.Agents)
+	router.Put("/admin/agents/{agentRegistration}/status", browserAuthHandler.UpdateAgentStatus)
 	router.Post("/admin/accounts", browserAuthHandler.CreateAccount)
 	router.Put("/admin/accounts/{idUser}", browserAuthHandler.UpdateAccount)
 	router.Delete("/admin/accounts/{idUser}", browserAuthHandler.DeleteAccount)
@@ -153,6 +155,7 @@ func NewRouter(
 	router.Group(func(router chi.Router) {
 		router.Use(cliAuthenticator.Middleware)
 		router.Post("/ideliumcl/testcycle", cliHandler.CreatePerformedCycle)
+		router.Post("/ideliumcl/agents/register", browserAuthHandler.CLRegisterAgent)
 		router.Put("/ideliumcl/testcycle", cliHandler.UpdatePerformedCycle)
 		router.Post("/ideliumcl/test", cliHandler.CreatePerformedTest)
 		router.Put("/ideliumcl/test", cliHandler.UpdatePerformedTest)

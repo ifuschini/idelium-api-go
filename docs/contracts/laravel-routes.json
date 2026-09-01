@@ -135,7 +135,7 @@
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
       "tenant_context": true,
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "middleware": [
         "api",
         "App\\Http\\Middleware\\Authenticate:sanctum",
@@ -151,7 +151,7 @@
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
       "tenant_context": true,
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "middleware": [
         "api",
         "App\\Http\\Middleware\\Authenticate:sanctum",
@@ -2099,7 +2099,7 @@
       "authentication_mode": "api-key",
       "trust_path": "api-key",
       "tenant_context": false,
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "middleware": [
         "api",
         "App\\Http\\Middleware\\AuthenticateIdeliumKey"
