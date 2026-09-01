@@ -21,6 +21,8 @@ services:
       retries: 24
     networks: [smoke]
     security_opt: [no-new-privileges:true]
+    volumes:
+      - ./smoke/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
 
   api:
     build:
