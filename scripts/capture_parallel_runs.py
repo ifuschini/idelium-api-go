@@ -7,11 +7,13 @@ import argparse
 import json
 import os
 import urllib.request
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 SENSITIVE = {"authorization", "cookie", "set-cookie", "token", "apikey", "password", "secret", "session"}
+PLACEHOLDER = re.compile(r"\{\{([A-Za-z0-9_.-]+)\}\}")
 
 
 def sanitize(value: Any) -> Any:
@@ -20,6 +22,27 @@ def sanitize(value: Any) -> Any:
     if isinstance(value, list):
         return [sanitize(item) for item in value]
     return value
+
+
+def resolve(value: Any, variables: dict[str, str]) -> Any:
+    if isinstance(value, str):
+        return PLACEHOLDER.sub(lambda match: variables.get(match.group(1), match.group(0)), value)
+    if isinstance(value, dict):
+        return {key: resolve(item, variables) for key, item in value.items()}
+    if isinstance(value, list):
+        return [resolve(item, variables) for item in value]
+    return value
+
+
+def extract(value: Any, path: str) -> str:
+    current = value
+    for part in path.split("."):
+        if not isinstance(current, dict) or part not in current:
+            raise ValueError(f"capture path not found: {path}")
+        current = current[part]
+    if not isinstance(current, str) or not current:
+        raise ValueError(f"capture path is not a non-empty string: {path}")
+    return current
 
 
 def main() -> int:
@@ -35,11 +58,13 @@ def main() -> int:
     xsrf = os.environ.get("CAPTURE_XSRF_TOKEN", "")
     api_key = os.environ.get("CAPTURE_API_KEY", "")
     run_token = os.environ.get("CAPTURE_RUN_TOKEN", "")
+    variables: dict[str, str] = {"runToken": run_token} if run_token else {}
     revision = os.environ.get("CAPTURE_LARAVEL_REVISION", "")
     if len(revision) != 40:
         raise SystemExit("CAPTURE_LARAVEL_REVISION must be an immutable 40-character Git revision")
     args.output_dir.mkdir(parents=True, exist_ok=True)
     for route in plan["routes"]:
+        path = resolve(route["path"], variables)
         headers = {"Accept": "application/json", "X-Correlation-ID": "laravel-capture"}
         if route["authentication"] == "browser-session":
             if not cookie:
@@ -47,30 +72,38 @@ def main() -> int:
             headers["Cookie"] = cookie
             if xsrf:
                 headers["X-XSRF-TOKEN"] = xsrf
+            route_token = variables.get("runToken", run_token)
             if route.get("requiresRunToken"):
-                if not run_token:
+                if not route_token:
                     raise SystemExit("Missing CAPTURE_RUN_TOKEN for run-token protected browser route")
-                headers["Idelium-Run-Token"] = run_token
+                headers["Idelium-Run-Token"] = route_token
         elif route["authentication"] == "api-key":
             if not api_key:
                 raise SystemExit("Missing CAPTURE_API_KEY for api-key route")
             headers["Idelium-Key"] = api_key
         elif route["authentication"] == "run-token":
-            if not run_token:
+            route_token = variables.get("runToken", run_token)
+            if not route_token:
                 raise SystemExit("Missing CAPTURE_RUN_TOKEN for run-token route")
-            headers["Idelium-Run-Token"] = run_token
-        body = route.get("body")
+            headers["Idelium-Run-Token"] = route_token
+        body = resolve(route.get("body"), variables)
         encoded_body = None
         if body is not None:
             encoded_body = json.dumps(body).encode("utf-8")
             headers["Content-Type"] = "application/json"
-        request = urllib.request.Request(base_url + route["path"], data=encoded_body, headers=headers, method=route["method"])
+        request = urllib.request.Request(base_url + path, data=encoded_body, headers=headers, method=route["method"])
         with urllib.request.urlopen(request, timeout=15) as response:
             raw = response.read()
             body = json.loads(raw.decode("utf-8")) if raw else None
             status = response.status
         if status != route["expectedStatus"]:
             raise SystemExit(f"{route['id']}: expected HTTP {route['expectedStatus']}, got {status}")
+        capture = route.get("capture")
+        if capture:
+            captured = extract(body, capture["path"])
+            variables[capture["as"]] = captured
+            if capture["as"] == "runToken":
+                variables["runTokenId"] = captured.split(".", 1)[0]
         fixture = {
             "fixtureVersion": "1.0",
             "id": route["id"],
