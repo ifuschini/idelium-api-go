@@ -32,6 +32,7 @@ def main() -> int:
     if not base_url:
         raise SystemExit(f"Missing required environment variable: {plan['baseUrlEnv']}")
     cookie = os.environ.get("CAPTURE_BROWSER_COOKIE", "")
+    xsrf = os.environ.get("CAPTURE_XSRF_TOKEN", "")
     api_key = os.environ.get("CAPTURE_API_KEY", "")
     run_token = os.environ.get("CAPTURE_RUN_TOKEN", "")
     revision = os.environ.get("CAPTURE_LARAVEL_REVISION", "")
@@ -44,6 +45,8 @@ def main() -> int:
             if not cookie:
                 raise SystemExit("Missing CAPTURE_BROWSER_COOKIE for browser-session route")
             headers["Cookie"] = cookie
+            if xsrf:
+                headers["X-XSRF-TOKEN"] = xsrf
         elif route["authentication"] == "api-key":
             if not api_key:
                 raise SystemExit("Missing CAPTURE_API_KEY for api-key route")
