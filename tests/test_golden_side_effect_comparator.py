@@ -69,6 +69,12 @@ class GoldenSideEffectComparatorTest(unittest.TestCase):
 
         self.assertTrue(result.passed)
 
+    def test_committed_parallel_worker_update_fixtures_match(self):
+        expected = json.loads((ROOT / "testdata" / "golden" / "parallel-run-worker-update.fixture.json").read_text(encoding="utf-8"))
+        actual = json.loads((ROOT / "testdata" / "golden" / "parallel-run-worker-update-go.fixture.json").read_text(encoding="utf-8"))
+        result = MODULE.compare(expected, actual)
+        self.assertTrue(result.passed)
+
     def test_side_effect_mismatches_are_reported_by_path(self):
         expected = fixture()
         actual = copy.deepcopy(expected)

@@ -1,0 +1,13 @@
+{
+  "fixtureVersion": "1.0",
+  "id": "parallel-run-worker-update-authorized",
+  "description": "Synthetic authorized Laravel parallel-run worker update.",
+  "source": {"runtime": "laravel", "repository": "idelium/idelium-api", "revision": "ef97a6b3f42105cad583b3f1a68acf637a9d086e", "capturedAt": "2026-01-01T00:00:00Z", "routeInventoryDigestSha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9"},
+  "route": {"method": "PUT", "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}", "trustPath": "browser-session", "tenantOwned": true},
+  "context": {"tenant": {"id": "fixture-tenant-alpha", "synthetic": true}, "actor": {"id": "fixture-browser-user", "synthetic": true}},
+  "request": {"headers": {"Accept": "application/json", "Content-Type": "application/json", "X-Correlation-ID": "fixture-correlation-worker-update"}, "query": {}, "body": {"status": "completed", "result": {"ok": true}}},
+  "response": {"status": 200, "headers": {"Content-Type": "application/json"}, "body": {"id": 40, "idProject": 5, "testCycleId": 7, "status": "completed", "resultSummary": {"completed": 1}, "workers": [{"workerId": "agent-a", "status": "completed", "result": {"ok": true}}]}},
+  "normalizations": [],
+  "redactions": [],
+  "sideEffects": [{"table": "parallel_run_schedules", "operation": "update", "tenantId": "fixture-tenant-alpha", "naturalKey": "fixture-run-40-agent-a", "row": {"status": "completed", "workerId": "agent-a", "result": {"ok": true}}}]
+}
