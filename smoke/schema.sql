@@ -3,7 +3,9 @@ CREATE TABLE costumers (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   costumer VARCHAR(255) NOT NULL,
   description TEXT NULL,
-  ideliumKey VARCHAR(255) NULL,
+  apiKey VARCHAR(255) NULL,
+  apiKeyExpiresAt TIMESTAMP NULL,
+  apiKeyLastUsedAt TIMESTAMP NULL,
   licenseExpiredAt TIMESTAMP NULL,
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL
@@ -16,7 +18,7 @@ CREATE TABLE users (
   password VARCHAR(255) NOT NULL,
   role INT NOT NULL DEFAULT 2,
   idCostumer BIGINT NOT NULL,
-  disabledAt TIMESTAMP NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'active',
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL
 );
@@ -26,6 +28,7 @@ CREATE TABLE projects (
   name VARCHAR(255) NOT NULL,
   description TEXT NULL,
   idCostumer BIGINT NOT NULL,
+  archivedAt TIMESTAMP NULL,
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL
 );
@@ -139,11 +142,13 @@ CREATE TABLE agent_registrations (
 
 CREATE TABLE go_browser_sessions (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  sessionHash CHAR(64) NOT NULL UNIQUE,
-  csrfHash CHAR(64) NOT NULL,
+  idHash CHAR(64) NOT NULL UNIQUE,
+  csrfTokenHash CHAR(64) NOT NULL,
   userId BIGINT NOT NULL,
-  tenantId BIGINT NOT NULL,
-  activeTenantId BIGINT NOT NULL,
+  idCostumer BIGINT NOT NULL,
+  activeTenantId BIGINT NULL,
+  impersonationReason VARCHAR(255) NULL,
+  impersonationExpiresAt TIMESTAMP NULL,
   expiresAt TIMESTAMP NOT NULL,
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL
