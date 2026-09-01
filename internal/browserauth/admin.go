@@ -783,6 +783,137 @@ type EnvironmentDetail struct {
 type EnvironmentRepository interface {
 	ListEnvironments(*http.Request, User, int64) ([]EnvironmentDetail, error)
 	GetEnvironment(*http.Request, User, int64, int64) (EnvironmentDetail, error)
+	CreateEnvironment(*http.Request, User, EnvironmentInput) error
+	UpdateEnvironment(*http.Request, User, EnvironmentInput) error
+	DeleteEnvironment(*http.Request, User, int64, int64) error
+}
+type EnvironmentInput struct {
+	IDProject, ID     int64
+	Code, Description string
+	Config            any
+}
+
+func environmentHasInlineSecret(v any) bool {
+	switch x := v.(type) {
+	case map[string]any:
+		for k, val := range x {
+			lk := strings.ToLower(k)
+			if strings.Contains(lk, "secret") || strings.Contains(lk, "password") || strings.Contains(lk, "token") || strings.Contains(lk, "cookie") {
+				return true
+			}
+			if environmentHasInlineSecret(val) {
+				return true
+			}
+		}
+	case []any:
+		for _, val := range x {
+			if environmentHasInlineSecret(val) {
+				return true
+			}
+		}
+	}
+	return false
+}
+func (h *Handler) CreateEnvironment(w http.ResponseWriter, r *http.Request) {
+	u, ok := h.requireCapability(w, r, "resources.manage")
+	if !ok {
+		return
+	}
+	var b struct {
+		IDProject         int64 `json:"idProject"`
+		Code, Description string
+		Config            any `json:"config"`
+	}
+	if err := decodeJSON(w, r, &b); err != nil || b.IDProject < 1 || strings.TrimSpace(b.Code) == "" {
+		validationError(w, "code", "The code field is required.")
+		return
+	}
+	if environmentHasInlineSecret(b.Config) {
+		validationError(w, "config", "Inline secrets are not allowed in environment configuration.")
+		return
+	}
+	repo, ok := h.sessions.(EnvironmentRepository)
+	if !ok {
+		h.internalError(w, r, "create browser environment", errors.New("environment repository unavailable"))
+		return
+	}
+	if err := repo.CreateEnvironment(r, u, EnvironmentInput{IDProject: b.IDProject, Code: strings.TrimSpace(b.Code), Description: strings.TrimSpace(b.Description), Config: b.Config}); err != nil {
+		h.internalError(w, r, "create browser environment", err)
+		return
+	}
+	h.Environments(w, r)
+}
+func (h *Handler) UpdateEnvironment(w http.ResponseWriter, r *http.Request) {
+	u, ok := h.requireCapability(w, r, "resources.manage")
+	if !ok {
+		return
+	}
+	pid, e := parsePathID(r.PathValue("idProject"))
+	if e != nil {
+		h.notFound(w)
+		return
+	}
+	id, e := parsePathID(r.PathValue("environment"))
+	if e != nil {
+		h.notFound(w)
+		return
+	}
+	var b struct {
+		Code, Description string
+		Config            any `json:"config"`
+	}
+	if err := decodeJSON(w, r, &b); err != nil || strings.TrimSpace(b.Code) == "" {
+		validationError(w, "code", "The code field is required.")
+		return
+	}
+	if environmentHasInlineSecret(b.Config) {
+		validationError(w, "config", "Inline secrets are not allowed in environment configuration.")
+		return
+	}
+	repo, ok := h.sessions.(EnvironmentRepository)
+	if !ok {
+		h.internalError(w, r, "update browser environment", errors.New("environment repository unavailable"))
+		return
+	}
+	if err := repo.UpdateEnvironment(r, u, EnvironmentInput{IDProject: pid, ID: id, Code: strings.TrimSpace(b.Code), Description: strings.TrimSpace(b.Description), Config: b.Config}); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			h.notFound(w)
+			return
+		}
+		h.internalError(w, r, "update browser environment", err)
+		return
+	}
+	h.Environments(w, r)
+}
+func (h *Handler) DeleteEnvironment(w http.ResponseWriter, r *http.Request) {
+	u, ok := h.requireCapability(w, r, "resources.manage")
+	if !ok {
+		return
+	}
+	pid, e := parsePathID(r.PathValue("idProject"))
+	if e != nil {
+		h.notFound(w)
+		return
+	}
+	id, e := parsePathID(r.PathValue("environment"))
+	if e != nil {
+		h.notFound(w)
+		return
+	}
+	repo, ok := h.sessions.(EnvironmentRepository)
+	if !ok {
+		h.internalError(w, r, "delete browser environment", errors.New("environment repository unavailable"))
+		return
+	}
+	if err := repo.DeleteEnvironment(r, u, pid, id); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			h.notFound(w)
+			return
+		}
+		h.internalError(w, r, "delete browser environment", err)
+		return
+	}
+	h.Environments(w, r)
 }
 
 func (h *Handler) Environments(writer http.ResponseWriter, request *http.Request) {
