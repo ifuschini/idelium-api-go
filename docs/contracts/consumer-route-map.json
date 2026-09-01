@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "route_inventory_digest_sha256": "fc0aa3f1000f6c29c045bb155564a9b04cb312afa9f9dda92ffd1f4b8f6672eb",
+  "route_inventory_digest_sha256": "d6aee54be173f1fe9ef654dce477a097cfd6da0f364bc8c1221fdc808789ef13",
   "sources": {
     "idelium-web": "23a21a7ce469bc4e0e417be42b0cfe089768a3bd",
     "idelium-cli": "34191d99c6f5c42118bf7622c4ec124251edeffa",
@@ -1789,7 +1789,7 @@
       "path": "/api/admin/steps",
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-web",
@@ -1810,7 +1810,7 @@
       "path": "/api/admin/steps/{idProject}",
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-web",
@@ -1831,7 +1831,7 @@
       "path": "/api/admin/steps/{idProject}/updateorder",
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-web",
@@ -1852,7 +1852,7 @@
       "path": "/api/admin/steps/{idProject}/{environment}",
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-web",
@@ -1873,7 +1873,7 @@
       "path": "/api/admin/steps/{idProject}/{step}",
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-web",
@@ -1894,7 +1894,7 @@
       "path": "/api/admin/steps/{idProject}/{step}",
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-web",

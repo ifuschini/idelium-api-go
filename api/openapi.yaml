@@ -5089,7 +5089,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/steps"
       x-idelium-controller: "App\\Http\\Controllers\\StepController@store"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -5125,7 +5125,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/steps/{idProject}"
       x-idelium-controller: "App\\Http\\Controllers\\StepController@index"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -5156,7 +5156,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/steps/{idProject}/updateorder"
       x-idelium-controller: "App\\Http\\Controllers\\StepController@updateorder"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -5198,7 +5198,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/steps/{idProject}/{environment}"
       x-idelium-controller: "App\\Http\\Controllers\\StepController@destroy"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -5234,7 +5234,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/steps/{idProject}/{step}"
       x-idelium-controller: "App\\Http\\Controllers\\StepController@show"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -5269,7 +5269,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/steps/{idProject}/{step}"
       x-idelium-controller: "App\\Http\\Controllers\\StepController@update"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
