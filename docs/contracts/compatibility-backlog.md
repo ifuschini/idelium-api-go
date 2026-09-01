@@ -58,11 +58,11 @@ harness is available.
 | `high` | 9 | `POST` | `/api/admin/costumers` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `high` | 9 | `DELETE` | `/api/admin/costumers/{idCostumer}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `high` | 9 | `PUT` | `/api/admin/costumers/{idCostumer}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `high` | 6 | `POST` | `/api/admin/environments` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `high` | 6 | `GET|HEAD` | `/api/admin/environments/{idProject}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `high` | 6 | `DELETE` | `/api/admin/environments/{idProject}/{environment}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `high` | 6 | `GET|HEAD` | `/api/admin/environments/{idProject}/{environment}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `high` | 6 | `PUT` | `/api/admin/environments/{idProject}/{environment}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
+| `high` | 6 | `POST` | `/api/admin/environments` | `browser-session` | `idelium-web` | `documented` | `go-application` |
+| `high` | 6 | `GET|HEAD` | `/api/admin/environments/{idProject}` | `browser-session` | `idelium-web` | `documented` | `go-application` |
+| `high` | 6 | `DELETE` | `/api/admin/environments/{idProject}/{environment}` | `browser-session` | `idelium-web` | `documented` | `go-application` |
+| `high` | 6 | `GET|HEAD` | `/api/admin/environments/{idProject}/{environment}` | `browser-session` | `idelium-web` | `documented` | `go-application` |
+| `high` | 6 | `PUT` | `/api/admin/environments/{idProject}/{environment}` | `browser-session` | `idelium-web` | `documented` | `go-application` |
 | `normal` | 7 | `POST` | `/api/admin/grid/bulk-jobs` | `browser-session` | — | `documented` | `laravel-application` |
 | `normal` | 7 | `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}` | `browser-session` | — | `documented` | `laravel-application` |
 | `normal` | 7 | `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}/export` | `browser-session` | — | `documented` | `laravel-application` |

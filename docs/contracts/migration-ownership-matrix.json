@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "compatibility_backlog_digest": "3196f30ec33595089fff12b46ed5188e9dd9cbf3087de993b70788af8aa598c5",
+  "compatibility_backlog_digest": "02246ce66e7326067499a3b66d6ec9f12fd5fafa94f26dc0cacf451657ff40d5",
   "ownership_policy": {
     "allowed_owners": [
       "go",

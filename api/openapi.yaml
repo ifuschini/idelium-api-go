@@ -2830,7 +2830,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/environments"
       x-idelium-controller: "App\\Http\\Controllers\\EnvironmentController@store"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -2866,7 +2866,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/environments/{idProject}"
       x-idelium-controller: "App\\Http\\Controllers\\EnvironmentController@index"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -2897,7 +2897,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/environments/{idProject}/{environment}"
       x-idelium-controller: "App\\Http\\Controllers\\EnvironmentController@destroy"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -2932,7 +2932,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/environments/{idProject}/{environment}"
       x-idelium-controller: "App\\Http\\Controllers\\EnvironmentController@show"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -2967,7 +2967,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/environments/{idProject}/{environment}"
       x-idelium-controller: "App\\Http\\Controllers\\EnvironmentController@update"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
