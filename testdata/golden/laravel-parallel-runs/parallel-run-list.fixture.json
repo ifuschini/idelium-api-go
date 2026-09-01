@@ -1,0 +1,71 @@
+{
+  "fixtureVersion": "1.0",
+  "id": "browser-list-parallel-runs",
+  "description": "Sanitized Laravel parallel-run capture.",
+  "source": {
+    "runtime": "laravel",
+    "repository": "idelium/idelium-api",
+    "revision": "4f1867452b91d8759e757c64a9198b43c048f425",
+    "capturedAt": "2026-09-01T13:15:26Z",
+    "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
+  },
+  "route": {
+    "method": "GET",
+    "path": "/api/admin/projects/9001/parallel-runs",
+    "trustPath": "browser-session",
+    "tenantOwned": true
+  },
+  "context": {
+    "tenant": {
+      "id": "fixture-tenant-9001",
+      "synthetic": true
+    },
+    "actor": {
+      "id": "fixture-browser-user-9001",
+      "synthetic": true
+    }
+  },
+  "request": {
+    "headers": {
+      "Accept": "application/json"
+    },
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": [
+      {
+        "id": 9001,
+        "runUrl": "/api/admin/projects/9001/parallel-runs/9001",
+        "idProject": 9001,
+        "testCycleId": 9001,
+        "performedTestCycleId": null,
+        "idempotencyKey": "fixture-parallel-run-smoke",
+        "status": "queued",
+        "requestedConcurrency": 1,
+        "activeWorkers": 0,
+        "totalWorkers": 0,
+        "completedWorkers": 0,
+        "failedWorkers": 0,
+        "cancelledWorkers": 0,
+        "lostWorkers": 0,
+        "aggregateStatus": null,
+        "metadata": {
+          "fixture": "fixture-parallel-run-smoke"
+        },
+        "resultSummary": [],
+        "scheduledAt": "2026-09-01T13:14:49.000000Z",
+        "startedAt": null,
+        "completedAt": null,
+        "cancelledAt": null
+      }
+    ]
+  },
+  "normalizations": [],
+  "redactions": [],
+  "sideEffects": []
+}

@@ -34,6 +34,9 @@ def main() -> int:
     cookie = os.environ.get("CAPTURE_BROWSER_COOKIE", "")
     api_key = os.environ.get("CAPTURE_API_KEY", "")
     run_token = os.environ.get("CAPTURE_RUN_TOKEN", "")
+    revision = os.environ.get("CAPTURE_LARAVEL_REVISION", "")
+    if len(revision) != 40:
+        raise SystemExit("CAPTURE_LARAVEL_REVISION must be an immutable 40-character Git revision")
     args.output_dir.mkdir(parents=True, exist_ok=True)
     for route in plan["routes"]:
         headers = {"Accept": "application/json", "X-Correlation-ID": "laravel-capture"}
@@ -65,8 +68,9 @@ def main() -> int:
             "fixtureVersion": "1.0",
             "id": route["id"],
             "description": "Sanitized Laravel parallel-run capture.",
-            "source": {"runtime": "laravel", "capturedAt": datetime.now(timezone.utc).isoformat()},
+            "source": {"runtime": "laravel", "repository": "idelium/idelium-api", "revision": revision, "capturedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"},
             "route": {"method": route["method"], "path": route["path"], "trustPath": route["authentication"], "tenantOwned": True},
+            "context": {"tenant": {"id": "fixture-tenant-9001", "synthetic": True}, "actor": {"id": "fixture-browser-user-9001", "synthetic": True}},
             "request": {"headers": {"Accept": "application/json"}, "query": {}, "body": None},
             "response": {"status": status, "headers": {"Content-Type": "application/json"}, "body": sanitize(body)},
             "normalizations": [], "redactions": [], "sideEffects": [],
