@@ -50,8 +50,8 @@ harness is available.
 | `high` | 9 | `POST` | `/api/admin/accounts` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `high` | 9 | `DELETE` | `/api/admin/accounts/{idUser}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `high` | 9 | `PUT` | `/api/admin/accounts/{idUser}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `normal` | 8 | `GET|HEAD` | `/api/admin/agents` | `browser-session` | — | `documented` | `laravel-application` |
-| `normal` | 8 | `PUT` | `/api/admin/agents/{agentRegistration}/status` | `browser-session` | — | `documented` | `laravel-application` |
+| `normal` | 8 | `GET|HEAD` | `/api/admin/agents` | `browser-session` | — | `documented` | `go-application` |
+| `normal` | 8 | `PUT` | `/api/admin/agents/{agentRegistration}/status` | `browser-session` | — | `documented` | `go-application` |
 | `high` | 9 | `GET|HEAD` | `/api/admin/apikey` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `high` | 9 | `PUT` | `/api/admin/apikey` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `high` | 9 | `GET|HEAD` | `/api/admin/costumers` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
@@ -173,7 +173,7 @@ harness is available.
 | `normal` | 9 | `GET|HEAD` | `/api/audit-events` | `browser-session` | — | `documented` | `laravel-application` |
 | `critical` | 0 | `GET|HEAD` | `/api/clear` | `public-operational` | — | `documented` | `laravel-application` |
 | `high` | 0 | `GET|HEAD` | `/api/csrf-cookie` | `public-operational` | — | `documented` | `laravel-framework` |
-| `high` | 8 | `POST` | `/api/ideliumcl/agents/register` | `api-key` | — | `documented` | `laravel-application` |
+| `high` | 8 | `POST` | `/api/ideliumcl/agents/register` | `api-key` | — | `documented` | `go-application` |
 | `high` | 4 | `GET|HEAD` | `/api/ideliumcl/environment/{idEnvironment}` | `api-key` | `idelium-cli`, `idelium-docker-wiki` | `documented` | `laravel-application` |
 | `high` | 4 | `GET|HEAD` | `/api/ideliumcl/environments/{idProject}` | `api-key` | `idelium-cli`, `idelium-docker-wiki` | `documented` | `laravel-application` |
 | `high` | 4 | `GET|HEAD` | `/api/ideliumcl/plugin/{idPlugin}` | `api-key` | `idelium-cli`, `idelium-docker-wiki` | `documented` | `laravel-application` |
@@ -198,9 +198,9 @@ harness is available.
 | `high` | 5 | `POST` | `/api/ideliumcl/testcycle` | `api-key` | `idelium-cli`, `idelium-docker-wiki` | `documented` | `laravel-application` |
 | `high` | 5 | `PUT` | `/api/ideliumcl/testcycle` | `api-key` | `idelium-cli`, `idelium-docker-wiki` | `documented` | `laravel-application` |
 | `high` | 4 | `GET|HEAD` | `/api/ideliumcl/testcycle/{idTestCycle}` | `api-key` | `idelium-cli`, `idelium-docker-wiki` | `documented` | `laravel-application` |
-| `high` | 8 | `POST` | `/api/ideliumrunner/claim` | `run-token` | `idelium-runner` | `documented` | `laravel-application` |
-| `high` | 8 | `POST` | `/api/ideliumrunner/heartbeat` | `run-token` | `idelium-runner` | `documented` | `laravel-application` |
-| `high` | 8 | `PUT` | `/api/ideliumrunner/worker` | `run-token` | `idelium-runner` | `documented` | `laravel-application` |
+| `high` | 8 | `POST` | `/api/ideliumrunner/claim` | `run-token` | `idelium-runner` | `documented` | `go-application` |
+| `high` | 8 | `POST` | `/api/ideliumrunner/heartbeat` | `run-token` | `idelium-runner` | `documented` | `go-application` |
+| `high` | 8 | `PUT` | `/api/ideliumrunner/worker` | `run-token` | `idelium-runner` | `documented` | `go-application` |
 | `high` | 9 | `POST` | `/api/login` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `high` | 9 | `POST` | `/api/logout` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `normal` | 9 | `GET|HEAD` | `/api/me/capabilities` | `browser-session` | — | `documented` | `laravel-application` |

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "route_inventory_digest_sha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9",
+  "route_inventory_digest_sha256": "fc0aa3f1000f6c29c045bb155564a9b04cb312afa9f9dda92ffd1f4b8f6672eb",
   "sources": {
     "idelium-web": "23a21a7ce469bc4e0e417be42b0cfe089768a3bd",
     "idelium-cli": "34191d99c6f5c42118bf7622c4ec124251edeffa",
@@ -133,7 +133,7 @@
       "path": "/api/admin/agents",
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": []
     },
     {
@@ -141,7 +141,7 @@
       "path": "/api/admin/agents/{agentRegistration}/status",
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": []
     },
     {
@@ -2170,7 +2170,7 @@
       "path": "/api/ideliumcl/agents/register",
       "authentication_mode": "api-key",
       "trust_path": "api-key",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": []
     },
     {
@@ -2682,7 +2682,7 @@
       "path": "/api/ideliumrunner/claim",
       "authentication_mode": "run-token",
       "trust_path": "run-token",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-runner",
@@ -2702,7 +2702,7 @@
       "path": "/api/ideliumrunner/heartbeat",
       "authentication_mode": "run-token",
       "trust_path": "run-token",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-runner",
@@ -2722,7 +2722,7 @@
       "path": "/api/ideliumrunner/worker",
       "authentication_mode": "run-token",
       "trust_path": "run-token",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-runner",

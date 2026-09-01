@@ -1,7 +1,7 @@
 {
   "consumer": "idelium-web",
-  "ownership_matrix_digest_sha256": "a85a4fc316c12519d2233a855b916ff6d6afd334a25fb7747cb866f5b940d707",
-  "route_inventory_digest_sha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9",
+  "ownership_matrix_digest_sha256": "09e93d50433d7b12ddea37088ddc3339d0d17e5ee6fb61ce4d2ef4f587828496",
+  "route_inventory_digest_sha256": "fc0aa3f1000f6c29c045bb155564a9b04cb312afa9f9dda92ffd1f4b8f6672eb",
   "routes": [
     {
       "aggregate": "platform-catalog",
