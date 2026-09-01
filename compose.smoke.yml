@@ -23,6 +23,7 @@ services:
     security_opt: [no-new-privileges:true]
     volumes:
       - ./smoke/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+      - ./smoke/seed.sql:/docker-entrypoint-initdb.d/002-seed.sql:ro
 
   api:
     build:

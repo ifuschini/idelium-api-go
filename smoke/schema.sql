@@ -62,6 +62,7 @@ CREATE TABLE steps (
   config JSON NOT NULL,
   idProject BIGINT NOT NULL,
   idCostumer BIGINT NOT NULL,
+  `order` INT NOT NULL DEFAULT 0,
   sort INT NOT NULL DEFAULT 0,
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL
@@ -70,6 +71,8 @@ CREATE TABLE steps (
 CREATE TABLE plugins (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
+  code VARCHAR(255) NOT NULL DEFAULT '',
+  description TEXT NULL,
   config JSON NULL,
   idProject BIGINT NOT NULL,
   idCostumer BIGINT NOT NULL,
@@ -80,6 +83,8 @@ CREATE TABLE plugins (
 CREATE TABLE environments (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
+  code VARCHAR(255) NOT NULL DEFAULT '',
+  description TEXT NULL,
   config JSON NULL,
   idProject BIGINT NOT NULL,
   idCostumer BIGINT NOT NULL,
