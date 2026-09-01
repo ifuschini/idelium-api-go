@@ -771,6 +771,7 @@ type ProjectDetailRepository interface {
 	GetProject(context.Context, int64, int64) (Project, error)
 	CreateProject(context.Context, int64, string, string) error
 	UpdateProject(context.Context, int64, int64, string, string) error
+	DeleteProject(context.Context, int64, int64) error
 }
 
 func (h *Handler) CreateProject(writer http.ResponseWriter, request *http.Request) {
@@ -820,6 +821,31 @@ func (h *Handler) UpdateProject(writer http.ResponseWriter, request *http.Reques
 			return
 		}
 		h.internalError(writer, request, "update browser project", err)
+		return
+	}
+	h.Projects(writer, request)
+}
+func (h *Handler) DeleteProject(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "projects.manage")
+	if !ok {
+		return
+	}
+	id, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	repo, ok := h.sessions.(ProjectDetailRepository)
+	if !ok {
+		h.internalError(writer, request, "delete browser project", errors.New("project repository unavailable"))
+		return
+	}
+	if err := repo.DeleteProject(request.Context(), user.ActiveTenant(), id); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			h.notFound(writer)
+			return
+		}
+		h.internalError(writer, request, "delete browser project", err)
 		return
 	}
 	h.Projects(writer, request)
