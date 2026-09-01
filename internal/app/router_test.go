@@ -485,6 +485,23 @@ func testRouter(logger *slog.Logger) http.Handler {
 	)
 }
 
+func TestRouterRegistersParallelRunResultAndWorkerRoutes(t *testing.T) {
+	router := testRouter(slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil)))
+	for _, route := range []struct {
+		method string
+		path   string
+	}{
+		{http.MethodGet, "/admin/projects/1/parallel-runs/2/results"},
+		{http.MethodPut, "/admin/projects/1/parallel-runs/2/workers/agent"},
+	} {
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, httptest.NewRequest(route.method, route.path, strings.NewReader(`{"status":"completed"}`)))
+		if response.Code == http.StatusNotFound || response.Code == http.StatusMethodNotAllowed {
+			t.Fatalf("parallel-run route %s %s was not registered: %d", route.method, route.path, response.Code)
+		}
+	}
+}
+
 func TestRouterReturnsStableNotFoundResponse(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&bytes.Buffer{}, nil))
 	router := testRouter(logger)
