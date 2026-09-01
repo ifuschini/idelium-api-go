@@ -33,6 +33,7 @@ def main() -> int:
         raise SystemExit(f"Missing required environment variable: {plan['baseUrlEnv']}")
     cookie = os.environ.get("CAPTURE_BROWSER_COOKIE", "")
     api_key = os.environ.get("CAPTURE_API_KEY", "")
+    run_token = os.environ.get("CAPTURE_RUN_TOKEN", "")
     args.output_dir.mkdir(parents=True, exist_ok=True)
     for route in plan["routes"]:
         headers = {"Accept": "application/json", "X-Correlation-ID": "laravel-capture"}
@@ -44,9 +45,19 @@ def main() -> int:
             if not api_key:
                 raise SystemExit("Missing CAPTURE_API_KEY for api-key route")
             headers["Idelium-Key"] = api_key
-        request = urllib.request.Request(base_url + route["path"], headers=headers, method=route["method"])
+        elif route["authentication"] == "run-token":
+            if not run_token:
+                raise SystemExit("Missing CAPTURE_RUN_TOKEN for run-token route")
+            headers["Idelium-Run-Token"] = run_token
+        body = route.get("body")
+        encoded_body = None
+        if body is not None:
+            encoded_body = json.dumps(body).encode("utf-8")
+            headers["Content-Type"] = "application/json"
+        request = urllib.request.Request(base_url + route["path"], data=encoded_body, headers=headers, method=route["method"])
         with urllib.request.urlopen(request, timeout=15) as response:
-            body = json.loads(response.read().decode("utf-8"))
+            raw = response.read()
+            body = json.loads(raw.decode("utf-8")) if raw else None
             status = response.status
         if status != route["expectedStatus"]:
             raise SystemExit(f"{route['id']}: expected HTTP {route['expectedStatus']}, got {status}")
