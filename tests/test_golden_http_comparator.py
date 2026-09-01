@@ -68,6 +68,12 @@ class GoldenHTTPComparatorTest(unittest.TestCase):
 
         self.assertTrue(result.passed)
 
+    def test_committed_parallel_run_results_fixtures_match(self):
+        expected = json.loads((ROOT / "testdata" / "golden" / "parallel-run-results.fixture.json").read_text(encoding="utf-8"))
+        actual = json.loads((ROOT / "testdata" / "golden" / "parallel-run-results-go.fixture.json").read_text(encoding="utf-8"))
+        result = MODULE.compare(expected, actual)
+        self.assertTrue(result.passed)
+
     def test_status_header_and_body_mismatches_are_reported_by_path(self):
         expected = fixture()
         actual = fixture()

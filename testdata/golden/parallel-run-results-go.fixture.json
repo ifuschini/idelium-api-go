@@ -1,0 +1,19 @@
+{
+  "fixtureVersion": "1.0",
+  "id": "parallel-run-results-authorized-go",
+  "description": "Synthetic authorized Go parallel-run results response.",
+  "source": {
+    "runtime": "go",
+    "repository": "idelium/idelium-api-go",
+    "revision": "8b768de000000000000000000000000000000000",
+    "capturedAt": "2026-01-01T00:00:00Z",
+    "routeInventoryDigestSha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9"
+  },
+  "route": {"method": "GET", "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results", "trustPath": "browser-session", "tenantOwned": true},
+  "context": {"tenant": {"id": "fixture-tenant-alpha", "synthetic": true}, "actor": {"id": "fixture-browser-user", "synthetic": true}},
+  "request": {"headers": {"Accept": "application/json", "X-Correlation-ID": "fixture-correlation-parallel-results"}, "query": {}, "body": null},
+  "response": {"status": 200, "headers": {"Content-Type": "application/json"}, "body": {"id": 40, "idProject": 5, "testCycleId": 7, "status": "running", "aggregateStatus": null, "resultSummary": {"completed": 1}, "workers": [{"workerId": "agent-a", "status": "running"}]}},
+  "normalizations": [],
+  "redactions": [],
+  "sideEffects": []
+}
