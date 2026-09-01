@@ -1,6 +1,7 @@
 package browserauth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -764,6 +765,37 @@ func (h *Handler) Projects(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	writeJSON(writer, http.StatusOK, projects)
+}
+
+type ProjectDetailRepository interface {
+	GetProject(context.Context, int64, int64) (Project, error)
+}
+
+func (h *Handler) ShowProject(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "projects.read")
+	if !ok {
+		return
+	}
+	id, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	repo, ok := h.sessions.(ProjectDetailRepository)
+	if !ok {
+		h.internalError(writer, request, "show browser project", errors.New("project detail repository unavailable"))
+		return
+	}
+	project, err := repo.GetProject(request.Context(), user.ActiveTenant(), id)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "show browser project", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, project)
 }
 
 func (h *Handler) Roles(writer http.ResponseWriter, request *http.Request) {

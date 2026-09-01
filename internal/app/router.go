@@ -58,6 +58,7 @@ func NewRouter(
 	router.Put("/admin/profile", browserAuthHandler.UpdateProfile)
 	router.Get("/admin/accounts", browserAuthHandler.Accounts)
 	router.Get("/admin/projects", browserAuthHandler.Projects)
+	router.Get("/admin/projects/{idProject}", browserAuthHandler.ShowProject)
 	router.Get("/admin/agents", browserAuthHandler.Agents)
 	router.Put("/admin/agents/{agentRegistration}/status", browserAuthHandler.UpdateAgentStatus)
 	router.Post("/admin/accounts", browserAuthHandler.CreateAccount)
