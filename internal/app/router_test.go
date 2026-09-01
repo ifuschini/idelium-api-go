@@ -491,8 +491,29 @@ func TestRouterRegistersParallelRunResultAndWorkerRoutes(t *testing.T) {
 		method string
 		path   string
 	}{
+		{http.MethodGet, "/admin/projects/1/parallel-runs"},
+		{http.MethodPost, "/admin/projects/1/parallel-runs"},
+		{http.MethodPost, "/admin/projects/1/parallel-runs/matrix"},
+		{http.MethodGet, "/admin/projects/1/parallel-runs/2"},
+		{http.MethodPost, "/admin/projects/1/parallel-runs/2/cancel"},
+		{http.MethodPost, "/admin/projects/1/parallel-runs/2/claim"},
 		{http.MethodGet, "/admin/projects/1/parallel-runs/2/results"},
 		{http.MethodPut, "/admin/projects/1/parallel-runs/2/workers/agent"},
+		{http.MethodPost, "/admin/projects/1/parallel-runs/2/workers/agent/heartbeat"},
+		{http.MethodGet, "/ideliumcl/projects/1/parallel-runs"},
+		{http.MethodPost, "/ideliumcl/projects/1/parallel-runs"},
+		{http.MethodPost, "/ideliumcl/projects/1/parallel-runs/matrix"},
+		{http.MethodGet, "/ideliumcl/projects/1/parallel-runs/2"},
+		{http.MethodPost, "/ideliumcl/projects/1/parallel-runs/2/cancel"},
+		{http.MethodPost, "/ideliumcl/projects/1/parallel-runs/2/claim"},
+		{http.MethodGet, "/ideliumcl/projects/1/parallel-runs/2/results"},
+		{http.MethodPost, "/ideliumcl/projects/1/parallel-runs/2/tokens"},
+		{http.MethodPost, "/ideliumcl/projects/1/parallel-runs/2/tokens/token/revoke"},
+		{http.MethodPut, "/ideliumcl/projects/1/parallel-runs/2/workers/agent"},
+		{http.MethodPost, "/ideliumcl/projects/1/parallel-runs/2/workers/agent/heartbeat"},
+		{http.MethodPost, "/ideliumrunner/claim"},
+		{http.MethodPost, "/ideliumrunner/heartbeat"},
+		{http.MethodPut, "/ideliumrunner/worker"},
 	} {
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, httptest.NewRequest(route.method, route.path, strings.NewReader(`{"status":"completed"}`)))
