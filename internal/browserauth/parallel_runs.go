@@ -78,6 +78,63 @@ func (h *Handler) CLResults(writer http.ResponseWriter, request *http.Request) {
 	h.results(writer, request, tenant.CustomerID)
 }
 
+// UpdateParallelRunWorker updates a worker from the browser session surface.
+func (h *Handler) UpdateParallelRunWorker(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.authenticatedUser(writer, request)
+	if !ok {
+		return
+	}
+	h.updateWorker(writer, request, user.ActiveTenant())
+}
+
+// CLUpdateParallelRunWorker updates a worker from the API-key surface.
+func (h *Handler) CLUpdateParallelRunWorker(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		h.unauthorized(writer)
+		return
+	}
+	h.updateWorker(writer, request, tenant.CustomerID)
+}
+
+func (h *Handler) updateWorker(writer http.ResponseWriter, request *http.Request, tenantID int64) {
+	projectID, runID, ok := parseAssetVersionPath(writer, request, "parallelRun")
+	if !ok {
+		return
+	}
+	workerID := strings.TrimSpace(request.PathValue("workerId"))
+	if workerID == "" || len(workerID) > 128 {
+		h.notFound(writer)
+		return
+	}
+	var body struct {
+		Status string `json:"status"`
+		Result any    `json:"result"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil || !validWorkerStatus(body.Status) {
+		validationError(writer, "status", "The worker status is invalid.")
+		return
+	}
+	repository, ok := h.sessions.(RunnerRepository)
+	if !ok {
+		h.internalError(writer, request, "update parallel run worker", errors.New("runner repository unavailable"))
+		return
+	}
+	run, err := repository.UpdateRunnerWorker(request, RunnerWorkerUpdate{TenantID: tenantID, ProjectID: projectID, RunID: runID, WorkerID: workerID, Status: body.Status, Result: body.Result, Now: h.now().UTC()})
+	switch {
+	case errors.Is(err, ErrNotFound), errors.Is(err, ErrParallelWorkerMissing):
+		h.notFound(writer)
+	case errors.Is(err, ErrParallelRunTerminal):
+		writeJSON(writer, http.StatusUnprocessableEntity, map[string]string{"message": "Parallel run is already terminal."})
+	case errors.Is(err, ErrParallelRunCancelling):
+		writeJSON(writer, http.StatusConflict, map[string]string{"message": "Parallel run is cancelling."})
+	case err != nil:
+		h.internalError(writer, request, "update parallel run worker", err)
+	default:
+		writeJSON(writer, http.StatusOK, run)
+	}
+}
+
 func (h *Handler) results(writer http.ResponseWriter, request *http.Request, tenantID int64) {
 	projectID, runID, ok := parseAssetVersionPath(writer, request, "parallelRun")
 	if !ok {
