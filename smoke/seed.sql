@@ -39,3 +39,15 @@ VALUES (
 
 INSERT INTO agent_registrations (id, idCostumer, agentId, capabilities)
 VALUES (9001, 9001, 'fixture-agent-smoke', '["selenium"]');
+
+INSERT INTO types (id, name) VALUES (9001, 'fixture-type-smoke');
+INSERT INTO statuses (id, name) VALUES (9001, 'fixture-status-smoke');
+INSERT INTO locations (id, name) VALUES (9001, 'fixture-location-smoke');
+INSERT INTO brand_devices (id, brand) VALUES (9001, 'fixture-brand-smoke');
+INSERT INTO model_devices (id, model, idBrand) VALUES (9001, 'fixture-model-smoke', 9001);
+INSERT INTO os (id, name, type) VALUES (9001, 'fixture-os-smoke', 9001);
+INSERT INTO version_os (id, version, idOs) VALUES (9001, 'fixture-os-version-smoke', 9001);
+INSERT INTO browsers (id, name, idOs) VALUES (9001, 'fixture-browser-smoke', 9001);
+INSERT INTO version_browsers (id, version, idBrowser) VALUES (9001, 'fixture-browser-version-smoke', 9001);
+INSERT INTO platforms (id, type, hostname, location, os, osversion, brand, browser, brandDescription, osDescription, browserDescription, status)
+VALUES (9001, 9001, 'fixture-host-smoke', 9001, 9001, 9001, 9001, 9001, 'fixture-brand-smoke', 'fixture-os-smoke', 'fixture-browser-smoke', 9001);
