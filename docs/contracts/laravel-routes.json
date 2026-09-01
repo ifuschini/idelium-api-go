@@ -2474,7 +2474,7 @@
       "authentication_mode": "run-token",
       "trust_path": "run-token",
       "tenant_context": false,
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "middleware": [
         "api"
       ],
@@ -2488,7 +2488,7 @@
       "authentication_mode": "run-token",
       "trust_path": "run-token",
       "tenant_context": false,
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "middleware": [
         "api"
       ],
@@ -2502,7 +2502,7 @@
       "authentication_mode": "run-token",
       "trust_path": "run-token",
       "tenant_context": false,
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "middleware": [
         "api"
       ],

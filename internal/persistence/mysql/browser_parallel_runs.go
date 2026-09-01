@@ -160,6 +160,50 @@ func (r *BrowserAuthRepository) ClaimParallelRun(request *http.Request, input br
 	return run, nil
 }
 
+func (r *BrowserAuthRepository) UpdateRunnerWorker(request *http.Request, input browserauth.RunnerWorkerUpdate) (browserauth.ParallelRun, error) {
+	ctx := request.Context()
+	tx, err := r.database.BeginTx(ctx, nil)
+	if err != nil {
+		return browserauth.ParallelRun{}, safeDatabaseFailure("start runner worker update", err)
+	}
+	defer tx.Rollback()
+	var status string
+	var workersJSON sql.NullString
+	err = tx.QueryRowContext(ctx, "SELECT status, workerStates FROM parallel_run_schedules WHERE id=? AND idCostumer=? AND idProject=? FOR UPDATE", input.RunID, input.TenantID, input.ProjectID).Scan(&status, &workersJSON)
+	if err != nil {
+		return browserauth.ParallelRun{}, parallelRunNotFound("lock runner worker update", err)
+	}
+	if parallelRunTerminal(status) {
+		return browserauth.ParallelRun{}, browserauth.ErrParallelRunTerminal
+	}
+	workers := decodeParallelMap(workersJSON)
+	worker, ok := workers[input.WorkerID].(map[string]any)
+	if !ok {
+		return browserauth.ParallelRun{}, browserauth.ErrParallelWorkerMissing
+	}
+	worker["status"] = input.Status
+	worker["updatedAt"] = parallelRunISOString(input.Now)
+	if input.Result != nil {
+		worker["result"] = input.Result
+	}
+	workers[input.WorkerID] = worker
+	counters, summary := recalculateParallelRunWorkers(workers, input.Now)
+	wb, _ := json.Marshal(workers)
+	sb, _ := json.Marshal(summary)
+	_, err = tx.ExecContext(ctx, `UPDATE parallel_run_schedules SET workerStates=?,resultSummary=?,activeWorkers=?,totalWorkers=?,completedWorkers=?,failedWorkers=?,cancelledWorkers=?,updated_at=? WHERE id=? AND idCostumer=? AND idProject=?`, string(wb), string(sb), counters.active, counters.total, counters.completed, counters.failed, counters.cancelled, input.Now, input.RunID, input.TenantID, input.ProjectID)
+	if err != nil {
+		return browserauth.ParallelRun{}, safeDatabaseFailure("update runner worker", err)
+	}
+	run, err := getParallelRun(ctx, tx, input.TenantID, input.ProjectID, input.RunID)
+	if err != nil {
+		return run, err
+	}
+	if err = tx.Commit(); err != nil {
+		return run, safeDatabaseFailure("commit runner worker update", err)
+	}
+	return run, nil
+}
+
 func (r *BrowserAuthRepository) HeartbeatParallelRunWorker(request *http.Request, tenantID, projectID, runID int64, workerID string, leaseSeconds int, now time.Time) (browserauth.ParallelRunHeartbeat, error) {
 	ctx := request.Context()
 	tx, err := r.database.BeginTx(ctx, nil)

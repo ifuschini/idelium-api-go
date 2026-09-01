@@ -177,6 +177,9 @@ func NewRouter(
 		router.Post("/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel", browserAuthHandler.CLCancelParallelRun)
 		router.Post("/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens", browserAuthHandler.CLIssueParallelRunToken)
 		router.Post("/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke", browserAuthHandler.CLRevokeParallelRunToken)
+		router.Post("/ideliumrunner/claim", browserAuthHandler.RunnerClaim)
+		router.Post("/ideliumrunner/heartbeat", browserAuthHandler.RunnerHeartbeat)
+		router.Put("/ideliumrunner/worker", browserAuthHandler.RunnerUpdateWorker)
 	})
 
 	router.NotFound(func(writer http.ResponseWriter, request *http.Request) {

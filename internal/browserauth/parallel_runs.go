@@ -81,6 +81,15 @@ type ParallelRunClaim struct {
 	CertificateHash string
 	Now             time.Time
 }
+type RunnerWorkerUpdate struct {
+	TenantID, ProjectID, RunID int64
+	WorkerID, Status           string
+	Result                     any
+	Now                        time.Time
+}
+type RunnerRepository interface {
+	UpdateRunnerWorker(*http.Request, RunnerWorkerUpdate) (ParallelRun, error)
+}
 
 type ParallelRunHeartbeat struct {
 	Run          ParallelRun
@@ -276,6 +285,112 @@ func (h *Handler) CLRevokeParallelRunToken(writer http.ResponseWriter, request *
 		return
 	}
 	writeJSON(writer, http.StatusOK, revoked)
+}
+
+// RunnerClaim accepts the runner-only token contract, whose identifiers are in the JSON body.
+func (h *Handler) RunnerClaim(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		h.unauthorized(writer)
+		return
+	}
+	var body struct {
+		ProjectID    int64  `json:"idProject"`
+		RunID        int64  `json:"parallelRun"`
+		WorkerID     string `json:"workerId"`
+		Capabilities []any  `json:"capabilities"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil || body.ProjectID < 1 || body.RunID < 1 || strings.TrimSpace(body.WorkerID) == "" || len(body.WorkerID) > 128 {
+		validationError(writer, "workerId", "The worker id field is invalid.")
+		return
+	}
+	in := ParallelRunClaim{TenantID: tenant.CustomerID, ProjectID: body.ProjectID, RunID: body.RunID, WorkerID: strings.TrimSpace(body.WorkerID), Capabilities: body.Capabilities, CapabilitiesSet: body.Capabilities != nil, RunToken: request.Header.Get("Idelium-Run-Token"), CertificateHash: request.Header.Get("Idelium-Agent-Cert-Sha256"), Now: h.now().UTC()}
+	if h.runTokenRequiredClaim && in.RunToken == "" {
+		writeJSON(writer, http.StatusUnauthorized, map[string]string{"message": "A short-lived run token is required to claim a worker slot."})
+		return
+	}
+	run, err := h.sessions.ClaimParallelRun(request, in)
+	if errors.Is(err, ErrRunTokenInvalid) {
+		writeJSON(writer, http.StatusUnauthorized, map[string]string{"message": "The run token is invalid, expired, used, or not bound to this agent."})
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "runner claim", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, run)
+}
+
+// RunnerHeartbeat accepts the runner-only token contract, whose identifiers are in the JSON body.
+func (h *Handler) RunnerHeartbeat(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		h.unauthorized(writer)
+		return
+	}
+	var body struct {
+		ProjectID    int64  `json:"idProject"`
+		RunID        int64  `json:"parallelRun"`
+		WorkerID     string `json:"workerId"`
+		LeaseSeconds int    `json:"leaseSeconds"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil || body.ProjectID < 1 || body.RunID < 1 || strings.TrimSpace(body.WorkerID) == "" {
+		validationError(writer, "workerId", "The worker id field is invalid.")
+		return
+	}
+	if body.LeaseSeconds == 0 {
+		body.LeaseSeconds = 120
+	}
+	if body.LeaseSeconds < 15 || body.LeaseSeconds > 3600 {
+		validationError(writer, "leaseSeconds", "The lease seconds field must be between 15 and 3600.")
+		return
+	}
+	result, err := h.sessions.HeartbeatParallelRunWorker(request, tenant.CustomerID, body.ProjectID, body.RunID, strings.TrimSpace(body.WorkerID), body.LeaseSeconds, h.now().UTC())
+	if err != nil {
+		h.internalError(writer, request, "runner heartbeat", err)
+		return
+	}
+	if result.WorkerStatus != "" {
+		p := parallelRunPayload(result.Run)
+		p["message"] = "Worker lease is no longer active."
+		p["workerStatus"] = result.WorkerStatus
+		writeJSON(writer, http.StatusConflict, p)
+		return
+	}
+	writeJSON(writer, http.StatusOK, result.Run)
+}
+
+func (h *Handler) RunnerUpdateWorker(writer http.ResponseWriter, request *http.Request) {
+	tenant, ok := auth.TenantFromContext(request.Context())
+	if !ok {
+		h.unauthorized(writer)
+		return
+	}
+	var body struct {
+		ProjectID int64  `json:"idProject"`
+		RunID     int64  `json:"parallelRun"`
+		WorkerID  string `json:"workerId"`
+		Status    string `json:"status"`
+		Result    any    `json:"result"`
+	}
+	if err := json.NewDecoder(request.Body).Decode(&body); err != nil || body.ProjectID < 1 || body.RunID < 1 || strings.TrimSpace(body.WorkerID) == "" || !validWorkerStatus(body.Status) {
+		validationError(writer, "status", "The worker status is invalid.")
+		return
+	}
+	repo, ok := h.sessions.(RunnerRepository)
+	if !ok {
+		h.internalError(writer, request, "runner worker update", errors.New("runner repository unavailable"))
+		return
+	}
+	run, err := repo.UpdateRunnerWorker(request, RunnerWorkerUpdate{TenantID: tenant.CustomerID, ProjectID: body.ProjectID, RunID: body.RunID, WorkerID: strings.TrimSpace(body.WorkerID), Status: body.Status, Result: body.Result, Now: h.now().UTC()})
+	if err != nil {
+		h.internalError(writer, request, "runner worker update", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, run)
+}
+func validWorkerStatus(s string) bool {
+	return s == "running" || s == "completed" || s == "failed" || s == "cancelled" || s == "lost"
 }
 
 func (h *Handler) cancelParallelRun(writer http.ResponseWriter, request *http.Request, tenantID int64) {

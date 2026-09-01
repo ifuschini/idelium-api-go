@@ -5873,7 +5873,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/ideliumrunner/claim"
       x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@claimWorkerWithRunToken"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "run-token"
       x-idelium-authentication-mode: "run-token"
       x-idelium-tenant-context: false
@@ -5909,7 +5909,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/ideliumrunner/heartbeat"
       x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@heartbeatWorkerWithToken"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "run-token"
       x-idelium-authentication-mode: "run-token"
       x-idelium-tenant-context: false
@@ -5945,7 +5945,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/ideliumrunner/worker"
       x-idelium-controller: "App\\Http\\Controllers\\ParallelRunScheduleController@updateWorkerWithToken"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "run-token"
       x-idelium-authentication-mode: "run-token"
       x-idelium-tenant-context: false
