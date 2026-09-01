@@ -72,6 +72,7 @@ func NewRouter(
 	router.Post("/admin/testcycles", browserAuthHandler.CreateTestCycle)
 	router.Post("/admin/steps/{idProject}/updateorder", browserAuthHandler.ReorderSteps)
 	router.Get("/admin/steps/{idProject}", browserAuthHandler.Steps)
+	router.Get("/admin/steps/{idProject}/{step}", browserAuthHandler.ShowStep)
 	router.Get("/admin/tests/{idProject}", browserAuthHandler.Tests)
 	router.Get("/admin/tests/{idProject}/{test}", browserAuthHandler.ShowTest)
 	router.Put("/admin/tests/{idProject}/{test}", browserAuthHandler.UpdateTest)

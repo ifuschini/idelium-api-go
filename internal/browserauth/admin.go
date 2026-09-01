@@ -601,6 +601,50 @@ type StepPage struct {
 	Meta PageMeta       `json:"meta"`
 }
 
+type StepDetail struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Config      any    `json:"config"`
+	IDProject   int64  `json:"idProject"`
+	Order       int64  `json:"order"`
+}
+type StepDetailRepository interface {
+	GetStep(*http.Request, User, int64, int64) (StepDetail, error)
+}
+
+func (h *Handler) ShowStep(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "resources.read")
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	stepID, err := parsePathID(request.PathValue("step"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	repo, ok := h.sessions.(StepDetailRepository)
+	if !ok {
+		h.internalError(writer, request, "show browser step", errors.New("step detail repository unavailable"))
+		return
+	}
+	step, err := repo.GetStep(request, user, projectID, stepID)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "show browser step", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, step)
+}
+
 func (h *Handler) Roles(writer http.ResponseWriter, request *http.Request) {
 	user, ok := h.authenticatedUser(writer, request)
 	if !ok {
