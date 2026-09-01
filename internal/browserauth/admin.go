@@ -801,6 +801,100 @@ type BrowserPluginRepository interface {
 	DeleteBrowserPlugin(*http.Request, User, int64, int64) error
 }
 
+func (h *Handler) CreatePlugin(w http.ResponseWriter, r *http.Request) {
+	u, ok := h.requireCapability(w, r, "resources.manage")
+	if !ok {
+		return
+	}
+	var b struct {
+		IDProject         int64 `json:"idProject"`
+		Name, Description string
+		Code              any `json:"code"`
+	}
+	if err := decodeJSON(w, r, &b); err != nil || b.IDProject < 1 || strings.TrimSpace(b.Name) == "" || !validPluginCode(b.Code) {
+		validationError(w, "code", "The plugin manifest must be a non-empty JSON object.")
+		return
+	}
+	repo, ok := h.sessions.(BrowserPluginRepository)
+	if !ok {
+		h.internalError(w, r, "create browser plugin", errors.New("plugin repository unavailable"))
+		return
+	}
+	if err := repo.CreateBrowserPlugin(r, u, PluginInput{IDProject: b.IDProject, Name: strings.TrimSpace(b.Name), Description: strings.TrimSpace(b.Description), Code: b.Code}); err != nil {
+		h.internalError(w, r, "create browser plugin", err)
+		return
+	}
+	h.Plugins(w, r)
+}
+func (h *Handler) UpdatePlugin(w http.ResponseWriter, r *http.Request) {
+	u, ok := h.requireCapability(w, r, "resources.manage")
+	if !ok {
+		return
+	}
+	pid, e := parsePathID(r.PathValue("idProject"))
+	if e != nil {
+		h.notFound(w)
+		return
+	}
+	id, e := parsePathID(r.PathValue("plugin"))
+	if e != nil {
+		h.notFound(w)
+		return
+	}
+	var b struct {
+		Description string
+		Code        any `json:"code"`
+	}
+	if err := decodeJSON(w, r, &b); err != nil || !validPluginCode(b.Code) {
+		validationError(w, "code", "The plugin manifest must be a non-empty JSON object.")
+		return
+	}
+	repo, ok := h.sessions.(BrowserPluginRepository)
+	if !ok {
+		h.internalError(w, r, "update browser plugin", errors.New("plugin repository unavailable"))
+		return
+	}
+	if err := repo.UpdateBrowserPlugin(r, u, PluginInput{IDProject: pid, ID: id, Description: strings.TrimSpace(b.Description), Code: b.Code}); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			h.notFound(w)
+			return
+		}
+		h.internalError(w, r, "update browser plugin", err)
+		return
+	}
+	h.Plugins(w, r)
+}
+func (h *Handler) DeletePlugin(w http.ResponseWriter, r *http.Request) {
+	u, ok := h.requireCapability(w, r, "resources.manage")
+	if !ok {
+		return
+	}
+	pid, e := parsePathID(r.PathValue("idProject"))
+	if e != nil {
+		h.notFound(w)
+		return
+	}
+	id, e := parsePathID(r.PathValue("plugin"))
+	if e != nil {
+		h.notFound(w)
+		return
+	}
+	repo, ok := h.sessions.(BrowserPluginRepository)
+	if !ok {
+		h.internalError(w, r, "delete browser plugin", errors.New("plugin repository unavailable"))
+		return
+	}
+	if err := repo.DeleteBrowserPlugin(r, u, pid, id); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			h.notFound(w)
+			return
+		}
+		h.internalError(w, r, "delete browser plugin", err)
+		return
+	}
+	h.Plugins(w, r)
+}
+
 func validPluginCode(v any) bool { m, ok := v.(map[string]any); return ok && len(m) > 0 }
 func (h *Handler) Plugins(writer http.ResponseWriter, request *http.Request) {
 	u, ok := h.requireCapability(writer, request, "resources.read")
