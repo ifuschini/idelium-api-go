@@ -9,10 +9,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/idelium/idelium-api-go/internal/app"
 	"github.com/idelium/idelium-api-go/internal/buildinfo"
 	"github.com/idelium/idelium-api-go/internal/config"
+	"github.com/idelium/idelium-api-go/internal/healthprobe"
 	mysqlpersistence "github.com/idelium/idelium-api-go/internal/persistence/mysql"
 	"github.com/idelium/idelium-api-go/internal/server"
 )
@@ -20,6 +22,18 @@ import (
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
+
+	if len(os.Args) == 2 && os.Args[1] == "healthcheck" {
+		endpoint := os.Getenv("IDELIUM_HEALTHCHECK_URL")
+		if endpoint == "" {
+			endpoint = "http://127.0.0.1:8080/health/live"
+		}
+		if err := healthprobe.Check(context.Background(), endpoint, 2*time.Second); err != nil {
+			logger.Error("API healthcheck failed", "error", err)
+			os.Exit(1)
+		}
+		return
+	}
 
 	if err := run(logger); err != nil {
 		logger.Error("API stopped", "error", err)
