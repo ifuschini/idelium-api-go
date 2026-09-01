@@ -773,6 +773,71 @@ type ProjectDetailRepository interface {
 	UpdateProject(context.Context, int64, int64, string, string) error
 	DeleteProject(context.Context, int64, int64) error
 }
+type EnvironmentDetail struct {
+	ID          int64  `json:"id"`
+	Code        string `json:"code"`
+	Description string `json:"description"`
+	Config      any    `json:"config"`
+	IDProject   int64  `json:"idProject"`
+}
+type EnvironmentRepository interface {
+	ListEnvironments(*http.Request, User, int64) ([]EnvironmentDetail, error)
+	GetEnvironment(*http.Request, User, int64, int64) (EnvironmentDetail, error)
+}
+
+func (h *Handler) Environments(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "resources.read")
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	repo, ok := h.sessions.(EnvironmentRepository)
+	if !ok {
+		h.internalError(writer, request, "list browser environments", errors.New("environment repository unavailable"))
+		return
+	}
+	items, err := repo.ListEnvironments(request, user, projectID)
+	if err != nil {
+		h.internalError(writer, request, "list browser environments", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{"data": items})
+}
+func (h *Handler) ShowEnvironment(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "resources.read")
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	id, err := parsePathID(request.PathValue("environment"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	repo, ok := h.sessions.(EnvironmentRepository)
+	if !ok {
+		h.internalError(writer, request, "show browser environment", errors.New("environment repository unavailable"))
+		return
+	}
+	item, err := repo.GetEnvironment(request, user, projectID, id)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "show browser environment", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, item)
+}
 
 func (h *Handler) CreateProject(writer http.ResponseWriter, request *http.Request) {
 	user, ok := h.requireCapability(writer, request, "projects.manage")
