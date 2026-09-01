@@ -611,6 +611,113 @@ type StepDetail struct {
 }
 type StepDetailRepository interface {
 	GetStep(*http.Request, User, int64, int64) (StepDetail, error)
+	CreateStep(*http.Request, User, StepInput) error
+	UpdateStep(*http.Request, User, StepInput) error
+	DeleteStep(*http.Request, User, int64, int64) error
+}
+type StepInput struct {
+	IDProject   int64
+	ID          int64
+	Name        string
+	Description string
+	Config      any
+}
+
+func (h *Handler) CreateStep(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "resources.manage")
+	if !ok {
+		return
+	}
+	var body struct {
+		IDProject         int64 `json:"idProject"`
+		Name, Description string
+		Config            any `json:"config"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil || body.IDProject < 1 || strings.TrimSpace(body.Name) == "" {
+		validationError(writer, "name", "The name field is required.")
+		return
+	}
+	repo, ok := h.sessions.(StepDetailRepository)
+	if !ok {
+		h.internalError(writer, request, "create browser step", errors.New("step repository unavailable"))
+		return
+	}
+	if err := repo.CreateStep(request, user, StepInput{IDProject: body.IDProject, Name: strings.TrimSpace(body.Name), Description: strings.TrimSpace(body.Description), Config: body.Config}); err != nil {
+		h.internalError(writer, request, "create browser step", err)
+		return
+	}
+	h.Steps(writer, request)
+}
+func (h *Handler) UpdateStep(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "resources.manage")
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	stepID, err := parsePathID(request.PathValue("step"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	var body struct {
+		Name, Description string
+		Config            any `json:"config"`
+	}
+	if err := decodeJSON(writer, request, &body); err != nil || strings.TrimSpace(body.Name) == "" {
+		validationError(writer, "name", "The name field is required.")
+		return
+	}
+	repo, ok := h.sessions.(StepDetailRepository)
+	if !ok {
+		h.internalError(writer, request, "update browser step", errors.New("step repository unavailable"))
+		return
+	}
+	if err := repo.UpdateStep(request, user, StepInput{IDProject: projectID, ID: stepID, Name: strings.TrimSpace(body.Name), Description: strings.TrimSpace(body.Description), Config: body.Config}); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			h.notFound(writer)
+			return
+		}
+		h.internalError(writer, request, "update browser step", err)
+		return
+	}
+	h.Steps(writer, request)
+}
+func (h *Handler) DeleteStep(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "resources.manage")
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	stepID, err := parsePathID(request.PathValue("environment"))
+	if err != nil {
+		stepID, err = parsePathID(request.PathValue("step"))
+	}
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	repo, ok := h.sessions.(StepDetailRepository)
+	if !ok {
+		h.internalError(writer, request, "delete browser step", errors.New("step repository unavailable"))
+		return
+	}
+	if err := repo.DeleteStep(request, user, projectID, stepID); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			h.notFound(writer)
+			return
+		}
+		h.internalError(writer, request, "delete browser step", err)
+		return
+	}
+	h.Steps(writer, request)
 }
 
 func (h *Handler) ShowStep(writer http.ResponseWriter, request *http.Request) {
