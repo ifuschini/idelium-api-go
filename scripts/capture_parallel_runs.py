@@ -47,6 +47,10 @@ def main() -> int:
             headers["Cookie"] = cookie
             if xsrf:
                 headers["X-XSRF-TOKEN"] = xsrf
+            if route.get("requiresRunToken"):
+                if not run_token:
+                    raise SystemExit("Missing CAPTURE_RUN_TOKEN for run-token protected browser route")
+                headers["Idelium-Run-Token"] = run_token
         elif route["authentication"] == "api-key":
             if not api_key:
                 raise SystemExit("Missing CAPTURE_API_KEY for api-key route")
