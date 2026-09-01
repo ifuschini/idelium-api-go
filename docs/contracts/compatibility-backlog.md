@@ -101,11 +101,11 @@ harness is available.
 | `high` | 3 | `GET|HEAD` | `/api/admin/platforms/osversion/{idOs}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `high` | 3 | `GET|HEAD` | `/api/admin/platforms/status` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `high` | 3 | `GET|HEAD` | `/api/admin/platforms/types` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `high` | 6 | `POST` | `/api/admin/plugins` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `high` | 6 | `GET|HEAD` | `/api/admin/plugins/{idProject}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `high` | 6 | `DELETE` | `/api/admin/plugins/{idProject}/{plugin}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `high` | 6 | `GET|HEAD` | `/api/admin/plugins/{idProject}/{plugin}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `high` | 6 | `PUT` | `/api/admin/plugins/{idProject}/{step}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
+| `high` | 6 | `POST` | `/api/admin/plugins` | `browser-session` | `idelium-web` | `documented` | `go-application` |
+| `high` | 6 | `GET|HEAD` | `/api/admin/plugins/{idProject}` | `browser-session` | `idelium-web` | `documented` | `go-application` |
+| `high` | 6 | `DELETE` | `/api/admin/plugins/{idProject}/{plugin}` | `browser-session` | `idelium-web` | `documented` | `go-application` |
+| `high` | 6 | `GET|HEAD` | `/api/admin/plugins/{idProject}/{plugin}` | `browser-session` | `idelium-web` | `documented` | `go-application` |
+| `high` | 6 | `PUT` | `/api/admin/plugins/{idProject}/{step}` | `browser-session` | `idelium-web` | `documented` | `go-application` |
 | `high` | 9 | `GET|HEAD` | `/api/admin/profile` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `high` | 9 | `PUT` | `/api/admin/profile` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `normal` | 9 | `POST` | `/api/admin/profile/mfa/confirm` | `browser-session` | — | `documented` | `laravel-application` |

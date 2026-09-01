@@ -4099,7 +4099,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/plugins"
       x-idelium-controller: "App\\Http\\Controllers\\PluginController@store"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -4135,7 +4135,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/plugins/{idProject}"
       x-idelium-controller: "App\\Http\\Controllers\\PluginController@index"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -4166,7 +4166,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/plugins/{idProject}/{plugin}"
       x-idelium-controller: "App\\Http\\Controllers\\PluginController@destroy"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -4201,7 +4201,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/plugins/{idProject}/{plugin}"
       x-idelium-controller: "App\\Http\\Controllers\\PluginController@show"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
@@ -4237,7 +4237,7 @@ paths:
       tags: [Laravel Compatibility]
       x-idelium-laravel-route: "/api/admin/plugins/{idProject}/{step}"
       x-idelium-controller: "App\\Http\\Controllers\\PluginController@update"
-      x-idelium-current-owner: "laravel-application"
+      x-idelium-current-owner: "go-application"
       x-idelium-trust-path: "browser-session"
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true

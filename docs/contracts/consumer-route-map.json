@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "route_inventory_digest_sha256": "02246ce66e7326067499a3b66d6ec9f12fd5fafa94f26dc0cacf451657ff40d5",
+  "route_inventory_digest_sha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48",
   "sources": {
     "idelium-web": "23a21a7ce469bc4e0e417be42b0cfe089768a3bd",
     "idelium-cli": "34191d99c6f5c42118bf7622c4ec124251edeffa",
@@ -1061,7 +1061,7 @@
       "path": "/api/admin/plugins",
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-web",
@@ -1082,7 +1082,7 @@
       "path": "/api/admin/plugins/{idProject}",
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-web",
@@ -1103,7 +1103,7 @@
       "path": "/api/admin/plugins/{idProject}/{plugin}",
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-web",
@@ -1124,7 +1124,7 @@
       "path": "/api/admin/plugins/{idProject}/{plugin}",
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-web",
@@ -1145,7 +1145,7 @@
       "path": "/api/admin/plugins/{idProject}/{step}",
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "consumers": [
         {
           "id": "idelium-web",
