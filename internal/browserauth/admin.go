@@ -752,6 +752,20 @@ func (h *Handler) ShowStep(writer http.ResponseWriter, request *http.Request) {
 	writeJSON(writer, http.StatusOK, step)
 }
 
+// Projects returns projects owned by the active tenant.
+func (h *Handler) Projects(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "projects.read")
+	if !ok {
+		return
+	}
+	projects, err := h.sessions.ListProjects(request.Context(), user.ActiveTenant())
+	if err != nil {
+		h.internalError(writer, request, "list browser projects", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, projects)
+}
+
 func (h *Handler) Roles(writer http.ResponseWriter, request *http.Request) {
 	user, ok := h.authenticatedUser(writer, request)
 	if !ok {
