@@ -111,8 +111,8 @@ harness is available.
 | `normal` | 9 | `POST` | `/api/admin/profile/mfa/confirm` | `browser-session` | — | `documented` | `laravel-application` |
 | `normal` | 9 | `POST` | `/api/admin/profile/mfa/enroll` | `browser-session` | — | `documented` | `laravel-application` |
 | `normal` | 9 | `POST` | `/api/admin/profile/mfa/step-up` | `browser-session` | — | `documented` | `laravel-application` |
-| `high` | 6 | `GET|HEAD` | `/api/admin/projects` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `high` | 6 | `POST` | `/api/admin/projects` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
+| `high` | 6 | `GET|HEAD` | `/api/admin/projects` | `browser-session` | `idelium-web` | `documented` | `go-application` |
+| `high` | 6 | `POST` | `/api/admin/projects` | `browser-session` | `idelium-web` | `documented` | `go-application` |
 | `high` | 6 | `GET|HEAD` | `/api/admin/projects/create` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `normal` | 7 | `GET|HEAD` | `/api/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}` | `browser-session` | — | `documented` | `laravel-application` |
 | `normal` | 7 | `GET|HEAD` | `/api/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}` | `browser-session` | — | `documented` | `laravel-application` |
@@ -142,9 +142,9 @@ harness is available.
 | `normal` | 7 | `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact` | `browser-session` | — | `documented` | `laravel-application` |
 | `normal` | 7 | `PUT` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold` | `browser-session` | — | `documented` | `laravel-application` |
 | `normal` | 7 | `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore` | `browser-session` | — | `documented` | `laravel-application` |
-| `high` | 6 | `DELETE` | `/api/admin/projects/{project}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `high` | 6 | `GET|HEAD` | `/api/admin/projects/{project}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
-| `high` | 6 | `PUT|PATCH` | `/api/admin/projects/{project}` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
+| `high` | 6 | `DELETE` | `/api/admin/projects/{project}` | `browser-session` | `idelium-web` | `documented` | `go-application` |
+| `high` | 6 | `GET|HEAD` | `/api/admin/projects/{project}` | `browser-session` | `idelium-web` | `documented` | `go-application` |
+| `high` | 6 | `PUT|PATCH` | `/api/admin/projects/{project}` | `browser-session` | `idelium-web` | `documented` | `go-application` |
 | `high` | 6 | `GET|HEAD` | `/api/admin/projects/{project}/edit` | `browser-session` | `idelium-web` | `documented` | `laravel-application` |
 | `normal` | 7 | `POST` | `/api/admin/result-exports` | `browser-session` | — | `documented` | `laravel-application` |
 | `normal` | 7 | `GET|HEAD` | `/api/admin/result-exports/{resultExport}` | `browser-session` | — | `documented` | `laravel-application` |

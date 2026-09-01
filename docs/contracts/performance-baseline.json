@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "routeInventoryDigestSha256": "d6aee54be173f1fe9ef654dce477a097cfd6da0f364bc8c1221fdc808789ef13",
+  "routeInventoryDigestSha256": "3196f30ec33595089fff12b46ed5188e9dd9cbf3087de993b70788af8aa598c5",
   "measurementPolicy": {
     "environment": "isolated non-production stack with synthetic tenants",
     "clock": "monotonic client-side duration around the HTTP request",

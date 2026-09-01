@@ -5,7 +5,7 @@
     "revision": "ef97a6b3f42105cad583b3f1a68acf637a9d086e"
   },
   "route_count": 171,
-  "route_digest_sha256": "d6aee54be173f1fe9ef654dce477a097cfd6da0f364bc8c1221fdc808789ef13",
+  "route_digest_sha256": "3196f30ec33595089fff12b46ed5188e9dd9cbf3087de993b70788af8aa598c5",
   "routes": [
     {
       "method": "GET|HEAD",
@@ -1111,7 +1111,7 @@
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
       "tenant_context": true,
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "middleware": [
         "api",
         "App\\Http\\Middleware\\Authenticate:sanctum",
@@ -1127,7 +1127,7 @@
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
       "tenant_context": true,
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "middleware": [
         "api",
         "App\\Http\\Middleware\\Authenticate:sanctum",
@@ -1607,7 +1607,7 @@
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
       "tenant_context": true,
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "middleware": [
         "api",
         "App\\Http\\Middleware\\Authenticate:sanctum",
@@ -1623,7 +1623,7 @@
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
       "tenant_context": true,
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "middleware": [
         "api",
         "App\\Http\\Middleware\\Authenticate:sanctum",
@@ -1639,7 +1639,7 @@
       "authentication_mode": "browser-session",
       "trust_path": "browser-session",
       "tenant_context": true,
-      "current_owner": "laravel-application",
+      "current_owner": "go-application",
       "middleware": [
         "api",
         "App\\Http\\Middleware\\Authenticate:sanctum",
