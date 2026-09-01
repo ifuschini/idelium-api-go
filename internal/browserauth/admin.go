@@ -1009,6 +1009,30 @@ func (h *Handler) ReorderSteps(writer http.ResponseWriter, request *http.Request
 	writeJSON(writer, http.StatusOK, page)
 }
 
+// Steps lists editable steps for a tenant-owned project using the Laravel page contract.
+func (h *Handler) Steps(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "resources.read")
+	if !ok {
+		return
+	}
+	projectID, err := parsePathID(request.PathValue("idProject"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	query := parseResourceQuery(request, projectID, "id")
+	page, err := h.sessions.ListStepsForReorder(request, user, query)
+	if errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "list browser steps", err)
+		return
+	}
+	writeJSON(writer, http.StatusOK, page)
+}
+
 func (h *Handler) Tests(writer http.ResponseWriter, request *http.Request) {
 	user, ok := h.authenticatedUser(writer, request)
 	if !ok {
