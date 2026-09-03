@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import urllib.request
+import urllib.error
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -77,6 +78,11 @@ def main() -> int:
                 if not route_token:
                     raise SystemExit("Missing CAPTURE_RUN_TOKEN for run-token protected browser route")
                 headers["Idelium-Run-Token"] = route_token
+            if route.get("requiresWorkerToken"):
+                worker_token = variables.get("workerToken", "")
+                if not worker_token:
+                    raise SystemExit("Missing worker token from claim response")
+                headers["Idelium-Worker-Token"] = worker_token
         elif route["authentication"] == "api-key":
             if not api_key:
                 raise SystemExit("Missing CAPTURE_API_KEY for api-key route")
@@ -92,10 +98,18 @@ def main() -> int:
             encoded_body = json.dumps(body).encode("utf-8")
             headers["Content-Type"] = "application/json"
         request = urllib.request.Request(base_url + path, data=encoded_body, headers=headers, method=route["method"])
-        with urllib.request.urlopen(request, timeout=15) as response:
-            raw = response.read()
-            body = json.loads(raw.decode("utf-8")) if raw else None
-            status = response.status
+        try:
+            with urllib.request.urlopen(request, timeout=15) as response:
+                raw = response.read()
+                body = json.loads(raw.decode("utf-8")) if raw else None
+                status = response.status
+        except urllib.error.HTTPError as error:
+            raw = error.read()
+            try:
+                body = sanitize(json.loads(raw.decode("utf-8"))) if raw else None
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                body = None
+            raise SystemExit(f"{route['id']}: HTTP {error.code}, response={body}") from error
         if status != route["expectedStatus"]:
             raise SystemExit(f"{route['id']}: expected HTTP {route['expectedStatus']}, got {status}")
         capture = route.get("capture")
