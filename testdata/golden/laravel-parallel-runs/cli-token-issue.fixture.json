@@ -1,0 +1,49 @@
+{
+  "fixtureVersion": "1.0",
+  "id": "cli-issue-parallel-run-token",
+  "description": "Sanitized Laravel parallel-run capture.",
+  "source": {
+    "runtime": "laravel",
+    "repository": "idelium/idelium-api",
+    "revision": "e6af3eb41d8c65108c95157198144c94fb5259ba",
+    "capturedAt": "2026-09-04T08:10:52Z",
+    "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
+  },
+  "route": {
+    "method": "POST",
+    "path": "/api/ideliumcl/projects/9001/parallel-runs/9001/tokens",
+    "trustPath": "api-key",
+    "tenantOwned": true
+  },
+  "context": {
+    "tenant": {
+      "id": "fixture-tenant-9001",
+      "synthetic": true
+    },
+    "actor": {
+      "id": "fixture-browser-user-9001",
+      "synthetic": true
+    }
+  },
+  "request": {
+    "headers": {
+      "Accept": "application/json"
+    },
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "token": "[REDACTED]",
+      "expiresAt": "2026-09-04T08:15:52.000000Z",
+      "agentId": "fixture-agent-smoke"
+    }
+  },
+  "normalizations": [],
+  "redactions": [],
+  "sideEffects": []
+}
