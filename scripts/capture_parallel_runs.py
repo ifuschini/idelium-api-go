@@ -19,7 +19,7 @@ PLACEHOLDER = re.compile(r"\{\{([A-Za-z0-9_.-]+)\}\}")
 
 def sanitize(value: Any) -> Any:
     if isinstance(value, dict):
-        return {k: "[REDACTED]" if any(part in k.lower() for part in SENSITIVE) else sanitize(v) for k, v in value.items()}
+        return {k: sanitize(v) for k, v in value.items() if not any(part in k.lower() for part in SENSITIVE)}
     if isinstance(value, list):
         return [sanitize(item) for item in value]
     return value
