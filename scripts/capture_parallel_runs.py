@@ -92,6 +92,11 @@ def main() -> int:
             if not route_token:
                 raise SystemExit("Missing CAPTURE_RUN_TOKEN for run-token route")
             headers["Idelium-Run-Token"] = route_token
+        if route.get("requiresRunToken") and "Idelium-Run-Token" not in headers:
+            route_token = variables.get("runToken", run_token)
+            if not route_token:
+                raise SystemExit("Missing run token for protected route")
+            headers["Idelium-Run-Token"] = route_token
         if route.get("requiresWorkerToken"):
             worker_token = variables.get("workerToken", "")
             if not worker_token:
