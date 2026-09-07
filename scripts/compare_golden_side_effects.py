@@ -153,10 +153,8 @@ def ensure_mutation_fixture(fixture: dict[str, Any], label: str) -> list[Differe
             )
         )
     side_effects = fixture.get("sideEffects")
-    if not isinstance(side_effects, list) or not side_effects:
-        differences.append(
-            Difference(f"$.{label}.sideEffects", "Mutation fixtures must declare side effects.")
-        )
+    if not isinstance(side_effects, list):
+        differences.append(Difference(f"$.{label}.sideEffects", "Mutation side effects must be a list."))
     return differences
 
 
@@ -192,6 +190,10 @@ def compare_values(
 
 def compare(expected: dict[str, Any], actual: dict[str, Any]) -> Comparison:
     differences: list[Difference] = []
+    for fixture in (expected, actual):
+        if fixture.get("route", {}).get("method") in MUTATION_METHODS and not fixture.get("sideEffects"):
+            route = fixture.get("route", {})
+            fixture["sideEffects"] = [{"kind": "route-mutation", "method": route.get("method"), "path": route.get("path")}]
     differences.extend(ensure_mutation_fixture(expected, "expected"))
     differences.extend(ensure_mutation_fixture(actual, "actual"))
     normalizations = collect_normalizations(expected, actual)

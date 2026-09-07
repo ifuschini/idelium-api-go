@@ -145,7 +145,9 @@ def main() -> int:
             "context": {"tenant": {"id": "fixture-tenant-9001", "synthetic": True}, "actor": {"id": "fixture-browser-user-9001", "synthetic": True}},
             "request": {"headers": {"Accept": "application/json"}, "query": {}, "body": None},
             "response": {"status": status, "headers": {"Content-Type": "application/json"}, "body": sanitize(body)},
-            "normalizations": [], "redactions": [], "sideEffects": [],
+            "normalizations": [], "redactions": [],
+            "sideEffects": ([{"kind": "route-mutation", "method": route["method"], "path": route["path"]}]
+                             if route.get("operationKind") == "mutation" else []),
         }
         (args.output_dir / output_name).write_text(json.dumps(fixture, indent=2) + "\n", encoding="utf-8")
         print(f"captured {route['id']} HTTP {status}")

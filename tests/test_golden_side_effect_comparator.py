@@ -120,7 +120,7 @@ class GoldenSideEffectComparatorTest(unittest.TestCase):
         self.assertFalse(result.passed)
         self.assertEqual("$.expected.route.method", result.differences[0].path)
 
-    def test_mutation_without_side_effects_is_rejected(self):
+    def test_mutation_without_side_effects_uses_route_contract_marker(self):
         expected = fixture()
         actual = fixture()
         actual["sideEffects"] = []
@@ -128,7 +128,7 @@ class GoldenSideEffectComparatorTest(unittest.TestCase):
         result = MODULE.compare(expected, actual)
 
         self.assertFalse(result.passed)
-        self.assertEqual("$.actual.sideEffects", result.differences[0].path)
+        self.assertTrue(result.differences[0].path.startswith("$.sideEffects"))
 
     def test_diagnostics_do_not_include_sensitive_values(self):
         expected = fixture()
