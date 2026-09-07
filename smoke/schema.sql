@@ -186,6 +186,20 @@ CREATE TABLE audit_events (
   created_at TIMESTAMP NULL
 );
 
+CREATE TABLE asset_versions (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  idCostumer BIGINT NOT NULL,
+  idProject BIGINT NOT NULL,
+  assetType VARCHAR(64) NOT NULL,
+  assetId BIGINT NOT NULL,
+  version INT NOT NULL,
+  actorUserId BIGINT NULL,
+  reason VARCHAR(255) NOT NULL,
+  snapshot JSON NOT NULL,
+  created_at TIMESTAMP NULL,
+  UNIQUE KEY asset_versions_unique_version (idCostumer, assetType, assetId, version)
+);
+
 CREATE TABLE types (id BIGINT PRIMARY KEY, name VARCHAR(255) NOT NULL);
 CREATE TABLE statuses (id BIGINT PRIMARY KEY, name VARCHAR(255) NOT NULL);
 CREATE TABLE locations (id BIGINT PRIMARY KEY, name VARCHAR(255) NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL);

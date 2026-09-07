@@ -37,6 +37,13 @@ VALUES (
   '{"fixture":"fixture-parallel-run-smoke"}', CURRENT_TIMESTAMP
 );
 
+INSERT INTO asset_versions (idCostumer, idProject, assetType, assetId, version, reason, snapshot)
+VALUES
+  (9001, 9001, 'test_cycle', 9001, 1, 'fixture.seeded', '{"id":9001}'),
+  (9001, 9001, 'test', 9001, 1, 'fixture.seeded', '{"id":9001}'),
+  (9001, 9001, 'step', 9001, 1, 'fixture.seeded', '{"id":9001}'),
+  (9001, 9001, 'environment', 9001, 1, 'fixture.seeded', '{"id":9001}');
+
 INSERT INTO agent_registrations (id, idCostumer, agentId, status, version, health, capabilities)
 VALUES (9001, 9001, 'fixture-agent-smoke', 'approved', 'fixture', 'healthy', '["selenium"]');
 
