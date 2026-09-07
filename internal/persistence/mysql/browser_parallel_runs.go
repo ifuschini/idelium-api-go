@@ -27,6 +27,32 @@ type parallelRunQueryer interface {
 	QueryRowContext(context.Context, string, ...any) *sql.Row
 }
 
+// ValidateWorkerToken enforces the runner worker-token contract for heartbeats and updates.
+func (r *BrowserAuthRepository) ValidateWorkerToken(request *http.Request, tenantID, projectID, runID int64, workerID, token string, now time.Time) error {
+	if token == "" {
+		return browserauth.ErrWorkerTokenInvalid
+	}
+	var workerJSON sql.NullString
+	err := r.database.QueryRowContext(request.Context(), `SELECT workerStates FROM parallel_run_schedules WHERE id = ? AND idCostumer = ? AND idProject = ?`, runID, tenantID, projectID).Scan(&workerJSON)
+	if errors.Is(err, sql.ErrNoRows) {
+		return browserauth.ErrWorkerTokenInvalid
+	}
+	if err != nil {
+		return safeDatabaseFailure("load parallel run worker token", err)
+	}
+	worker, ok := decodeParallelMap(workerJSON)[workerID].(map[string]any)
+	if !ok {
+		return browserauth.ErrWorkerTokenInvalid
+	}
+	hash, _ := worker["workerTokenHash"].(string)
+	expires, _ := worker["workerTokenExpiresAt"].(string)
+	expiresAt, parseErr := time.Parse(time.RFC3339Nano, expires)
+	if hash == "" || parseErr != nil || !expiresAt.After(now) || bcrypt.CompareHashAndPassword([]byte(hash), []byte(token)) != nil {
+		return browserauth.ErrWorkerTokenInvalid
+	}
+	return nil
+}
+
 func (r *BrowserAuthRepository) ListParallelRuns(request *http.Request, tenantID, projectID int64, filters map[string]string) ([]browserauth.ParallelRun, error) {
 	ctx := request.Context()
 	if err := r.ensureProject(ctx, tenantID, projectID); err != nil {

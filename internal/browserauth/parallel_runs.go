@@ -22,6 +22,7 @@ var (
 	ErrAgentProofInvalid      = errors.New("agent identity proof is invalid")
 	ErrAgentUnavailable       = errors.New("agent is unavailable")
 	ErrParallelWorkerMissing  = errors.New("parallel run worker has not claimed")
+	ErrWorkerTokenInvalid     = errors.New("worker token is invalid, expired, or not bound to this worker")
 )
 
 type AgentUnavailableError struct {
@@ -185,6 +186,10 @@ type RunnerWorkerUpdate struct {
 }
 type RunnerRepository interface {
 	UpdateRunnerWorker(*http.Request, RunnerWorkerUpdate) (ParallelRun, error)
+}
+
+type WorkerTokenValidator interface {
+	ValidateWorkerToken(*http.Request, int64, int64, int64, string, string, time.Time) error
 }
 
 type ParallelRunHeartbeat struct {
@@ -434,6 +439,9 @@ func (h *Handler) RunnerHeartbeat(writer http.ResponseWriter, request *http.Requ
 		validationError(writer, "workerId", "The worker id field is invalid.")
 		return
 	}
+	if !h.validateWorkerToken(writer, request, tenant.CustomerID, body.ProjectID, body.RunID, strings.TrimSpace(body.WorkerID)) {
+		return
+	}
 	if body.LeaseSeconds == 0 {
 		body.LeaseSeconds = 120
 	}
@@ -473,6 +481,9 @@ func (h *Handler) RunnerUpdateWorker(writer http.ResponseWriter, request *http.R
 		validationError(writer, "status", "The worker status is invalid.")
 		return
 	}
+	if !h.validateWorkerToken(writer, request, tenant.CustomerID, body.ProjectID, body.RunID, strings.TrimSpace(body.WorkerID)) {
+		return
+	}
 	repo, ok := h.sessions.(RunnerRepository)
 	if !ok {
 		h.internalError(writer, request, "runner worker update", errors.New("runner repository unavailable"))
@@ -484,6 +495,23 @@ func (h *Handler) RunnerUpdateWorker(writer http.ResponseWriter, request *http.R
 		return
 	}
 	writeJSON(writer, http.StatusOK, run)
+}
+
+func (h *Handler) validateWorkerToken(writer http.ResponseWriter, request *http.Request, tenantID, projectID, runID int64, workerID string) bool {
+	validator, ok := h.sessions.(WorkerTokenValidator)
+	if !ok {
+		h.internalError(writer, request, "validate worker token", errors.New("worker token validator unavailable"))
+		return false
+	}
+	if err := validator.ValidateWorkerToken(request, tenantID, projectID, runID, workerID, request.Header.Get("Idelium-Worker-Token"), h.now().UTC()); err != nil {
+		if errors.Is(err, ErrWorkerTokenInvalid) {
+			writeJSON(writer, http.StatusUnauthorized, map[string]string{"message": "Worker token is invalid, expired, or not bound to this worker."})
+			return false
+		}
+		h.internalError(writer, request, "validate worker token", err)
+		return false
+	}
+	return true
 }
 func validWorkerStatus(s string) bool {
 	return s == "running" || s == "completed" || s == "failed" || s == "cancelled" || s == "lost"
