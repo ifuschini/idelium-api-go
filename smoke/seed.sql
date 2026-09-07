@@ -37,8 +37,8 @@ VALUES (
   '{"fixture":"fixture-parallel-run-smoke"}', CURRENT_TIMESTAMP
 );
 
-INSERT INTO agent_registrations (id, idCostumer, agentId, capabilities)
-VALUES (9001, 9001, 'fixture-agent-smoke', '["selenium"]');
+INSERT INTO agent_registrations (id, idCostumer, agentId, status, version, health, capabilities)
+VALUES (9001, 9001, 'fixture-agent-smoke', 'approved', 'fixture', 'healthy', '["selenium"]');
 
 INSERT INTO types (id, name) VALUES (9001, 'fixture-type-smoke');
 INSERT INTO statuses (id, name) VALUES (9001, 'fixture-status-smoke');
