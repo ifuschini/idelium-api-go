@@ -74,6 +74,20 @@ func (r *BrowserAuthRepository) CreateParallelRunMatrix(request *http.Request, i
 
 func (r *BrowserAuthRepository) ClaimParallelRun(request *http.Request, input browserauth.ParallelRunClaim) (browserauth.ParallelRun, error) {
 	ctx := request.Context()
+	var workerToken string
+	var workerTokenHash string
+	if input.IssueWorkerToken {
+		secret, err := randomParallelRunTokenPart(32)
+		if err != nil {
+			return browserauth.ParallelRun{}, errors.New("worker token generation failed")
+		}
+		workerToken = "idwt_" + secret
+		hash, err := bcrypt.GenerateFromPassword([]byte(workerToken), bcrypt.DefaultCost)
+		if err != nil {
+			return browserauth.ParallelRun{}, errors.New("worker token hashing failed")
+		}
+		workerTokenHash = string(hash)
+	}
 	if input.RunToken != "" {
 		if err := r.consumeParallelRunToken(ctx, input); err != nil {
 			if auditErr := r.recordParallelRunTokenAudit(request, input, "run_token.reject", "failure"); auditErr != nil {
@@ -133,6 +147,10 @@ func (r *BrowserAuthRepository) ClaimParallelRun(request *http.Request, input br
 		"claimedAt": claimedAt, "lastHeartbeatAt": now,
 		"leaseExpiresAt": parallelRunISOString(input.Now.Add(120 * time.Second)), "updatedAt": now, "result": result,
 	}
+	if input.IssueWorkerToken {
+		workers[input.WorkerID].(map[string]any)["workerTokenHash"] = workerTokenHash
+		workers[input.WorkerID].(map[string]any)["workerTokenExpiresAt"] = parallelRunISOString(input.Now.Add(120 * time.Second))
+	}
 	counters, summary := recalculateParallelRunWorkers(workers, input.Now)
 	workersJSON, err := json.Marshal(workers)
 	if err != nil {
@@ -156,6 +174,9 @@ func (r *BrowserAuthRepository) ClaimParallelRun(request *http.Request, input br
 	}
 	if err := tx.Commit(); err != nil {
 		return browserauth.ParallelRun{}, safeDatabaseFailure("commit parallel run worker claim", err)
+	}
+	if workerToken != "" {
+		run.WorkerToken = workerToken
 	}
 	return run, nil
 }
@@ -686,6 +707,9 @@ func scanParallelRun(scanner parallelRunScanner) (browserauth.ParallelRun, error
 		if worker, ok := workers[workerID].(map[string]any); ok {
 			workerCopy := map[string]any{"workerId": workerID}
 			for key, value := range worker {
+				if key == "workerTokenHash" || key == "workerTokenExpiresAt" {
+					continue
+				}
 				workerCopy[key] = value
 			}
 			run.Workers = append(run.Workers, workerCopy)

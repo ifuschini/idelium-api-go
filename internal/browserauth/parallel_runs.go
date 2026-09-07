@@ -57,6 +57,7 @@ type ParallelRun struct {
 	StartedAt            *time.Time       `json:"startedAt"`
 	CompletedAt          *time.Time       `json:"completedAt"`
 	CancelledAt          *time.Time       `json:"cancelledAt"`
+	WorkerToken          string           `json:"workerToken,omitempty"`
 }
 
 // Results returns the Laravel-compatible execution summary for a run.
@@ -163,17 +164,18 @@ type ParallelRunCreate struct {
 }
 
 type ParallelRunClaim struct {
-	TenantID        int64
-	ActorUserID     *int64
-	ActorTenantID   int64
-	ProjectID       int64
-	RunID           int64
-	WorkerID        string
-	Capabilities    []any
-	CapabilitiesSet bool
-	RunToken        string
-	CertificateHash string
-	Now             time.Time
+	TenantID         int64
+	ActorUserID      *int64
+	ActorTenantID    int64
+	ProjectID        int64
+	RunID            int64
+	WorkerID         string
+	Capabilities     []any
+	CapabilitiesSet  bool
+	RunToken         string
+	CertificateHash  string
+	IssueWorkerToken bool
+	Now              time.Time
 }
 type RunnerWorkerUpdate struct {
 	TenantID, ProjectID, RunID int64
@@ -398,7 +400,7 @@ func (h *Handler) RunnerClaim(writer http.ResponseWriter, request *http.Request)
 		validationError(writer, "workerId", "The worker id field is invalid.")
 		return
 	}
-	in := ParallelRunClaim{TenantID: tenant.CustomerID, ProjectID: body.ProjectID, RunID: body.RunID, WorkerID: strings.TrimSpace(body.WorkerID), Capabilities: body.Capabilities, CapabilitiesSet: body.Capabilities != nil, RunToken: request.Header.Get("Idelium-Run-Token"), CertificateHash: request.Header.Get("Idelium-Agent-Cert-Sha256"), Now: h.now().UTC()}
+	in := ParallelRunClaim{TenantID: tenant.CustomerID, ProjectID: body.ProjectID, RunID: body.RunID, WorkerID: strings.TrimSpace(body.WorkerID), Capabilities: body.Capabilities, CapabilitiesSet: body.Capabilities != nil, RunToken: request.Header.Get("Idelium-Run-Token"), CertificateHash: request.Header.Get("Idelium-Agent-Cert-Sha256"), IssueWorkerToken: true, Now: h.now().UTC()}
 	if h.runTokenRequiredClaim && in.RunToken == "" {
 		writeJSON(writer, http.StatusUnauthorized, map[string]string{"message": "A short-lived run token is required to claim a worker slot."})
 		return
