@@ -5,8 +5,8 @@
   "source": {
     "runtime": "laravel",
     "repository": "idelium/idelium-api",
-    "revision": "e6af3eb41d8c65108c95157198144c94fb5259ba",
-    "capturedAt": "2026-09-04T07:29:15Z",
+    "revision": "a5c22b37192da1ec41cd7be68e18f8363bccb4e3",
+    "capturedAt": "2026-09-07T10:44:21Z",
     "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
   },
   "route": {
@@ -40,8 +40,8 @@
     "body": {
       "data": [
         {
-          "id": 9003,
-          "runUrl": "/api/admin/projects/9001/parallel-runs/9003",
+          "id": 9005,
+          "runUrl": "/api/admin/projects/9001/parallel-runs/9005",
           "idProject": 9001,
           "testCycleId": 9001,
           "performedTestCycleId": null,
@@ -94,7 +94,7 @@
             }
           },
           "resultSummary": [],
-          "scheduledAt": "2026-09-04T07:29:15.000000Z",
+          "scheduledAt": "2026-09-07T10:44:21.000000Z",
           "startedAt": null,
           "completedAt": null,
           "cancelledAt": null

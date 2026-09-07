@@ -5,8 +5,8 @@
   "source": {
     "runtime": "laravel",
     "repository": "idelium/idelium-api",
-    "revision": "e6af3eb41d8c65108c95157198144c94fb5259ba",
-    "capturedAt": "2026-09-07T09:10:46Z",
+    "revision": "a5c22b37192da1ec41cd7be68e18f8363bccb4e3",
+    "capturedAt": "2026-09-07T10:44:21Z",
     "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
   },
   "route": {
@@ -41,10 +41,27 @@
       "id": 9001,
       "idProject": 9001,
       "testCycleId": 9001,
-      "status": "queued",
+      "status": "running",
       "aggregateStatus": null,
-      "resultSummary": [],
-      "workers": []
+      "resultSummary": [
+        {
+          "workerId": "fixture-agent-smoke",
+          "status": "running",
+          "result": null
+        }
+      ],
+      "workers": [
+        {
+          "workerId": "fixture-agent-smoke",
+          "status": "running",
+          "capabilities": [],
+          "claimedAt": "2026-09-07T10:44:21.140144Z",
+          "lastHeartbeatAt": "2026-09-07T10:44:21.140144Z",
+          "leaseExpiresAt": "2026-09-07T10:46:21.140144Z",
+          "updatedAt": "2026-09-07T10:44:21.140144Z",
+          "result": null
+        }
+      ]
     }
   },
   "normalizations": [],

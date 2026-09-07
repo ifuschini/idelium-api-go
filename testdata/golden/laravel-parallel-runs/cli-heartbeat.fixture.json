@@ -1,6 +1,6 @@
 {
   "fixtureVersion": "1.0",
-  "id": "cli-results-parallel-run",
+  "id": "cli-heartbeat-parallel-run-worker",
   "description": "Sanitized Laravel parallel-run capture.",
   "source": {
     "runtime": "laravel",
@@ -10,8 +10,8 @@
     "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
   },
   "route": {
-    "method": "GET",
-    "path": "/api/ideliumcl/projects/9001/parallel-runs/9001/results",
+    "method": "POST",
+    "path": "/api/ideliumcl/projects/9001/parallel-runs/9001/workers/fixture-agent-smoke/heartbeat",
     "trustPath": "api-key",
     "tenantOwned": true
   },
@@ -39,10 +39,23 @@
     },
     "body": {
       "id": 9001,
+      "runUrl": "/api/admin/projects/9001/parallel-runs/9001",
       "idProject": 9001,
       "testCycleId": 9001,
+      "performedTestCycleId": null,
+      "idempotencyKey": "fixture-parallel-run-smoke",
       "status": "running",
+      "requestedConcurrency": 1,
+      "activeWorkers": 1,
+      "totalWorkers": 1,
+      "completedWorkers": 0,
+      "failedWorkers": 0,
+      "cancelledWorkers": 0,
+      "lostWorkers": 0,
       "aggregateStatus": null,
+      "metadata": {
+        "fixture": "fixture-parallel-run-smoke"
+      },
       "resultSummary": [
         {
           "workerId": "fixture-agent-smoke",
@@ -52,20 +65,10 @@
           }
         }
       ],
-      "workers": [
-        {
-          "workerId": "fixture-agent-smoke",
-          "status": "running",
-          "capabilities": [],
-          "claimedAt": "2026-09-07T10:44:21.140144Z",
-          "lastHeartbeatAt": "2026-09-07T10:44:21.417103Z",
-          "leaseExpiresAt": "2026-09-07T10:46:21.417103Z",
-          "updatedAt": "2026-09-07T10:44:21.417103Z",
-          "result": {
-            "ok": true
-          }
-        }
-      ]
+      "scheduledAt": "2026-09-07T10:44:20.000000Z",
+      "startedAt": "2026-09-07T10:44:21.000000Z",
+      "completedAt": null,
+      "cancelledAt": null
     }
   },
   "normalizations": [],

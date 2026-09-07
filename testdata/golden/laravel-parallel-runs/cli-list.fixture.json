@@ -5,8 +5,8 @@
   "source": {
     "runtime": "laravel",
     "repository": "idelium/idelium-api",
-    "revision": "e6af3eb41d8c65108c95157198144c94fb5259ba",
-    "capturedAt": "2026-09-04T07:29:15Z",
+    "revision": "a5c22b37192da1ec41cd7be68e18f8363bccb4e3",
+    "capturedAt": "2026-09-07T10:44:21Z",
     "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
   },
   "route": {
@@ -45,6 +45,39 @@
         "testCycleId": 9001,
         "performedTestCycleId": null,
         "idempotencyKey": "fixture-parallel-run-smoke",
+        "status": "running",
+        "requestedConcurrency": 1,
+        "activeWorkers": 1,
+        "totalWorkers": 1,
+        "completedWorkers": 0,
+        "failedWorkers": 0,
+        "cancelledWorkers": 0,
+        "lostWorkers": 0,
+        "aggregateStatus": null,
+        "metadata": {
+          "fixture": "fixture-parallel-run-smoke"
+        },
+        "resultSummary": [
+          {
+            "workerId": "fixture-agent-smoke",
+            "status": "running",
+            "result": {
+              "ok": true
+            }
+          }
+        ],
+        "scheduledAt": "2026-09-07T10:44:20.000000Z",
+        "startedAt": "2026-09-07T10:44:21.000000Z",
+        "completedAt": null,
+        "cancelledAt": null
+      },
+      {
+        "id": 9002,
+        "runUrl": "/api/admin/projects/9001/parallel-runs/9002",
+        "idProject": 9001,
+        "testCycleId": 9001,
+        "performedTestCycleId": null,
+        "idempotencyKey": "capture-browser-create",
         "status": "queued",
         "requestedConcurrency": 1,
         "activeWorkers": 0,
@@ -55,10 +88,96 @@
         "lostWorkers": 0,
         "aggregateStatus": null,
         "metadata": {
-          "fixture": "fixture-parallel-run-smoke"
+          "run": {
+            "build": null,
+            "commit": null,
+            "branch": null,
+            "repository": null,
+            "initiator": null,
+            "pipeline": null,
+            "workloadIdentity": {
+              "provider": null,
+              "issuer": null,
+              "subject": null,
+              "audience": null
+            }
+          },
+          "executionSnapshot": {
+            "schemaVersion": "2026-07-28",
+            "testCycle": null,
+            "tests": [
+              {
+                "assetType": "test",
+                "assetId": 9001,
+                "version": null
+              }
+            ],
+            "steps": [],
+            "environments": []
+          }
         },
         "resultSummary": [],
-        "scheduledAt": "2026-09-04T07:28:58.000000Z",
+        "scheduledAt": "2026-09-07T10:44:21.000000Z",
+        "startedAt": null,
+        "completedAt": null,
+        "cancelledAt": null
+      },
+      {
+        "id": 9003,
+        "runUrl": "/api/admin/projects/9001/parallel-runs/9003",
+        "idProject": 9001,
+        "testCycleId": 9001,
+        "performedTestCycleId": null,
+        "idempotencyKey": "capture-browser-matrix-247fe3f8aa6e1bc1",
+        "status": "queued",
+        "requestedConcurrency": 1,
+        "activeWorkers": 0,
+        "totalWorkers": 0,
+        "completedWorkers": 0,
+        "failedWorkers": 0,
+        "cancelledWorkers": 0,
+        "lostWorkers": 0,
+        "aggregateStatus": null,
+        "metadata": {
+          "run": {
+            "build": null,
+            "commit": null,
+            "branch": null,
+            "repository": null,
+            "initiator": null,
+            "pipeline": null,
+            "workloadIdentity": {
+              "provider": null,
+              "issuer": null,
+              "subject": null,
+              "audience": null
+            }
+          },
+          "matrix": {
+            "index": 0,
+            "total": 1,
+            "combination": {
+              "platform": "9001",
+              "browser": "9001",
+              "environment": "9001"
+            }
+          },
+          "executionSnapshot": {
+            "schemaVersion": "2026-07-28",
+            "testCycle": null,
+            "tests": [
+              {
+                "assetType": "test",
+                "assetId": 9001,
+                "version": null
+              }
+            ],
+            "steps": [],
+            "environments": []
+          }
+        },
+        "resultSummary": [],
+        "scheduledAt": "2026-09-07T10:44:21.000000Z",
         "startedAt": null,
         "completedAt": null,
         "cancelledAt": null

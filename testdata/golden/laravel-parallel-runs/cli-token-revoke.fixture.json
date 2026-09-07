@@ -5,8 +5,8 @@
   "source": {
     "runtime": "laravel",
     "repository": "idelium/idelium-api",
-    "revision": "e6af3eb41d8c65108c95157198144c94fb5259ba",
-    "capturedAt": "2026-09-07T09:18:53Z",
+    "revision": "a5c22b37192da1ec41cd7be68e18f8363bccb4e3",
+    "capturedAt": "2026-09-07T10:44:21Z",
     "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
   },
   "route": {
@@ -38,7 +38,7 @@
       "Content-Type": "application/json"
     },
     "body": {
-      "revokedAt": "2026-09-07T09:18:53.000000Z"
+      "revokedAt": "2026-09-07T10:44:21.000000Z"
     }
   },
   "normalizations": [],
