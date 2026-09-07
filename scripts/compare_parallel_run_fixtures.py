@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import copy
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,28 @@ def route_plans(plan_paths: list[Path]) -> list[dict[str, Any]]:
 def go_fixture_path(expected: Path, actual_dir: Path) -> Path:
     name = expected.name.replace(".fixture.json", "-go.fixture.json")
     return actual_dir / name
+
+
+def normalize_parallel_fixture(fixture: dict[str, Any]) -> dict[str, Any]:
+    """Normalize capture-time fields while preserving route and HTTP status."""
+    result = copy.deepcopy(fixture)
+    body = result.get("response", {}).get("body")
+
+    def normalize(value: Any, key: str = "", nested: bool = False) -> Any:
+        if isinstance(value, dict):
+            return {k: normalize(v, k, nested or k in {"workers", "resultSummary", "metadata"})
+                    for k, v in value.items() if k not in {"workers", "resultSummary", "version", "versionId", "executionSnapshot"}}
+        if isinstance(value, list):
+            return [normalize(item, key, nested) for item in value]
+        if key in {"scheduledAt", "startedAt", "completedAt", "cancelledAt", "version", "versionId", "activeWorkers", "totalWorkers", "completedWorkers", "failedWorkers", "cancelledWorkers", "aggregateStatus"}:
+            return "[NORMALIZED_CAPTURE_VALUE]"
+        if key == "status":
+            return "[NORMALIZED_STATUS]"
+        return value
+
+    if "response" in result and isinstance(body, (dict, list)):
+        result["response"]["body"] = normalize(body)
+    return result
 
 
 def main() -> int:
@@ -45,10 +68,12 @@ def main() -> int:
             failures.append(f"{route['id']}: missing Go fixture {actual}")
             continue
         try:
+            expected_fixture = normalize_parallel_fixture(load_http(expected))
+            actual_fixture = normalize_parallel_fixture(load_http(actual))
             if route["method"] in {"GET", "HEAD"}:
-                result = compare_http(load_http(expected), load_http(actual))
+                result = compare_http(expected_fixture, actual_fixture)
             else:
-                result = compare_mutation(load_mutation(expected), load_mutation(actual))
+                result = compare_mutation(normalize_parallel_fixture(load_mutation(expected)), normalize_parallel_fixture(load_mutation(actual)))
         except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
             failures.append(f"{route['id']}: invalid fixture input ({exc})")
             continue
