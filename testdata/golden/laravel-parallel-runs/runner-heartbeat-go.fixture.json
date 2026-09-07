@@ -1,0 +1,100 @@
+{
+  "fixtureVersion": "1.0",
+  "id": "runner-heartbeat",
+  "description": "Sanitized Laravel parallel-run capture.",
+  "source": {
+    "runtime": "go",
+    "repository": "idelium/idelium-api-go",
+    "revision": "7a89491567bb861d69c174bb23a931286e24ea18",
+    "capturedAt": "2026-09-07T13:09:50Z",
+    "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
+  },
+  "route": {
+    "method": "POST",
+    "path": "/api/ideliumrunner/heartbeat",
+    "trustPath": "run-token",
+    "tenantOwned": true
+  },
+  "context": {
+    "tenant": {
+      "id": "fixture-tenant-9001",
+      "synthetic": true
+    },
+    "actor": {
+      "id": "fixture-browser-user-9001",
+      "synthetic": true
+    }
+  },
+  "request": {
+    "headers": {
+      "Accept": "application/json"
+    },
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "id": 9001,
+      "runUrl": "/api/admin/projects/9001/parallel-runs/9001",
+      "idProject": 9001,
+      "testCycleId": 9001,
+      "performedTestCycleId": null,
+      "idempotencyKey": "fixture-parallel-run-smoke",
+      "status": "running",
+      "requestedConcurrency": 1,
+      "activeWorkers": 1,
+      "totalWorkers": 2,
+      "completedWorkers": 0,
+      "failedWorkers": 0,
+      "cancelledWorkers": 0,
+      "lostWorkers": 0,
+      "aggregateStatus": null,
+      "metadata": {
+        "fixture": "fixture-parallel-run-smoke"
+      },
+      "resultSummary": [
+        {
+          "result": {
+            "ok": true
+          },
+          "status": "running",
+          "workerId": "fixture-agent-smoke"
+        },
+        {
+          "result": null,
+          "status": "queued",
+          "workerId": "worker-smoke"
+        }
+      ],
+      "workers": [
+        {
+          "capabilities": [],
+          "claimedAt": "2026-09-07T13:09:50.146394Z",
+          "lastHeartbeatAt": "2026-09-07T13:09:50.769422Z",
+          "leaseExpiresAt": "2026-09-07T13:10:50.769422Z",
+          "result": {
+            "ok": true
+          },
+          "status": "running",
+          "updatedAt": "2026-09-07T13:09:50.769422Z",
+          "workerId": "fixture-agent-smoke"
+        },
+        {
+          "status": "queued",
+          "workerId": "worker-smoke"
+        }
+      ],
+      "scheduledAt": "2026-09-07T13:09:41Z",
+      "startedAt": "2026-09-07T13:09:50Z",
+      "completedAt": null,
+      "cancelledAt": null
+    }
+  },
+  "normalizations": [],
+  "redactions": [],
+  "sideEffects": []
+}
