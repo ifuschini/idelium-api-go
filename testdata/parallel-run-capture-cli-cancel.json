@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "parallel-run-capture.v1",
+  "consumer": "idelium-api-go-differential",
+  "baseUrlEnv": "CAPTURE_LARAVEL_BASE_URL",
+  "tenantId": 9001,
+  "projectId": 9001,
+  "fixtures": {"runId": 9001, "workerId": "fixture-agent-smoke", "testCycleId": 9001},
+  "routes": [
+    {
+      "id": "cli-cancel-parallel-run",
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/9001/parallel-runs/9001/cancel",
+      "authentication": "api-key",
+      "operationKind": "mutation",
+      "expectedStatus": 200,
+      "output": "cli-cancel.fixture.json"
+    }
+  ]
+}
