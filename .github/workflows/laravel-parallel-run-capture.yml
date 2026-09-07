@@ -52,6 +52,12 @@ jobs:
           export CAPTURE_BROWSER_COOKIE=$(awk 'NF>=7{v[$6]=$6"="$7} END{for(k in v) printf "%s;",v[k]}' "$jar")
           raw_token=$(awk '$0 !~ /^#/ && $6=="XSRF-TOKEN"{v=$7} END{print v}' "$jar")
           export CAPTURE_XSRF_TOKEN=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.unquote(sys.stdin.read().strip()))' <<<"$raw_token")
+          export CAPTURE_RUN_TOKEN=$(curl --fail --silent --show-error \
+            -H 'Accept: application/json' -H 'Idelium-Key: fixture-cli-key-9001' \
+            -H 'Content-Type: application/json' \
+            -d '{"agentId":"fixture-agent-smoke"}' \
+            http://localhost:18082/api/ideliumcl/projects/9001/parallel-runs/9001/tokens \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["token"])')
           python3 scripts/capture_parallel_runs.py \
             --plan testdata/parallel-run-capture-extended.json \
             --output-dir testdata/golden/laravel-parallel-runs
