@@ -40,14 +40,19 @@ jobs:
       - name: Capture and validate fixtures
         env:
           CAPTURE_LARAVEL_BASE_URL: http://localhost:18082
-          CAPTURE_LARAVEL_REVISION: ${{ secrets.CAPTURE_LARAVEL_REVISION }}
-          CAPTURE_BROWSER_COOKIE: ${{ secrets.CAPTURE_BROWSER_COOKIE }}
-          CAPTURE_XSRF_TOKEN: ${{ secrets.CAPTURE_XSRF_TOKEN }}
-          CAPTURE_API_KEY: ${{ secrets.CAPTURE_API_KEY }}
-          CAPTURE_RUN_TOKEN: ${{ secrets.CAPTURE_RUN_TOKEN }}
+          CAPTURE_LARAVEL_REVISION: ${{ github.sha }}
+          CAPTURE_API_KEY: fixture-cli-key-9001
+          CAPTURE_BROWSER_COOKIE: ${{ env.CAPTURE_BROWSER_COOKIE }}
+          CAPTURE_XSRF_TOKEN: ${{ env.CAPTURE_XSRF_TOKEN }}
         run: |
-          test "${#CAPTURE_LARAVEL_REVISION}" = 40
           test -n "$CAPTURE_API_KEY"
+          jar=$(mktemp); headers=$(mktemp)
+          curl --fail --silent --show-error --cookie-jar "$jar" --dump-header "$headers" -H 'Accept: application/json' http://localhost:18082/api/sanctum/csrf-cookie >/dev/null
+          raw=$(sed -n 's/^Set-Cookie: XSRF-TOKEN=\([^;]*\).*/\1/p' "$headers" | tail -1)
+          token=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.unquote(sys.stdin.read().strip()))' <<<"$raw")
+          curl --fail --silent --show-error --cookie "$jar" --cookie-jar "$jar" -H 'Accept: application/json' -H "X-XSRF-TOKEN: $token" -H "X-CSRF-TOKEN: $token" -H 'Content-Type: application/json' -d '{"email":"fixture-smoke@example.invalid","password":"SmokePassword123!"}' http://localhost:18082/api/login >/dev/null
+          export CAPTURE_BROWSER_COOKIE=$(awk 'NF>=7{v[$6]=$6"="$7} END{for(k in v) printf "%s;",v[k]}' "$jar")
+          export CAPTURE_XSRF_TOKEN=$(awk '$0 !~ /^#/ && $6=="XSRF-TOKEN"{v=$7} END{print v}' "$jar")
           python3 scripts/capture_parallel_runs.py \
             --plan testdata/parallel-run-capture-extended.json \
             --output-dir testdata/golden/laravel-parallel-runs
