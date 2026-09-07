@@ -367,60 +367,6 @@
       "route_id": "POST /api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test"
     },
     {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "GET|HEAD /api/admin/projects/{idProject}/parallel-runs"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/admin/projects/{idProject}/parallel-runs"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/admin/projects/{idProject}/parallel-runs/matrix"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "GET|HEAD /api/admin/projects/{idProject}/parallel-runs/{parallelRun}"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "GET|HEAD /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "PUT /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat"
-    },
-    {
       "aggregate": "artifacts",
       "migration_wave": 7,
       "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
@@ -635,90 +581,6 @@
       "migration_wave": 8,
       "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
       "route_id": "POST /api/ideliumcl/agents/register"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "GET|HEAD /api/ideliumcl/projects/{idProject}/parallel-runs"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/matrix"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "GET|HEAD /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "GET|HEAD /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "PUT /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/ideliumrunner/claim"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "POST /api/ideliumrunner/heartbeat"
-    },
-    {
-      "aggregate": "parallel-runs",
-      "migration_wave": 8,
-      "reason": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "route_id": "PUT /api/ideliumrunner/worker"
     },
     {
       "aggregate": "browser-identity",
@@ -2159,8 +2021,7 @@
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -2169,15 +2030,14 @@
       "operation_kind": "read",
       "path": "/api/admin/projects/{idProject}/parallel-runs",
       "route_id": "GET|HEAD /api/admin/projects/{idProject}/parallel-runs",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": true
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -2186,15 +2046,14 @@
       "operation_kind": "mutation",
       "path": "/api/admin/projects/{idProject}/parallel-runs",
       "route_id": "POST /api/admin/projects/{idProject}/parallel-runs",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": true
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -2203,15 +2062,14 @@
       "operation_kind": "mutation",
       "path": "/api/admin/projects/{idProject}/parallel-runs/matrix",
       "route_id": "POST /api/admin/projects/{idProject}/parallel-runs/matrix",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": true
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -2220,15 +2078,14 @@
       "operation_kind": "read",
       "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}",
       "route_id": "GET|HEAD /api/admin/projects/{idProject}/parallel-runs/{parallelRun}",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": true
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -2237,15 +2094,14 @@
       "operation_kind": "mutation",
       "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
       "route_id": "POST /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": true
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -2254,15 +2110,14 @@
       "operation_kind": "mutation",
       "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim",
       "route_id": "POST /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": true
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -2271,15 +2126,14 @@
       "operation_kind": "read",
       "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results",
       "route_id": "GET|HEAD /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": true
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -2288,15 +2142,14 @@
       "operation_kind": "mutation",
       "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
       "route_id": "PUT /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": true
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -2305,9 +2158,9 @@
       "operation_kind": "mutation",
       "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
       "route_id": "POST /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": true
     },
     {
@@ -3042,8 +2895,7 @@
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3052,15 +2904,14 @@
       "operation_kind": "read",
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs",
       "route_id": "GET|HEAD /api/ideliumcl/projects/{idProject}/parallel-runs",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3069,15 +2920,14 @@
       "operation_kind": "mutation",
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs",
       "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3086,15 +2936,14 @@
       "operation_kind": "mutation",
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/matrix",
       "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/matrix",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3103,15 +2952,14 @@
       "operation_kind": "read",
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}",
       "route_id": "GET|HEAD /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3120,15 +2968,14 @@
       "operation_kind": "mutation",
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
       "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3137,15 +2984,14 @@
       "operation_kind": "mutation",
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim",
       "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3154,15 +3000,14 @@
       "operation_kind": "read",
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results",
       "route_id": "GET|HEAD /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3171,15 +3016,14 @@
       "operation_kind": "mutation",
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens",
       "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3188,15 +3032,14 @@
       "operation_kind": "mutation",
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke",
       "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3205,15 +3048,14 @@
       "operation_kind": "mutation",
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
       "route_id": "PUT /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3222,9 +3064,9 @@
       "operation_kind": "mutation",
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
       "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
@@ -3373,8 +3215,7 @@
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3383,15 +3224,14 @@
       "operation_kind": "mutation",
       "path": "/api/ideliumrunner/claim",
       "route_id": "POST /api/ideliumrunner/claim",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3400,15 +3240,14 @@
       "operation_kind": "mutation",
       "path": "/api/ideliumrunner/heartbeat",
       "route_id": "POST /api/ideliumrunner/heartbeat",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
       "aggregate": "parallel-runs",
-      "blocker": "Route has no Go implementation and no explicit Go fail-closed gate.",
-      "current_owner": "laravel",
+      "current_owner": "go",
       "dual_writes_allowed": false,
       "fallback_owner": "laravel",
       "gateway_route_configured": false,
@@ -3417,9 +3256,9 @@
       "operation_kind": "mutation",
       "path": "/api/ideliumrunner/worker",
       "route_id": "PUT /api/ideliumrunner/worker",
-      "routing_action": "keep-on-laravel",
-      "staging_owner": "laravel",
-      "staging_state": "blocked",
+      "routing_action": "send-to-go",
+      "staging_owner": "go",
+      "staging_state": "ready",
       "tenant_context": false
     },
     {
@@ -3636,8 +3475,8 @@
   "summary": {
     "gateway_go_routes": 10,
     "go_fail_closed_routes": 17,
-    "go_owned_routes": 23,
-    "laravel_blocker_routes": 128,
+    "go_owned_routes": 46,
+    "laravel_blocker_routes": 105,
     "route_count": 168
   }
 }

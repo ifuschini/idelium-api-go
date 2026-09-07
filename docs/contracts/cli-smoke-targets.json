@@ -1,6 +1,6 @@
 {
   "consumer": "idelium-cli",
-  "ownership_matrix_digest_sha256": "e5097fc6eae0a2e8b9e36918f07983f5fc434d682fb1efb9a4e8456441e805b8",
+  "ownership_matrix_digest_sha256": "ec54517c06fd06346282ed0b40d81d7071d7c034f34584e94e0d8f096985ef51",
   "route_inventory_digest_sha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48",
   "routes": [
     {

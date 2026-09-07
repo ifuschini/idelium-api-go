@@ -15,8 +15,8 @@
     "route_count": 168,
     "mutation_route_count": 98,
     "route_owner_counts": {
-      "go": 23,
-      "laravel": 145
+      "go": 46,
+      "laravel": 122
     }
   },
   "aggregates": [
@@ -202,7 +202,7 @@
     },
     {
       "aggregate": "parallel-runs",
-      "mutation_owner": "laravel",
+      "mutation_owner": "go",
       "route_count": 23,
       "mutation_route_count": 17,
       "tenant_scoped_route_count": 9,
@@ -1199,8 +1199,8 @@
       "path": "/api/admin/projects/{idProject}/parallel-runs",
       "aggregate": "parallel-runs",
       "operation_kind": "read",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 8
     },
@@ -1210,8 +1210,8 @@
       "path": "/api/admin/projects/{idProject}/parallel-runs",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 8
     },
@@ -1221,8 +1221,8 @@
       "path": "/api/admin/projects/{idProject}/parallel-runs/matrix",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 8
     },
@@ -1232,8 +1232,8 @@
       "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}",
       "aggregate": "parallel-runs",
       "operation_kind": "read",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 8
     },
@@ -1243,8 +1243,8 @@
       "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 8
     },
@@ -1254,8 +1254,8 @@
       "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 8
     },
@@ -1265,8 +1265,8 @@
       "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results",
       "aggregate": "parallel-runs",
       "operation_kind": "read",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 8
     },
@@ -1276,8 +1276,8 @@
       "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 8
     },
@@ -1287,8 +1287,8 @@
       "path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 8
     },
@@ -1771,8 +1771,8 @@
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs",
       "aggregate": "parallel-runs",
       "operation_kind": "read",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },
@@ -1782,8 +1782,8 @@
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },
@@ -1793,8 +1793,8 @@
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/matrix",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },
@@ -1804,8 +1804,8 @@
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}",
       "aggregate": "parallel-runs",
       "operation_kind": "read",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },
@@ -1815,8 +1815,8 @@
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },
@@ -1826,8 +1826,8 @@
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },
@@ -1837,8 +1837,8 @@
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results",
       "aggregate": "parallel-runs",
       "operation_kind": "read",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },
@@ -1848,8 +1848,8 @@
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },
@@ -1859,8 +1859,8 @@
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },
@@ -1870,8 +1870,8 @@
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },
@@ -1881,8 +1881,8 @@
       "path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },
@@ -1991,8 +1991,8 @@
       "path": "/api/ideliumrunner/claim",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },
@@ -2002,8 +2002,8 @@
       "path": "/api/ideliumrunner/heartbeat",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },
@@ -2013,8 +2013,8 @@
       "path": "/api/ideliumrunner/worker",
       "aggregate": "parallel-runs",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 8
     },

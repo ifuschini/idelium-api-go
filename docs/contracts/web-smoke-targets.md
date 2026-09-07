@@ -19,7 +19,7 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | Metric | Value |
 | --- | --- |
 | Routes | 91 |
-| Owners | go: 10, laravel: 81 |
+| Owners | go: 19, laravel: 72 |
 | Execution modes | safe-read: 38, synthetic-mutation: 53 |
 
 ## Routes
@@ -36,6 +36,15 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | `GET` | `/api/admin/platforms/osversion/{idOs}` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `GET` | `/api/admin/platforms/status` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
 | `GET` | `/api/admin/platforms/types` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `platform-catalog` |
+| `GET` | `/api/admin/projects/{idProject}/parallel-runs` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `parallel-runs` |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `synthetic-mutation` | yes | `parallel-runs` |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/matrix` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `synthetic-mutation` | yes | `parallel-runs` |
+| `GET` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `parallel-runs` |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `synthetic-mutation` | yes | `parallel-runs` |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `synthetic-mutation` | yes | `parallel-runs` |
+| `GET` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `safe-read` | yes | `parallel-runs` |
+| `PUT` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `synthetic-mutation` | yes | `parallel-runs` |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `go` | `IDELIUM_WEB_SMOKE_GO_BASE_URL` | `synthetic-mutation` | yes | `parallel-runs` |
 | `GET` | `/api/admin/accounts` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `accounts` |
 | `POST` | `/api/admin/accounts` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `accounts` |
 | `DELETE` | `/api/admin/accounts/{idUser}` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `accounts` |
@@ -80,15 +89,6 @@ authoritative; unknown owners fail closed instead of falling back silently.
 | `GET` | `/api/admin/projects` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `projects` |
 | `POST` | `/api/admin/projects` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `projects` |
 | `GET` | `/api/admin/projects/create` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `projects` |
-| `GET` | `/api/admin/projects/{idProject}/parallel-runs` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `parallel-runs` |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `parallel-runs` |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/matrix` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `parallel-runs` |
-| `GET` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `parallel-runs` |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `parallel-runs` |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `parallel-runs` |
-| `GET` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `parallel-runs` |
-| `PUT` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `parallel-runs` |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `parallel-runs` |
 | `DELETE` | `/api/admin/projects/{project}` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `projects` |
 | `GET` | `/api/admin/projects/{project}` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `safe-read` | yes | `projects` |
 | `PUT|PATCH` | `/api/admin/projects/{project}` | `laravel` | `IDELIUM_WEB_SMOKE_LARAVEL_BASE_URL` | `synthetic-mutation` | yes | `projects` |

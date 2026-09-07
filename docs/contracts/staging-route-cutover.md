@@ -12,9 +12,9 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | Cutover status | `blocked` |
 | Production enabled | `false` |
 | Route count | 168 |
-| Go-owned routes | 23 |
+| Go-owned routes | 46 |
 | Go fail-closed routes | 17 |
-| Laravel blocker routes | 128 |
+| Laravel blocker routes | 105 |
 | Gateway Go routes | 10 |
 
 ## Staging policy
@@ -44,7 +44,6 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `grid-jobs` | 4 |
 | `integrations` | 7 |
 | `operations` | 4 |
-| `parallel-runs` | 23 |
 | `platform-catalog` | 17 |
 | `plugins` | 5 |
 | `projects` | 7 |
@@ -139,15 +138,15 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `POST` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret` | `integrations` | `blocked` | `laravel` | `keep-on-laravel` |
 | `PUT` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status` | `integrations` | `blocked` | `laravel` | `keep-on-laravel` |
 | `POST` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test` | `integrations` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/matrix` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/matrix` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `parallel-runs` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts` | `artifacts` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}` | `artifacts` | `blocked` | `laravel` | `keep-on-laravel` |
 | `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive` | `artifacts` | `blocked` | `laravel` | `keep-on-laravel` |
@@ -191,17 +190,17 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `GET|HEAD` | `/api/ideliumcl/environments/{idProject}` | `environments` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/ideliumcl/plugin/{idPlugin}` | `plugins` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/ideliumcl/plugins/{idProject}` | `plugins` | `ready` | `go` | `send-to-go` |
-| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/matrix` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/matrix` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `parallel-runs` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/ideliumcl/step` | `cli-performed-steps` | `ready` | `go` | `send-to-go` |
 | `PUT` | `/api/ideliumcl/step` | `cli-performed-steps` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/ideliumcl/step/{idStep}` | `steps` | `ready` | `go` | `send-to-go` |
@@ -211,9 +210,9 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `POST` | `/api/ideliumcl/testcycle` | `cli-performed-cycles` | `ready` | `go` | `send-to-go` |
 | `PUT` | `/api/ideliumcl/testcycle` | `cli-performed-cycles` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/ideliumcl/testcycle/{idTestCycle}` | `test-cycles` | `ready` | `go` | `send-to-go` |
-| `POST` | `/api/ideliumrunner/claim` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/ideliumrunner/heartbeat` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/ideliumrunner/worker` | `parallel-runs` | `blocked` | `laravel` | `keep-on-laravel` |
+| `POST` | `/api/ideliumrunner/claim` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/ideliumrunner/heartbeat` | `parallel-runs` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/ideliumrunner/worker` | `parallel-runs` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/login` | `browser-identity` | `blocked` | `laravel` | `keep-on-laravel` |
 | `POST` | `/api/logout` | `browser-identity` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/me/capabilities` | `access-control` | `blocked` | `laravel` | `keep-on-laravel` |

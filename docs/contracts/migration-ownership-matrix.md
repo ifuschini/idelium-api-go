@@ -35,7 +35,7 @@ Application-level dual writes are prohibited.
 | `integrations` | laravel | 7 | 5 | 7 | laravel-primary |
 | `legacy-api-keys` | laravel | 2 | 1 | 2 | laravel-primary |
 | `operations` | none | 4 | 0 | 0 | laravel-primary |
-| `parallel-runs` | laravel | 23 | 17 | 9 | laravel-primary |
+| `parallel-runs` | go | 23 | 17 | 9 | laravel-primary |
 | `platform-catalog` | laravel | 27 | 17 | 27 | laravel-primary |
 | `plugins` | laravel | 7 | 3 | 5 | laravel-primary |
 | `projects` | laravel | 7 | 3 | 7 | laravel-primary |
@@ -143,15 +143,15 @@ does not require database restoration or reverse data replication.
 | `POST` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret` | `integrations` | mutation | laravel | yes | 7 |
 | `PUT` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status` | `integrations` | mutation | laravel | yes | 7 |
 | `POST` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test` | `integrations` | mutation | laravel | yes | 7 |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs` | `parallel-runs` | read | laravel | yes | 8 |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs` | `parallel-runs` | mutation | laravel | yes | 8 |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/matrix` | `parallel-runs` | mutation | laravel | yes | 8 |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}` | `parallel-runs` | read | laravel | yes | 8 |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `parallel-runs` | mutation | laravel | yes | 8 |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `parallel-runs` | mutation | laravel | yes | 8 |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results` | `parallel-runs` | read | laravel | yes | 8 |
-| `PUT` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `parallel-runs` | mutation | laravel | yes | 8 |
-| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `parallel-runs` | mutation | laravel | yes | 8 |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs` | `parallel-runs` | read | go | yes | 8 |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs` | `parallel-runs` | mutation | go | yes | 8 |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/matrix` | `parallel-runs` | mutation | go | yes | 8 |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}` | `parallel-runs` | read | go | yes | 8 |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `parallel-runs` | mutation | go | yes | 8 |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `parallel-runs` | mutation | go | yes | 8 |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results` | `parallel-runs` | read | go | yes | 8 |
+| `PUT` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `parallel-runs` | mutation | go | yes | 8 |
+| `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `parallel-runs` | mutation | go | yes | 8 |
 | `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts` | `artifacts` | read | laravel | yes | 7 |
 | `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}` | `artifacts` | read | laravel | yes | 7 |
 | `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive` | `artifacts` | mutation | laravel | yes | 7 |
@@ -195,17 +195,17 @@ does not require database restoration or reverse data replication.
 | `GET|HEAD` | `/api/ideliumcl/environments/{idProject}` | `environments` | read | go | no | 4 |
 | `GET|HEAD` | `/api/ideliumcl/plugin/{idPlugin}` | `plugins` | read | go | no | 4 |
 | `GET|HEAD` | `/api/ideliumcl/plugins/{idProject}` | `plugins` | read | go | no | 4 |
-| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `parallel-runs` | read | laravel | no | 8 |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `parallel-runs` | mutation | laravel | no | 8 |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/matrix` | `parallel-runs` | mutation | laravel | no | 8 |
-| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}` | `parallel-runs` | read | laravel | no | 8 |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `parallel-runs` | mutation | laravel | no | 8 |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `parallel-runs` | mutation | laravel | no | 8 |
-| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results` | `parallel-runs` | read | laravel | no | 8 |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens` | `parallel-runs` | mutation | laravel | no | 8 |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke` | `parallel-runs` | mutation | laravel | no | 8 |
-| `PUT` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `parallel-runs` | mutation | laravel | no | 8 |
-| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `parallel-runs` | mutation | laravel | no | 8 |
+| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `parallel-runs` | read | go | no | 8 |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs` | `parallel-runs` | mutation | go | no | 8 |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/matrix` | `parallel-runs` | mutation | go | no | 8 |
+| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}` | `parallel-runs` | read | go | no | 8 |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel` | `parallel-runs` | mutation | go | no | 8 |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim` | `parallel-runs` | mutation | go | no | 8 |
+| `GET|HEAD` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results` | `parallel-runs` | read | go | no | 8 |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens` | `parallel-runs` | mutation | go | no | 8 |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke` | `parallel-runs` | mutation | go | no | 8 |
+| `PUT` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `parallel-runs` | mutation | go | no | 8 |
+| `POST` | `/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `parallel-runs` | mutation | go | no | 8 |
 | `POST` | `/api/ideliumcl/step` | `cli-performed-steps` | mutation | go | no | 5 |
 | `PUT` | `/api/ideliumcl/step` | `cli-performed-steps` | mutation | go | no | 5 |
 | `GET|HEAD` | `/api/ideliumcl/step/{idStep}` | `steps` | read | go | no | 4 |
@@ -215,9 +215,9 @@ does not require database restoration or reverse data replication.
 | `POST` | `/api/ideliumcl/testcycle` | `cli-performed-cycles` | mutation | go | no | 5 |
 | `PUT` | `/api/ideliumcl/testcycle` | `cli-performed-cycles` | mutation | go | no | 5 |
 | `GET|HEAD` | `/api/ideliumcl/testcycle/{idTestCycle}` | `test-cycles` | read | go | no | 4 |
-| `POST` | `/api/ideliumrunner/claim` | `parallel-runs` | mutation | laravel | no | 8 |
-| `POST` | `/api/ideliumrunner/heartbeat` | `parallel-runs` | mutation | laravel | no | 8 |
-| `PUT` | `/api/ideliumrunner/worker` | `parallel-runs` | mutation | laravel | no | 8 |
+| `POST` | `/api/ideliumrunner/claim` | `parallel-runs` | mutation | go | no | 8 |
+| `POST` | `/api/ideliumrunner/heartbeat` | `parallel-runs` | mutation | go | no | 8 |
+| `PUT` | `/api/ideliumrunner/worker` | `parallel-runs` | mutation | go | no | 8 |
 | `POST` | `/api/login` | `browser-identity` | mutation | laravel | no | 9 |
 | `POST` | `/api/logout` | `browser-identity` | mutation | laravel | yes | 9 |
 | `GET|HEAD` | `/api/me/capabilities` | `access-control` | read | laravel | yes | 9 |
