@@ -1,18 +1,18 @@
 {
   "fixtureVersion": "1.0",
-  "id": "runner-worker-update",
+  "id": "browser-cancel-parallel-run",
   "description": "Sanitized Laravel parallel-run capture.",
   "source": {
     "runtime": "laravel",
     "repository": "idelium/idelium-api",
     "revision": "30843a0cfd57650150319ddde3e66db379fdfd8f",
-    "capturedAt": "2026-09-07T10:48:26Z",
+    "capturedAt": "2026-09-07T10:48:44Z",
     "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
   },
   "route": {
-    "method": "PUT",
-    "path": "/api/ideliumrunner/worker",
-    "trustPath": "run-token",
+    "method": "POST",
+    "path": "/api/admin/projects/9001/parallel-runs/9001/cancel",
+    "trustPath": "browser-session",
     "tenantOwned": true
   },
   "context": {
@@ -44,31 +44,23 @@
       "testCycleId": 9001,
       "performedTestCycleId": null,
       "idempotencyKey": "fixture-parallel-run-smoke",
-      "status": "completed",
+      "status": "cancelled",
       "requestedConcurrency": 1,
       "activeWorkers": 0,
-      "totalWorkers": 1,
-      "completedWorkers": 1,
+      "totalWorkers": 0,
+      "completedWorkers": 0,
       "failedWorkers": 0,
       "cancelledWorkers": 0,
       "lostWorkers": 0,
-      "aggregateStatus": 1,
+      "aggregateStatus": 3,
       "metadata": {
         "fixture": "fixture-parallel-run-smoke"
       },
-      "resultSummary": [
-        {
-          "workerId": "fixture-agent-smoke",
-          "status": "completed",
-          "result": {
-            "ok": true
-          }
-        }
-      ],
-      "scheduledAt": "2026-09-07T10:48:24.000000Z",
-      "startedAt": "2026-09-07T10:48:25.000000Z",
-      "completedAt": "2026-09-07T10:48:26.000000Z",
-      "cancelledAt": null
+      "resultSummary": [],
+      "scheduledAt": "2026-09-07T10:48:44.000000Z",
+      "startedAt": null,
+      "completedAt": "2026-09-07T10:48:44.000000Z",
+      "cancelledAt": "2026-09-07T10:48:44.000000Z"
     }
   },
   "normalizations": [],
