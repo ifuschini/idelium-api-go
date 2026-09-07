@@ -1,0 +1,70 @@
+name: Laravel parallel-run capture
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Go repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Checkout Laravel repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: ifuschini/idelium-api
+          path: laravel
+          ref: dependabot/composer/laravel/pint-1.30.0
+
+      - name: Start isolated Laravel profile
+        working-directory: laravel
+        env:
+          CAPTURE_DB_PASSWORD: capture_pw
+          CAPTURE_DB_ROOT_PASSWORD: capture_root
+        run: docker compose -f compose.capture.yml up -d --build --force-recreate
+
+      - name: Prepare Laravel database
+        working-directory: laravel
+        env:
+          CAPTURE_DB_PASSWORD: capture_pw
+          CAPTURE_DB_ROOT_PASSWORD: capture_root
+        run: |
+          docker compose -f compose.capture.yml exec -T api php artisan migrate --force
+          docker compose -f compose.capture.yml exec -T api php artisan db:seed --class=ParallelRunCaptureSeeder --force
+
+      - name: Capture and validate fixtures
+        env:
+          CAPTURE_LARAVEL_BASE_URL: http://localhost:18082
+          CAPTURE_LARAVEL_REVISION: ${{ secrets.CAPTURE_LARAVEL_REVISION }}
+          CAPTURE_BROWSER_COOKIE: ${{ secrets.CAPTURE_BROWSER_COOKIE }}
+          CAPTURE_XSRF_TOKEN: ${{ secrets.CAPTURE_XSRF_TOKEN }}
+          CAPTURE_API_KEY: ${{ secrets.CAPTURE_API_KEY }}
+          CAPTURE_RUN_TOKEN: ${{ secrets.CAPTURE_RUN_TOKEN }}
+        run: |
+          test "${#CAPTURE_LARAVEL_REVISION}" = 40
+          test -n "$CAPTURE_API_KEY"
+          python3 scripts/capture_parallel_runs.py \
+            --plan testdata/parallel-run-capture-extended.json \
+            --output-dir testdata/golden/laravel-parallel-runs
+          python3 scripts/validate_golden_fixtures.py testdata/golden/laravel-parallel-runs
+
+      - name: Commit captured fixtures
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add testdata/golden/laravel-parallel-runs
+          git diff --cached --quiet || git commit -m "test: capture Laravel parallel-run fixtures"
+          git push
+
+      - name: Tear down capture profile
+        if: always()
+        working-directory: laravel
+        env:
+          CAPTURE_DB_PASSWORD: capture_pw
+          CAPTURE_DB_ROOT_PASSWORD: capture_root
+        run: docker compose -f compose.capture.yml down --volumes --remove-orphans
