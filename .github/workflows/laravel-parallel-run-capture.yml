@@ -50,7 +50,8 @@ jobs:
           token=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.unquote(sys.stdin.read().strip()))' <<<"$raw")
           curl --fail --silent --show-error --cookie "$jar" --cookie-jar "$jar" -H 'Accept: application/json' -H "X-XSRF-TOKEN: $token" -H "X-CSRF-TOKEN: $token" -H 'Content-Type: application/json' -d '{"email":"fixture-smoke@example.invalid","password":"SmokePassword123!"}' http://localhost:18082/api/login >/dev/null
           export CAPTURE_BROWSER_COOKIE=$(awk 'NF>=7{v[$6]=$6"="$7} END{for(k in v) printf "%s;",v[k]}' "$jar")
-          export CAPTURE_XSRF_TOKEN=$(awk '$0 !~ /^#/ && $6=="XSRF-TOKEN"{v=$7} END{print v}' "$jar")
+          raw_token=$(awk '$0 !~ /^#/ && $6=="XSRF-TOKEN"{v=$7} END{print v}' "$jar")
+          export CAPTURE_XSRF_TOKEN=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.unquote(sys.stdin.read().strip()))' <<<"$raw_token")
           python3 scripts/capture_parallel_runs.py \
             --plan testdata/parallel-run-capture-extended.json \
             --output-dir testdata/golden/laravel-parallel-runs
