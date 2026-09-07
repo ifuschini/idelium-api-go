@@ -91,6 +91,8 @@ def main() -> int:
                 raise SystemExit("Missing CAPTURE_API_KEY for api-key route")
             headers["Idelium-Key"] = api_key
         elif route["authentication"] == "run-token":
+            if api_key:
+                headers["Idelium-Key"] = api_key
             route_token = variables.get("runToken", run_token)
             if not route_token:
                 raise SystemExit("Missing CAPTURE_RUN_TOKEN for run-token route")
