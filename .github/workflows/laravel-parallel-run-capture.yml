@@ -42,8 +42,6 @@ jobs:
           CAPTURE_LARAVEL_BASE_URL: http://localhost:18082
           CAPTURE_LARAVEL_REVISION: ${{ github.sha }}
           CAPTURE_API_KEY: fixture-cli-key-9001
-          CAPTURE_BROWSER_COOKIE: ${{ env.CAPTURE_BROWSER_COOKIE }}
-          CAPTURE_XSRF_TOKEN: ${{ env.CAPTURE_XSRF_TOKEN }}
         run: |
           test -n "$CAPTURE_API_KEY"
           jar=$(mktemp); headers=$(mktemp)
