@@ -63,6 +63,37 @@ jobs:
             --output-dir testdata/golden/laravel-parallel-runs
           python3 scripts/validate_golden_fixtures.py testdata/golden/laravel-parallel-runs
 
+      - name: Capture isolated browser cancellation fixture
+        working-directory: laravel
+        env:
+          CAPTURE_DB_PASSWORD: capture_pw
+          CAPTURE_DB_ROOT_PASSWORD: capture_root
+          CAPTURE_LARAVEL_BASE_URL: http://localhost:18082
+          CAPTURE_LARAVEL_REVISION: ${{ github.sha }}
+        run: |
+          docker compose -f compose.capture.yml down --volumes --remove-orphans
+          docker compose -f compose.capture.yml up -d --build --force-recreate
+          docker compose -f compose.capture.yml exec -T api php artisan migrate --force
+          docker compose -f compose.capture.yml exec -T api php artisan db:seed --class=ParallelRunCaptureSeeder --force
+          cd ..
+          jar=$(mktemp); headers=$(mktemp)
+          curl --fail --silent --show-error --cookie-jar "$jar" --dump-header "$headers" \
+            -H 'Accept: application/json' "$CAPTURE_LARAVEL_BASE_URL/api/sanctum/csrf-cookie" >/dev/null
+          raw=$(sed -n 's/^Set-Cookie: XSRF-TOKEN=\([^;]*\).*/\1/p' "$headers" | tail -1)
+          token=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.unquote(sys.stdin.read().strip()))' <<<"$raw")
+          curl --fail --silent --show-error --cookie "$jar" --cookie-jar "$jar" \
+            -H 'Accept: application/json' -H "X-XSRF-TOKEN: $token" -H "X-CSRF-TOKEN: $token" \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"fixture-smoke@example.invalid","password":"SmokePassword123!"}' \
+            "$CAPTURE_LARAVEL_BASE_URL/api/login" >/dev/null
+          export CAPTURE_BROWSER_COOKIE=$(awk 'NF>=7{v[$6]=$6"="$7} END{for(k in v) printf "%s;",v[k]}' "$jar")
+          raw_token=$(awk '$0 !~ /^#/ && $6=="XSRF-TOKEN"{v=$7} END{print v}' "$jar")
+          export CAPTURE_XSRF_TOKEN=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.unquote(sys.stdin.read().strip()))' <<<"$raw_token")
+          python3 scripts/capture_parallel_runs.py \
+            --plan testdata/parallel-run-capture-cancel.json \
+            --output-dir testdata/golden/laravel-parallel-runs
+          python3 scripts/validate_golden_fixtures.py testdata/golden/laravel-parallel-runs
+
       - name: Commit captured fixtures
         run: |
           git config user.name github-actions[bot]
