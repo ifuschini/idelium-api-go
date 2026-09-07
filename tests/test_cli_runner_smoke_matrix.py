@@ -25,7 +25,7 @@ class CliRunnerSmokeMatrixTest(unittest.TestCase):
 
     def test_go_fixture_set_contains_stateful_routes_without_secrets(self):
         fixtures = list(FIXTURES.glob("*-go.fixture.json"))
-        self.assertEqual(len(fixtures), 23)
+        self.assertEqual(len(fixtures), 24)
         for fixture in fixtures:
             content = fixture.read_text(encoding="utf-8").lower()
             self.assertNotIn("authorization", content)
