@@ -50,6 +50,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--runtime", default="laravel", choices=("laravel", "go"))
+    parser.add_argument("--repository", default="idelium/idelium-api")
+    parser.add_argument("--output-suffix", default="", help="Suffix inserted before .fixture.json")
     args = parser.parse_args()
     plan = json.loads(args.plan.read_text(encoding="utf-8"))
     base_url = os.environ.get(plan["baseUrlEnv"], "").rstrip("/")
@@ -128,18 +131,21 @@ def main() -> int:
             variables[capture["as"]] = captured
             if capture["as"] == "runToken":
                 variables["runTokenId"] = captured.split(".", 1)[0]
+        output_name = route["output"]
+        if args.output_suffix:
+            output_name = output_name.replace(".fixture.json", f"{args.output_suffix}.fixture.json")
         fixture = {
             "fixtureVersion": "1.0",
             "id": route["id"],
             "description": "Sanitized Laravel parallel-run capture.",
-            "source": {"runtime": "laravel", "repository": "idelium/idelium-api", "revision": revision, "capturedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"},
+            "source": {"runtime": args.runtime, "repository": args.repository, "revision": revision, "capturedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"},
             "route": {"method": route["method"], "path": route["path"], "trustPath": route["authentication"], "tenantOwned": True},
             "context": {"tenant": {"id": "fixture-tenant-9001", "synthetic": True}, "actor": {"id": "fixture-browser-user-9001", "synthetic": True}},
             "request": {"headers": {"Accept": "application/json"}, "query": {}, "body": None},
             "response": {"status": status, "headers": {"Content-Type": "application/json"}, "body": sanitize(body)},
             "normalizations": [], "redactions": [], "sideEffects": [],
         }
-        (args.output_dir / route["output"]).write_text(json.dumps(fixture, indent=2) + "\n", encoding="utf-8")
+        (args.output_dir / output_name).write_text(json.dumps(fixture, indent=2) + "\n", encoding="utf-8")
         print(f"captured {route['id']} HTTP {status}")
     return 0
 
