@@ -68,6 +68,8 @@ type MFARepository interface {
 }
 type SCIMRepository interface {
 	CreateSCIMUser(context.Context, int64, string, string, bool) (browserauth.User, error)
+	UpdateSCIMUser(context.Context, int64, int64, string, string, bool) (browserauth.User, error)
+	DeleteSCIMUser(context.Context, int64, int64) error
 }
 type SSOStateRepository interface {
 	CreateSSOState(context.Context, int64, int64, string, string, time.Time) error
@@ -172,7 +174,26 @@ func (handler Handler) SCIMUsers(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 	if handler.scim != nil {
+		user, err := browserauth.AuthenticateRequest(request.Context(), request, handler.sessions, time.Now().UTC())
+		if !err {
+			httpx.WriteError(writer, request, 401, "UNAUTHENTICATED", "An active browser session is required.")
+			return
+		}
+		userID, _ := strconv.ParseInt(chi.URLParam(request, "user"), 10, 64)
+		if request.Method == http.MethodDelete {
+			if userID <= 0 {
+				httpx.WriteError(writer, request, 400, "INVALID_SCIM_USER", "The SCIM user identifier is required.")
+				return
+			}
+			if e := handler.scim.DeleteSCIMUser(request.Context(), user.ActiveTenant(), userID); e != nil {
+				httpx.WriteError(writer, request, 404, "SCIM_USER_NOT_FOUND", "SCIM user not found.")
+				return
+			}
+			httpx.WriteJSON(writer, 200, map[string]any{"id": userID, "deleted": true})
+			return
+		}
 		var in struct {
+			ID          int64  `json:"id"`
 			Name, Email string `json:"name"`
 			Active      *bool  `json:"active"`
 		}
@@ -184,9 +205,29 @@ func (handler Handler) SCIMUsers(writer http.ResponseWriter, request *http.Reque
 		if in.Active != nil {
 			active = *in.Active
 		}
-		user, err := browserauth.AuthenticateRequest(request.Context(), request, handler.sessions, time.Now().UTC())
-		if !err {
-			httpx.WriteError(writer, request, 401, "UNAUTHENTICATED", "An active browser session is required.")
+		if request.Method == http.MethodPut || request.Method == http.MethodPatch {
+			if userID <= 0 {
+				userID = in.ID
+			}
+			if userID <= 0 {
+				httpx.WriteError(writer, request, 400, "INVALID_SCIM_USER", "The SCIM user identifier is required.")
+				return
+			}
+			updated, e := handler.scim.UpdateSCIMUser(request.Context(), user.ActiveTenant(), userID, strings.TrimSpace(in.Email), strings.TrimSpace(in.Name), active)
+			if e != nil {
+				httpx.WriteError(writer, request, 404, "SCIM_USER_NOT_FOUND", "SCIM user not found.")
+				return
+			}
+			httpx.WriteJSON(writer, 200, map[string]any{"id": updated.ID, "userName": updated.Email, "active": active})
+			return
+		}
+		if in.ID > 0 {
+			updated, e := handler.scim.UpdateSCIMUser(request.Context(), user.ActiveTenant(), in.ID, strings.TrimSpace(in.Email), strings.TrimSpace(in.Name), active)
+			if e != nil {
+				httpx.WriteError(writer, request, 404, "SCIM_USER_NOT_FOUND", "SCIM user not found.")
+				return
+			}
+			httpx.WriteJSON(writer, 200, map[string]any{"id": updated.ID, "userName": updated.Email, "active": active})
 			return
 		}
 		created, e := handler.scim.CreateSCIMUser(request.Context(), user.ActiveTenant(), strings.TrimSpace(in.Email), strings.TrimSpace(in.Name), active)
