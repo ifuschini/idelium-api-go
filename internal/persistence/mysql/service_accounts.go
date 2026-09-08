@@ -68,3 +68,15 @@ func (r *ServiceAccountRepository) Revoke(ctx context.Context, tenant, id int64,
 	}
 	return nil
 }
+
+func (r *ServiceAccountRepository) ActiveServiceAccount(ctx context.Context, tenant int64, subject string, now time.Time) (bool, error) {
+	var id int64
+	err := r.database.QueryRowContext(ctx, `SELECT id FROM service_accounts WHERE idCostumer=? AND credentialId=? AND revokedAt IS NULL AND (expiresAt IS NULL OR expiresAt>?) LIMIT 1`, tenant, subject, now).Scan(&id)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, safeDatabaseFailure("validate OIDC service-account binding", err)
+	}
+	return id > 0, nil
+}

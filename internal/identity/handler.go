@@ -44,6 +44,7 @@ type Handler struct {
 	scim      SCIMRepository
 	users     browserauth.UserRepository
 	sso       SSOStateRepository
+	service   ServiceAccountBinding
 }
 
 type Provider struct {
@@ -83,6 +84,10 @@ type SSOStateInspector interface {
 	SSOState(context.Context, string, time.Time) (int64, int64, error)
 }
 
+type ServiceAccountBinding interface {
+	ActiveServiceAccount(context.Context, int64, string, time.Time) (bool, error)
+}
+
 // NewHandler creates an advanced identity migration gate.
 func NewHandler(logger *slog.Logger, deps ...any) Handler {
 	h := Handler{logger: logger}
@@ -100,6 +105,9 @@ func NewHandler(logger *slog.Logger, deps ...any) Handler {
 	}
 	if len(deps) > 4 {
 		h.sso, _ = deps[4].(SSOStateRepository)
+	}
+	if len(deps) > 5 {
+		h.service, _ = deps[5].(ServiceAccountBinding)
 	}
 	if len(deps) > 0 {
 		if repository, ok := deps[0].(browserauth.Repository); ok {
@@ -437,6 +445,15 @@ func (handler Handler) OIDCTokenExchange(writer http.ResponseWriter, request *ht
 		claims, err := validateOIDCJWTForProvider(in.IDToken, in.Nonce, provider.Issuer, provider.Audience)
 		if err != nil {
 			httpx.WriteError(writer, request, 401, "INVALID_OIDC_TOKEN", err.Error())
+			return
+		}
+		if handler.service == nil {
+			httpx.WriteError(writer, request, 503, "OIDC_UNAVAILABLE", "Service-account binding is unavailable.")
+			return
+		}
+		bound, bindingErr := handler.service.ActiveServiceAccount(request.Context(), tenantID, claims.Subject, time.Now().UTC())
+		if bindingErr != nil || !bound {
+			httpx.WriteError(writer, request, 401, "INVALID_SERVICE_ACCOUNT", "The OIDC subject is not bound to an active service account.")
 			return
 		}
 		if _, _, err = handler.sso.ConsumeSSOState(request.Context(), in.State, time.Now().UTC()); err != nil {

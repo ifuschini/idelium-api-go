@@ -150,12 +150,16 @@ func NewRouter(
 	router.Get("/admin/launch/targets/{idProject}", platformHandler.LaunchTargets)
 
 	var identityProviderRepository identity.ProviderRepository
+	var identityServiceBinding identity.ServiceAccountBinding
 	for _, candidate := range optionalRepositories {
 		if repository, ok := candidate.(identity.ProviderRepository); ok {
 			identityProviderRepository = repository
 		}
+		if repository, ok := candidate.(identity.ServiceAccountBinding); ok {
+			identityServiceBinding = repository
+		}
 	}
-	identityHandler := identity.NewHandler(logger, browserAuthRepository, identityProviderRepository, browserAuthRepository, browserAuthRepository, browserAuthRepository)
+	identityHandler := identity.NewHandler(logger, browserAuthRepository, identityProviderRepository, browserAuthRepository, browserAuthRepository, browserAuthRepository, identityServiceBinding)
 	router.Get("/admin/identity/providers", identityHandler.Providers)
 	router.Post("/admin/identity/providers", identityHandler.Providers)
 	router.Put("/admin/identity/accounts/{user}/break-glass", identityHandler.BreakGlass)
