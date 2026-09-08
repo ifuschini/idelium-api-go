@@ -20,6 +20,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -72,6 +73,12 @@ type SSOStateRepository interface {
 	CreateSSOState(context.Context, int64, int64, string, string, time.Time) error
 	ConsumeSSOState(context.Context, string, time.Time) (int64, int64, error)
 	Provider(context.Context, int64, string) (Provider, error)
+}
+
+// SSOStateInspector exposes the unconsumed state binding so token claims can
+// be checked against the tenant and provider before the state is spent.
+type SSOStateInspector interface {
+	SSOState(context.Context, string, time.Time) (int64, int64, error)
 }
 
 // NewHandler creates an advanced identity migration gate.
@@ -352,13 +359,38 @@ func (handler Handler) OIDCTokenExchange(writer http.ResponseWriter, request *ht
 		httpx.WriteError(writer, request, 400, "INVALID_OIDC_REQUEST", "id_token, state and nonce are required.")
 		return
 	}
+	if handler.sso == nil {
+		httpx.WriteError(writer, request, 503, "OIDC_UNAVAILABLE", "OIDC state storage is unavailable.")
+		return
+	}
+	var tenantID, providerID int64
+	var err error
+	if inspector, ok := handler.sso.(SSOStateInspector); ok {
+		tenantID, providerID, err = inspector.SSOState(request.Context(), in.State, time.Now().UTC())
+		if err != nil {
+			httpx.WriteError(writer, request, 401, "INVALID_OIDC_STATE", "The OIDC state is invalid or expired.")
+			return
+		}
+		provider, providerErr := handler.sso.Provider(request.Context(), tenantID, strconv.FormatInt(providerID, 10))
+		if providerErr != nil || provider.Status != "active" || provider.Issuer == "" || provider.Audience == "" {
+			httpx.WriteError(writer, request, 401, "INVALID_OIDC_PROVIDER", "The OIDC provider binding is invalid.")
+			return
+		}
+		claims, err := validateOIDCJWTForProvider(in.IDToken, in.Nonce, provider.Issuer, provider.Audience)
+		if err != nil {
+			httpx.WriteError(writer, request, 401, "INVALID_OIDC_TOKEN", err.Error())
+			return
+		}
+		if _, _, err = handler.sso.ConsumeSSOState(request.Context(), in.State, time.Now().UTC()); err != nil {
+			httpx.WriteError(writer, request, 401, "INVALID_OIDC_STATE", "The OIDC state is invalid or expired.")
+			return
+		}
+		httpx.WriteJSON(writer, 200, map[string]any{"validated": true, "tenantId": tenantID, "providerId": providerID, "issuer": claims.Issuer, "subject": claims.Subject, "email": claims.Email})
+		return
+	}
 	claims, err := validateOIDCJWT(in.IDToken, in.Nonce)
 	if err != nil {
 		httpx.WriteError(writer, request, 401, "INVALID_OIDC_TOKEN", err.Error())
-		return
-	}
-	if handler.sso == nil {
-		httpx.WriteError(writer, request, 503, "OIDC_UNAVAILABLE", "OIDC state storage is unavailable.")
 		return
 	}
 	if _, _, err = handler.sso.ConsumeSSOState(request.Context(), in.State, time.Now().UTC()); err != nil {
@@ -379,6 +411,10 @@ type oidcClaims struct {
 }
 
 func validateOIDCJWT(token, expectedNonce string) (oidcClaims, error) {
+	return validateOIDCJWTForProvider(token, expectedNonce, os.Getenv("IDELIUM_OIDC_ISSUER"), os.Getenv("IDELIUM_OIDC_AUDIENCE"))
+}
+
+func validateOIDCJWTForProvider(token, expectedNonce, expectedIssuer, expectedAudience string) (oidcClaims, error) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
 		return oidcClaims{}, fmt.Errorf("malformed JWT")
@@ -402,11 +438,11 @@ func validateOIDCJWT(token, expectedNonce string) (oidcClaims, error) {
 	if json.Unmarshal(payload, &c) != nil || c.Issuer == "" || c.Subject == "" || c.Exp <= time.Now().Unix() || c.Nonce != expectedNonce {
 		return oidcClaims{}, fmt.Errorf("invalid JWT claims")
 	}
-	expectedIssuer := strings.TrimSpace(os.Getenv("IDELIUM_OIDC_ISSUER"))
+	expectedIssuer = strings.TrimSpace(expectedIssuer)
 	if expectedIssuer == "" || c.Issuer != expectedIssuer {
 		return oidcClaims{}, fmt.Errorf("invalid JWT issuer")
 	}
-	expectedAudience := strings.TrimSpace(os.Getenv("IDELIUM_OIDC_AUDIENCE"))
+	expectedAudience = strings.TrimSpace(expectedAudience)
 	if expectedAudience == "" {
 		return oidcClaims{}, fmt.Errorf("OIDC audience is not configured")
 	}

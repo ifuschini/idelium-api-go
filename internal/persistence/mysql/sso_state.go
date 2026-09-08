@@ -31,6 +31,21 @@ func (r *BrowserAuthRepository) ConsumeSSOState(ctx context.Context, state strin
 	}
 	return tenant, provider, nil
 }
+
+// SSOState returns the tenant/provider binding for an unconsumed state without
+// consuming it. Callers must consume the state after validating the token.
+func (r *BrowserAuthRepository) SSOState(ctx context.Context, state string, now time.Time) (int64, int64, error) {
+	var tenant, provider int64
+	e := r.database.QueryRowContext(ctx, `SELECT idCostumer,identityProviderId FROM sso_states WHERE state=? AND consumedAt IS NULL AND expiresAt>?`, state, now).Scan(&tenant, &provider)
+	if e == sql.ErrNoRows {
+		return 0, 0, errors.New("SSO state expired or already consumed")
+	}
+	if e != nil {
+		return 0, 0, safeDatabaseFailure("inspect SSO state", e)
+	}
+	return tenant, provider, nil
+}
+
 func (r *BrowserAuthRepository) Provider(ctx context.Context, tenant, name string) (identity.Provider, error) {
 	var p identity.Provider
 	var issuer, audience sql.NullString
