@@ -21,6 +21,8 @@ CREATE TABLE users (
   status VARCHAR(32) NOT NULL DEFAULT 'active',
   mfaSecretEncrypted TEXT NULL,
   mfaConfirmedAt TIMESTAMP NULL,
+  breakGlassReason VARCHAR(255) NULL,
+  breakGlassExpiresAt TIMESTAMP NULL,
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL
 );

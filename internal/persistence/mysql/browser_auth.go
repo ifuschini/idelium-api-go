@@ -22,6 +22,33 @@ import (
 
 type BrowserAuthRepository struct{ database *sql.DB }
 
+func (r *BrowserAuthRepository) SetBreakGlass(ctx context.Context, tenant, target int64, reason string, expires, now time.Time) error {
+	res, err := r.database.ExecContext(ctx, `UPDATE users SET breakGlassReason=?,breakGlassExpiresAt=?,updated_at=? WHERE id=? AND idCostumer=?`, reason, expires, now, target, tenant)
+	if err != nil {
+		return safeDatabaseFailure("set break-glass control", err)
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return browserauth.ErrNotFound
+	}
+	_, _ = r.database.ExecContext(ctx, `INSERT INTO audit_events(activeTenantId,action,targetType,targetId,result,created_at) VALUES (?, 'identity.break_glass.enabled','user',?,'success',?)`, tenant, target, now)
+	return nil
+}
+
+func (r *BrowserAuthRepository) TestBreakGlass(ctx context.Context, tenant, target int64, now time.Time) (bool, error) {
+	var expires *time.Time
+	err := r.database.QueryRowContext(ctx, `SELECT breakGlassExpiresAt FROM users WHERE id=? AND idCostumer=? AND status='active'`, target, tenant).Scan(&expires)
+	if err == sql.ErrNoRows {
+		return false, browserauth.ErrNotFound
+	}
+	if err != nil {
+		return false, safeDatabaseFailure("test break-glass control", err)
+	}
+	valid := expires != nil && expires.After(now)
+	_, _ = r.database.ExecContext(ctx, `INSERT INTO audit_events(activeTenantId,action,targetType,targetId,result,created_at) VALUES (?, 'identity.break_glass.test','user',?,? ,?)`, tenant, target, map[bool]string{true: "success", false: "failure"}[valid], now)
+	return valid, nil
+}
+
 func NewBrowserAuthRepository(database *sql.DB) *BrowserAuthRepository {
 	return &BrowserAuthRepository{database: database}
 }

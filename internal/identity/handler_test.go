@@ -65,6 +65,10 @@ func TestAdvancedIdentityRoutesFailClosedWithoutPayloadLeak(t *testing.T) {
 				expectedCode = http.StatusUnauthorized
 				expectedError = "IDENTITY_SIGNATURE_REQUIRED"
 			}
+			if strings.Contains(tt.path, "break-glass") {
+				expectedCode = http.StatusServiceUnavailable
+				expectedError = "BREAK_GLASS_UNAVAILABLE"
+			}
 			if response.Code != expectedCode {
 				t.Fatalf("expected status %d, got %d", expectedCode, response.Code)
 			}

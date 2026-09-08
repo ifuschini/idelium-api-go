@@ -37,14 +37,15 @@ var replayedNonces = map[string]time.Time{}
 // Handler exposes advanced identity routes only after migration gates enable a
 // Go-native implementation. Until then it fails closed with safe diagnostics.
 type Handler struct {
-	logger    *slog.Logger
-	sessions  browserauth.SessionRepository
-	providers ProviderRepository
-	mfa       MFARepository
-	scim      SCIMRepository
-	users     browserauth.UserRepository
-	sso       SSOStateRepository
-	service   ServiceAccountBinding
+	logger     *slog.Logger
+	sessions   browserauth.SessionRepository
+	providers  ProviderRepository
+	mfa        MFARepository
+	scim       SCIMRepository
+	users      browserauth.UserRepository
+	sso        SSOStateRepository
+	service    ServiceAccountBinding
+	breakglass BreakGlassRepository
 }
 
 type Provider struct {
@@ -88,6 +89,11 @@ type ServiceAccountBinding interface {
 	ActiveServiceAccount(context.Context, int64, string, time.Time) (bool, error)
 }
 
+type BreakGlassRepository interface {
+	SetBreakGlass(context.Context, int64, int64, string, time.Time, time.Time) error
+	TestBreakGlass(context.Context, int64, int64, time.Time) (bool, error)
+}
+
 // NewHandler creates an advanced identity migration gate.
 func NewHandler(logger *slog.Logger, deps ...any) Handler {
 	h := Handler{logger: logger}
@@ -108,6 +114,12 @@ func NewHandler(logger *slog.Logger, deps ...any) Handler {
 	}
 	if len(deps) > 5 {
 		h.service, _ = deps[5].(ServiceAccountBinding)
+	}
+	if len(deps) > 6 {
+		h.breakglass, _ = deps[6].(BreakGlassRepository)
+	}
+	if len(deps) > 7 {
+		h.breakglass, _ = deps[7].(BreakGlassRepository)
 	}
 	if len(deps) > 0 {
 		if repository, ok := deps[0].(browserauth.Repository); ok {
@@ -160,7 +172,33 @@ func (handler Handler) BreakGlass(writer http.ResponseWriter, request *http.Requ
 		httpx.WriteError(writer, request, http.StatusBadRequest, "INVALID_USER", "The user identifier is required.")
 		return
 	}
-	handler.writeMigrationDisabled(writer, request, "break-glass")
+	if handler.breakglass == nil || handler.sessions == nil {
+		httpx.WriteError(writer, request, 503, "BREAK_GLASS_UNAVAILABLE", "Break-glass storage is unavailable.")
+		return
+	}
+	actor, ok := browserauth.AuthenticateRequest(request.Context(), request, handler.sessions, time.Now().UTC())
+	if !ok {
+		httpx.WriteError(writer, request, 401, "UNAUTHENTICATED", "An active browser session is required.")
+		return
+	}
+	target, err := strconv.ParseInt(chi.URLParam(request, "user"), 10, 64)
+	if err != nil || target <= 0 {
+		httpx.WriteError(writer, request, 400, "INVALID_USER", "The user identifier is required.")
+		return
+	}
+	var in struct {
+		Reason    string    `json:"reason"`
+		ExpiresAt time.Time `json:"expiresAt"`
+	}
+	if json.NewDecoder(http.MaxBytesReader(writer, request.Body, 16<<10)).Decode(&in) != nil || strings.TrimSpace(in.Reason) == "" || in.ExpiresAt.IsZero() || !in.ExpiresAt.After(time.Now().UTC()) || in.ExpiresAt.After(time.Now().UTC().Add(time.Hour)) {
+		httpx.WriteError(writer, request, 422, "INVALID_BREAK_GLASS", "Reason and an expiry within one hour are required.")
+		return
+	}
+	if err = handler.breakglass.SetBreakGlass(request.Context(), actor.ActiveTenant(), target, strings.TrimSpace(in.Reason), in.ExpiresAt.UTC(), time.Now().UTC()); err != nil {
+		httpx.WriteError(writer, request, 404, "USER_NOT_FOUND", "User not found.")
+		return
+	}
+	httpx.WriteJSON(writer, 200, map[string]any{"user": target, "expiresAt": in.ExpiresAt.UTC(), "enabled": true})
 }
 
 // BreakGlassTest blocks break-glass verification writes until cutover.
@@ -169,7 +207,30 @@ func (handler Handler) BreakGlassTest(writer http.ResponseWriter, request *http.
 		httpx.WriteError(writer, request, http.StatusBadRequest, "INVALID_USER", "The user identifier is required.")
 		return
 	}
-	handler.writeMigrationDisabled(writer, request, "break-glass-test")
+	if handler.breakglass == nil || handler.sessions == nil {
+		httpx.WriteError(writer, request, 503, "BREAK_GLASS_UNAVAILABLE", "Break-glass storage is unavailable.")
+		return
+	}
+	actor, ok := browserauth.AuthenticateRequest(request.Context(), request, handler.sessions, time.Now().UTC())
+	if !ok {
+		httpx.WriteError(writer, request, 401, "UNAUTHENTICATED", "An active browser session is required.")
+		return
+	}
+	target, err := strconv.ParseInt(chi.URLParam(request, "user"), 10, 64)
+	if err != nil || target <= 0 {
+		httpx.WriteError(writer, request, 400, "INVALID_USER", "The user identifier is required.")
+		return
+	}
+	valid, err := handler.breakglass.TestBreakGlass(request.Context(), actor.ActiveTenant(), target, time.Now().UTC())
+	if err != nil {
+		httpx.WriteError(writer, request, 404, "USER_NOT_FOUND", "User not found.")
+		return
+	}
+	if !valid {
+		httpx.WriteError(writer, request, 409, "BREAK_GLASS_INACTIVE", "Break-glass control is inactive or expired.")
+		return
+	}
+	httpx.WriteJSON(writer, 200, map[string]any{"user": target, "valid": true})
 }
 
 // SCIMUsers blocks SCIM lifecycle writes until Go owns the identity provider.
