@@ -659,6 +659,9 @@ func (handler Handler) OIDCCallback(writer http.ResponseWriter, request *http.Re
 	if !validateSignedPayload(writer, request) {
 		return
 	}
+	if !handler.validateCallbackBinding(writer, request) {
+		return
+	}
 	if handler.users != nil {
 		handler.issueSSOSession(writer, request)
 		return
@@ -675,11 +678,54 @@ func (handler Handler) SAMLCallback(writer http.ResponseWriter, request *http.Re
 	if !validateSignedPayload(writer, request) {
 		return
 	}
+	if !handler.validateCallbackBinding(writer, request) {
+		return
+	}
 	if handler.users != nil {
 		handler.issueSSOSession(writer, request)
 		return
 	}
 	handler.writeMigrationDisabled(writer, request, "saml-callback")
+}
+
+func (handler Handler) validateCallbackBinding(writer http.ResponseWriter, request *http.Request) bool {
+	if handler.sso == nil {
+		httpx.WriteError(writer, request, 503, "SSO_UNAVAILABLE", "SSO state storage is unavailable.")
+		return false
+	}
+	inspector, ok := handler.sso.(SSOStateInspector)
+	if !ok {
+		httpx.WriteError(writer, request, 503, "SSO_UNAVAILABLE", "SSO state inspection is unavailable.")
+		return false
+	}
+	body, err := io.ReadAll(http.MaxBytesReader(writer, request.Body, 64<<10))
+	request.Body = io.NopCloser(bytes.NewReader(body))
+	if err != nil {
+		httpx.WriteError(writer, request, 400, "INVALID_SSO_ASSERTION", "The SSO assertion is invalid.")
+		return false
+	}
+	var in struct {
+		State string `json:"state"`
+	}
+	if json.Unmarshal(body, &in) != nil || strings.TrimSpace(in.State) == "" {
+		httpx.WriteError(writer, request, 400, "INVALID_SSO_ASSERTION", "A valid SSO state is required.")
+		return false
+	}
+	tenant, provider, err := inspector.SSOState(request.Context(), in.State, time.Now().UTC())
+	if err != nil {
+		httpx.WriteError(writer, request, 401, "INVALID_OIDC_STATE", "The SSO state is invalid or expired.")
+		return false
+	}
+	configured, err := handler.sso.Provider(request.Context(), tenant, chi.URLParam(request, "identityProvider"))
+	if err != nil || configured.ID != provider || configured.Status != "active" {
+		httpx.WriteError(writer, request, 401, "INVALID_OIDC_PROVIDER", "The SSO provider binding is invalid.")
+		return false
+	}
+	if _, _, err = handler.sso.ConsumeSSOState(request.Context(), in.State, time.Now().UTC()); err != nil {
+		httpx.WriteError(writer, request, 401, "INVALID_OIDC_STATE", "The SSO state is invalid or expired.")
+		return false
+	}
+	return true
 }
 
 func (handler Handler) issueSSOSession(w http.ResponseWriter, r *http.Request) {
