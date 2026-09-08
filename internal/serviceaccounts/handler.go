@@ -53,7 +53,7 @@ func NewHandler(logger *slog.Logger, deps ...any) Handler {
 }
 func (h Handler) user(w http.ResponseWriter, r *http.Request) (browserauth.User, bool) {
 	if h.repository == nil {
-		httpx.WriteError(w, r, http.StatusNotImplemented, "SERVICE_ACCOUNT_MIGRATION_DISABLED", "Service-account credential migration is not enabled for the Go runtime.")
+		httpx.WriteError(w, r, http.StatusServiceUnavailable, "SERVICE_ACCOUNT_UNAVAILABLE", "Service-account storage is unavailable.")
 		return browserauth.User{}, false
 	}
 	if h.sessions == nil || h.repository == nil {

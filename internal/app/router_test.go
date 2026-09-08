@@ -588,12 +588,12 @@ func TestRouterFailsClosedForServiceAccountRoutes(t *testing.T) {
 		httptest.NewRequest(http.MethodPost, "/admin/service-accounts", strings.NewReader(`{"token":"must-not-leak"}`)),
 	)
 
-	if response.Code != http.StatusNotImplemented {
-		t.Fatalf("expected status 501, got %d", response.Code)
+	if response.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected status 503, got %d", response.Code)
 	}
 	body := response.Body.String()
-	if !strings.Contains(body, "SERVICE_ACCOUNT_MIGRATION_DISABLED") {
-		t.Fatalf("stable service-account migration code missing: %s", body)
+	if !strings.Contains(body, "SERVICE_ACCOUNT_UNAVAILABLE") {
+		t.Fatalf("stable service-account availability code missing: %s", body)
 	}
 	if strings.Contains(body, "must-not-leak") || strings.Contains(body, "token") {
 		t.Fatalf("service-account route leaked credential payload: %s", body)
@@ -610,12 +610,12 @@ func TestRouterFailsClosedForLegacyAPIKeyRoutes(t *testing.T) {
 		httptest.NewRequest(http.MethodPut, "/admin/apikey", strings.NewReader(`{"apiKey":"must-not-leak"}`)),
 	)
 
-	if response.Code != http.StatusNotImplemented {
-		t.Fatalf("expected status 501, got %d", response.Code)
+	if response.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected status 503, got %d", response.Code)
 	}
 	body := response.Body.String()
-	if !strings.Contains(body, "LEGACY_API_KEY_MIGRATION_DISABLED") {
-		t.Fatalf("stable legacy API-key migration code missing: %s", body)
+	if !strings.Contains(body, "LEGACY_API_KEY_UNAVAILABLE") {
+		t.Fatalf("stable legacy API-key availability code missing: %s", body)
 	}
 	if strings.Contains(body, "must-not-leak") || strings.Contains(body, "apiKey") {
 		t.Fatalf("legacy API-key route leaked credential payload: %s", body)
@@ -629,8 +629,8 @@ func TestRouterFailsClosedForLegacyAPIKeyHeadRoute(t *testing.T) {
 
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodHead, "/admin/apikey", nil))
 
-	if response.Code != http.StatusNotImplemented {
-		t.Fatalf("expected status 501, got %d", response.Code)
+	if response.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected status 503, got %d", response.Code)
 	}
 }
 

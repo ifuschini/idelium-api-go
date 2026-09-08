@@ -33,7 +33,7 @@ func NewHandler(logger *slog.Logger, deps ...any) Handler {
 }
 func (h Handler) user(w http.ResponseWriter, r *http.Request) (browserauth.User, bool) {
 	if h.lifecycle == nil {
-		httpx.WriteError(w, r, 501, "LEGACY_API_KEY_MIGRATION_DISABLED", "Legacy API-key lifecycle migration is not enabled for the Go runtime.")
+		httpx.WriteError(w, r, http.StatusServiceUnavailable, "LEGACY_API_KEY_UNAVAILABLE", "Legacy API-key storage is unavailable.")
 		return browserauth.User{}, false
 	}
 	u, ok := browserauth.AuthenticateRequest(r.Context(), r, h.sessions, h.now())

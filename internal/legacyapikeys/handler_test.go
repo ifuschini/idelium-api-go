@@ -41,11 +41,11 @@ func TestReplaceFailsClosedWithoutLeakingPayload(t *testing.T) {
 func assertMigrationDisabled(t *testing.T, response *httptest.ResponseRecorder) string {
 	t.Helper()
 
-	if response.Code != http.StatusNotImplemented {
-		t.Fatalf("expected status 501, got %d", response.Code)
+	if response.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected status 503, got %d", response.Code)
 	}
 	body := response.Body.String()
-	if !strings.Contains(body, "LEGACY_API_KEY_MIGRATION_DISABLED") {
+	if !strings.Contains(body, "LEGACY_API_KEY_UNAVAILABLE") {
 		t.Fatalf("stable legacy API-key migration code missing: %s", body)
 	}
 	return body
