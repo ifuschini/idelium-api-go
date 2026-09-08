@@ -118,9 +118,9 @@ func (handler Handler) writeMigrationDisabled(
 	httpx.WriteError(
 		writer,
 		request,
-		http.StatusNotImplemented,
-		"IDENTITY_MIGRATION_DISABLED",
-		"Advanced identity migration is not enabled for the Go runtime.",
+		http.StatusConflict,
+		"IDENTITY_LARAVEL_OWNER",
+		"Advanced identity operations remain owned by the Laravel runtime.",
 	)
 }
 

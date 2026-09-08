@@ -10,13 +10,13 @@ Wave 9 covers the late identity surfaces that must not be partially enabled:
 - break-glass account controls.
 
 This migration slice makes those routes explicit in the Go router and fails
-closed with a stable `501` response until Go-native identity is enabled. The
+closed with a stable `409` ownership response until Go-native identity is enabled. The
 guard exists to avoid accidental `404` ambiguity or unsafe fallback behavior
 when traffic is pointed at Go before the final compatibility gates pass.
 
 ## Current behavior
 
-The following routes return `IDENTITY_MIGRATION_DISABLED` from Go:
+The following routes return `IDENTITY_LARAVEL_OWNER` from Go:
 
 - `GET /api/admin/identity/providers`
 - `POST /api/admin/identity/providers`
@@ -43,8 +43,8 @@ while Laravel owns these routes. The generated OpenAPI compatibility block also
 marks these operations with:
 
 - `x-idelium-go-cutover-gate: true`
-- `x-idelium-go-cutover-error-code: "IDENTITY_MIGRATION_DISABLED"`
-- documented `501` compatibility error response
+- `x-idelium-go-cutover-error-code: "IDENTITY_LARAVEL_OWNER"`
+- documented `409` ownership response
 
 ## Cutover requirements
 

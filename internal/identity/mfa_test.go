@@ -34,11 +34,11 @@ func TestMFARoutesFailClosedUntilNativeStepUpIsEnabled(t *testing.T) {
 
 			router.ServeHTTP(response, request)
 
-			if response.Code != http.StatusNotImplemented {
-				t.Fatalf("expected status 501, got %d", response.Code)
+			if response.Code != http.StatusConflict {
+				t.Fatalf("expected status 409, got %d", response.Code)
 			}
 			body := response.Body.String()
-			if !strings.Contains(body, "IDENTITY_MIGRATION_DISABLED") {
+			if !strings.Contains(body, "IDENTITY_LARAVEL_OWNER") {
 				t.Fatalf("stable MFA gate code missing: %s", body)
 			}
 			for _, unsafe := range []string{"123456", "do-not-leak", "recovery_code", "otp"} {

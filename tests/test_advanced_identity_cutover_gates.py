@@ -30,7 +30,7 @@ class AdvancedIdentityCutoverGateTest(unittest.TestCase):
                 self.assertNotEqual(-1, index, f"{path} is missing from OpenAPI")
                 block = self.source[index : self.source.find("\n  /", index + 1)]
                 self.assertIn("x-idelium-go-cutover-gate: true", block)
-                self.assertIn('x-idelium-go-cutover-error-code: "IDENTITY_MIGRATION_DISABLED"', block)
+                self.assertIn('x-idelium-go-cutover-error-code: "IDENTITY_LARAVEL_OWNER"', block)
                 self.assertIn('"501":', block)
 
 
