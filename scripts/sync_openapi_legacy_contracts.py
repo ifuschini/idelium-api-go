@@ -13,25 +13,10 @@ from typing import Any, Iterable
 BEGIN = "  # BEGIN GENERATED LARAVEL COMPATIBILITY CONTRACTS"
 END = "  # END GENERATED LARAVEL COMPATIBILITY CONTRACTS"
 HTTP_METHODS = {"DELETE", "GET", "PATCH", "POST", "PUT"}
-GO_CUTOVER_GATED_ROUTES = {
-    "GET|HEAD /api/admin/apikey": "LEGACY_API_KEY_MIGRATION_DISABLED",
-    "PUT /api/admin/apikey": "LEGACY_API_KEY_MIGRATION_DISABLED",
-    "PUT /api/admin/identity/accounts/{user}/break-glass": "IDENTITY_MIGRATION_DISABLED",
-    "POST /api/admin/identity/accounts/{user}/break-glass/test": "IDENTITY_MIGRATION_DISABLED",
-    "GET|HEAD /api/admin/identity/providers": "IDENTITY_MIGRATION_DISABLED",
-    "POST /api/admin/identity/providers": "IDENTITY_MIGRATION_DISABLED",
-    "POST /api/admin/identity/providers/{identityProvider}/scim/users": "IDENTITY_MIGRATION_DISABLED",
-    "POST /api/admin/profile/mfa/confirm": "IDENTITY_MIGRATION_DISABLED",
-    "POST /api/admin/profile/mfa/enroll": "IDENTITY_MIGRATION_DISABLED",
-    "POST /api/admin/profile/mfa/step-up": "IDENTITY_MIGRATION_DISABLED",
-    "POST /api/oidc/token-exchange": "IDENTITY_MIGRATION_DISABLED",
-    "POST /api/sso/{identityProvider}/oidc/callback": "IDENTITY_MIGRATION_DISABLED",
-    "POST /api/sso/{identityProvider}/saml/callback": "IDENTITY_MIGRATION_DISABLED",
-    "POST /api/sso/{identityProvider}/start": "IDENTITY_MIGRATION_DISABLED",
-    "GET|HEAD /api/admin/service-accounts": "SERVICE_ACCOUNT_MIGRATION_DISABLED",
-    "POST /api/admin/service-accounts": "SERVICE_ACCOUNT_MIGRATION_DISABLED",
-    "POST /api/admin/service-accounts/{serviceAccount}/revoke": "SERVICE_ACCOUNT_MIGRATION_DISABLED",
-}
+# All identity, service-account, and legacy API-key routes in this inventory
+# are Go-owned after the Wave 9 cutover. Keep this map empty so generated
+# contracts do not advertise obsolete migration-gate responses.
+GO_CUTOVER_GATED_ROUTES: dict[str, str] = {}
 
 
 def parse_args() -> argparse.Namespace:

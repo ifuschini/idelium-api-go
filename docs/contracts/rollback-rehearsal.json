@@ -15,7 +15,7 @@
   ],
   "preconditions": {
     "docker_switch_status": "blocked",
-    "laravel_blocker_routes": 105,
+    "laravel_blocker_routes": 122,
     "maintenance_status": "blocked",
     "route_cutover_status": "blocked"
   },

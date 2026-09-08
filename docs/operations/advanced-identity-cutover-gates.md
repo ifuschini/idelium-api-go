@@ -16,13 +16,15 @@ when traffic is pointed at Go before the final compatibility gates pass.
 
 ## Current behavior
 
-The following routes still return `IDENTITY_LARAVEL_OWNER` from Go:
+The following routes are now Go-owned when their configured repositories are
+wired; missing storage fails closed with `503` rather than a migration gate:
 
 - `GET /api/admin/identity/providers`
 - `POST /api/admin/identity/providers`
 - `PUT /api/admin/identity/accounts/{user}/break-glass`
 - `POST /api/admin/identity/accounts/{user}/break-glass/test`
 - `POST /api/admin/identity/providers/{identityProvider}/scim/users`
+- `PUT/PATCH/DELETE /api/admin/identity/providers/{identityProvider}/scim/users/{user}`
 - `POST /api/admin/profile/mfa/enroll`
 - `POST /api/admin/profile/mfa/confirm`
 - `POST /api/admin/profile/mfa/step-up`
@@ -31,7 +33,7 @@ The following routes still return `IDENTITY_LARAVEL_OWNER` from Go:
 - `POST /api/sso/{identityProvider}/saml/callback`
 
 The response envelope follows the standard API error contract and includes a
-correlation ID. The handlers do not read or echo callback payloads, assertions,
+correlation ID. The handlers do not log or echo callback payloads, assertions,
 SAML documents, OIDC tokens, secrets, cookies, session identifiers, or
 authorization headers.
 
@@ -51,13 +53,9 @@ and rotation policy is implemented.
 
 ## OpenAPI contract
 
-The Laravel compatibility contracts remain the authoritative public contract
-while Laravel owns these routes. The generated OpenAPI compatibility block also
-marks these operations with:
-
-- `x-idelium-go-cutover-gate: true`
-- `x-idelium-go-cutover-error-code: "IDENTITY_LARAVEL_OWNER"`
-- documented `409` ownership response
+The generated OpenAPI compatibility block no longer advertises migration-gate
+responses for these routes. Repository misconfiguration is represented by the
+runtime `503` availability contract.
 
 ## Cutover requirements
 

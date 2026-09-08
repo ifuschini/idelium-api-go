@@ -1,0 +1,24 @@
+{
+  "fixtureVersion": "1.0",
+  "purpose": "Inventory for sanitized identity Laravel/Go captures.",
+  "syntheticTenant": "fixture-tenant-9001",
+  "routes": [
+    {"id": "identity-provider-list", "method": "GET", "path": "/api/admin/identity/providers", "trustPath": "browser-session"},
+    {"id": "identity-provider-create", "method": "POST", "path": "/api/admin/identity/providers", "trustPath": "browser-session"},
+    {"id": "scim-create", "method": "POST", "path": "/api/admin/identity/providers/9001/scim/users", "trustPath": "browser-session"},
+    {"id": "scim-update", "method": "PUT", "path": "/api/admin/identity/providers/9001/scim/users/9002", "trustPath": "browser-session"},
+    {"id": "scim-delete", "method": "DELETE", "path": "/api/admin/identity/providers/9001/scim/users/9002", "trustPath": "browser-session"},
+    {"id": "break-glass-enable", "method": "PUT", "path": "/api/admin/identity/accounts/9002/break-glass", "trustPath": "browser-session"},
+    {"id": "break-glass-test", "method": "POST", "path": "/api/admin/identity/accounts/9002/break-glass/test", "trustPath": "browser-session"},
+    {"id": "oidc-token-exchange", "method": "POST", "path": "/api/oidc/token-exchange", "trustPath": "internal-service"},
+    {"id": "sso-start", "method": "POST", "path": "/api/sso/9001/start", "trustPath": "browser-session"},
+    {"id": "oidc-callback", "method": "POST", "path": "/api/sso/9001/oidc/callback", "trustPath": "browser-session"},
+    {"id": "saml-callback", "method": "POST", "path": "/api/sso/9001/saml/callback", "trustPath": "browser-session"}
+  ],
+  "sanitization": {
+    "credentials": "never persisted",
+    "cookies": "never persisted",
+    "authorizationHeaders": "never persisted",
+    "tenantData": "synthetic only"
+  }
+}

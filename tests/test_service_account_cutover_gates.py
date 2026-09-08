@@ -10,7 +10,7 @@ class ServiceAccountCutoverGateTest(unittest.TestCase):
     def setUp(self):
         self.source = OPENAPI.read_text(encoding="utf-8")
 
-    def test_service_account_routes_document_go_cutover_gate(self):
+    def test_service_account_routes_are_go_owned(self):
         expected_paths = [
             "/admin/service-accounts",
             "/admin/service-accounts/{serviceAccount}/revoke",
@@ -20,12 +20,9 @@ class ServiceAccountCutoverGateTest(unittest.TestCase):
                 index = self.source.find(f"  {path}:")
                 self.assertNotEqual(-1, index, f"{path} is missing from OpenAPI")
                 block = self.source[index : self.source.find("\n  /", index + 1)]
-                self.assertIn("x-idelium-go-cutover-gate: true", block)
-                self.assertIn(
-                    'x-idelium-go-cutover-error-code: "SERVICE_ACCOUNT_MIGRATION_DISABLED"',
-                    block,
-                )
-                self.assertIn('"501":', block)
+                self.assertNotIn("x-idelium-go-cutover-gate: true", block)
+                self.assertNotIn('x-idelium-go-cutover-error-code:', block)
+                self.assertNotIn('"501":', block)
 
 
 if __name__ == "__main__":

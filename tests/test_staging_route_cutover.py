@@ -62,7 +62,6 @@ class StagingRouteCutoverTests(unittest.TestCase):
             if route["staging_state"] == "gated"
         ]
 
-        self.assertGreater(len(gated_routes), 0)
         for route in gated_routes:
             self.assertEqual(route["staging_owner"], "go-fail-closed")
             self.assertEqual(route["routing_action"], "send-to-go-gate")

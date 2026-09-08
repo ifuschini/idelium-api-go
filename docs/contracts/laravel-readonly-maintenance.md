@@ -15,9 +15,9 @@ enter the maintenance window.
 | Max duration | 60 minutes |
 | Schema freeze | `frozen` |
 | Route cutover | `blocked` |
-| Laravel blocker routes | 105 |
+| Laravel blocker routes | 122 |
 | Go-owned routes | 46 |
-| Go fail-closed routes | 17 |
+| Go fail-closed routes | 0 |
 
 ## Controls
 
@@ -41,7 +41,7 @@ enter the maintenance window.
 
 | Control | Reason | Count |
 | --- | --- | ---: |
-| `route-cutover` | Routes without Go implementation or fail-closed gates remain on Laravel. | 105 |
+| `route-cutover` | Routes without Go implementation or fail-closed gates remain on Laravel. | 122 |
 
 ## Rollback
 
