@@ -54,14 +54,16 @@ VALUES
 INSERT INTO agent_registrations (id, idCostumer, agentId, status, version, health, capabilities)
 VALUES (9001, 9001, 'fixture-agent-smoke', 'approved', 'fixture', 'healthy', '["selenium"]');
 
-INSERT INTO types (id, name) VALUES (9001, 'fixture-type-smoke');
-INSERT INTO statuses (id, name) VALUES (9001, 'fixture-status-smoke');
-INSERT INTO locations (id, name) VALUES (9001, 'fixture-location-smoke');
-INSERT INTO brand_devices (id, brand) VALUES (9001, 'fixture-brand-smoke');
-INSERT INTO model_devices (id, model, idBrand) VALUES (9001, 'fixture-model-smoke', 9001);
-INSERT INTO os (id, name, type) VALUES (9001, 'fixture-os-smoke', 9001);
-INSERT INTO version_os (id, version, idOs) VALUES (9001, 'fixture-os-version-smoke', 9001);
-INSERT INTO browsers (id, name, idOs) VALUES (9001, 'fixture-browser-smoke', 9001);
-INSERT INTO version_browsers (id, version, idBrowser) VALUES (9001, 'fixture-browser-version-smoke', 9001);
-INSERT INTO platforms (id, type, hostname, location, os, osversion, brand, browser, brandDescription, osDescription, browserDescription, status)
-VALUES (9001, 9001, 'fixture-host-smoke', 9001, 9001, 9001, 9001, 9001, 'fixture-brand-smoke', 'fixture-os-smoke', 'fixture-browser-smoke', 9001);
+INSERT INTO types (id, name) VALUES (1, 'desktop'), (2, 'mobile');
+INSERT INTO statuses (id, name) VALUES (1, 'active'), (2, 'inactive');
+INSERT INTO locations (id, name) VALUES (1, 'eu-west'), (2, 'us-east');
+INSERT INTO brand_devices (id, brand) VALUES (1, 'Apple'), (2, 'Samsung');
+INSERT INTO model_devices (id, model, idBrand) VALUES (1, 'iPhone', 1), (2, 'iPad', 1);
+INSERT INTO os (id, name, type) VALUES (1, 'linux', 1), (2, 'windows', 1);
+INSERT INTO version_os (id, version, idOs) VALUES (1, '14', 1), (2, '15', 1);
+INSERT INTO browsers (id, name, idOs) VALUES (1, 'chrome', 1), (2, 'firefox', 1);
+INSERT INTO version_browsers (id, version, idBrowser) VALUES (1, '124', 1), (2, '125', 1);
+INSERT INTO platforms (id, type, hostname, location, os, osversion, brand, browser, brandDescription, osDescription, browserDescription, status, updated_at)
+VALUES
+  (1, 1, 'https://chrome-node.example:4444', 1, 1, 1, 1, 1, 'Dell', 'Linux', 'chrome', 1, '2026-08-25 10:00:00'),
+  (2, 1, 'https://firefox-node.example:4444', 2, 1, 1, 1, 2, 'Dell', 'Linux', 'firefox', 2, '2026-08-25 10:00:00');

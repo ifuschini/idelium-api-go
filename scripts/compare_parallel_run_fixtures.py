@@ -31,13 +31,17 @@ def normalize_parallel_fixture(fixture: dict[str, Any]) -> dict[str, Any]:
     """Normalize capture-time fields while preserving route and HTTP status."""
     result = copy.deepcopy(fixture)
     body = result.get("response", {}).get("body")
-    project_fixture = str(result.get("id", "")).startswith("project-")
+    fixture_id = str(result.get("id", ""))
+    project_fixture = fixture_id.startswith("project-")
+    platform_fixture = fixture_id.startswith("platform-")
 
     def normalize(value: Any, key: str = "", nested: bool = False) -> Any:
         if isinstance(value, dict):
             ignored = {"workers", "resultSummary", "version", "versionId", "executionSnapshot"}
             if project_fixture:
                 ignored.update({"idCostumer", "created_at", "updated_at"})
+            if platform_fixture:
+                ignored.update({"created_at", "updated_at"})
             return {k: normalize(v, k, nested or k in {"workers", "resultSummary", "metadata"})
                     for k, v in value.items() if k not in ignored}
         if isinstance(value, list):

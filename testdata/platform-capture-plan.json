@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "platform-catalog-capture.v1",
+  "consumer": "idelium-api-go-platform-catalog-differential",
+  "baseUrlEnv": "CAPTURE_LARAVEL_BASE_URL",
+  "routes": [
+    {"id":"platform-types","method":"GET","path":"/api/admin/platforms/types","authentication":"browser-session","operationKind":"read","expectedStatus":200,"output":"platform-types.fixture.json"},
+    {"id":"platform-status","method":"GET","path":"/api/admin/platforms/status","authentication":"browser-session","operationKind":"read","expectedStatus":200,"output":"platform-status.fixture.json"},
+    {"id":"platform-locations","method":"GET","path":"/api/admin/platforms/locations","authentication":"browser-session","operationKind":"read","expectedStatus":200,"output":"platform-locations.fixture.json"},
+    {"id":"platform-brands","method":"GET","path":"/api/admin/platforms/brands","authentication":"browser-session","operationKind":"read","expectedStatus":200,"output":"platform-brands.fixture.json"},
+    {"id":"platform-models","method":"GET","path":"/api/admin/platforms/models/1","authentication":"browser-session","operationKind":"read","expectedStatus":200,"output":"platform-models.fixture.json"},
+    {"id":"platform-operating-systems","method":"GET","path":"/api/admin/platforms/os/1","authentication":"browser-session","operationKind":"read","expectedStatus":200,"output":"platform-operating-systems.fixture.json"},
+    {"id":"platform-operating-system-versions","method":"GET","path":"/api/admin/platforms/osversion/1","authentication":"browser-session","operationKind":"read","expectedStatus":200,"output":"platform-operating-system-versions.fixture.json"},
+    {"id":"platform-browsers","method":"GET","path":"/api/admin/platforms/browsers/1","authentication":"browser-session","operationKind":"read","expectedStatus":200,"output":"platform-browsers.fixture.json"},
+    {"id":"platform-browser-versions","method":"GET","path":"/api/admin/platforms/browserversions/1","authentication":"browser-session","operationKind":"read","expectedStatus":200,"output":"platform-browser-versions.fixture.json"},
+    {"id":"platform-managed-platforms","method":"GET","path":"/api/admin/platforms/manageplatforms/1","authentication":"browser-session","operationKind":"read","expectedStatus":200,"output":"platform-managed-platforms.fixture.json"}
+  ],
+  "sanitization": {
+    "removeHeaders": ["authorization", "cookie", "set-cookie", "x-xsrf-token"],
+    "redactKeys": ["apiKey", "token", "tokenHash", "password", "session", "cookie", "authorization"],
+    "normalizeTimestamps": true
+  }
+}

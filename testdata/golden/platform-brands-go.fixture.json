@@ -1,13 +1,13 @@
 {
   "fixtureVersion": "1.0",
-  "id": "platform-brands-go-authorized",
-  "description": "Synthetic authorized Go response for the platform brand catalog.",
+  "id": "platform-brands",
+  "description": "Sanitized Laravel parallel-run capture.",
   "source": {
     "runtime": "go",
     "repository": "idelium/idelium-api-go",
-    "revision": "0000000000000000000000000000000000000000",
-    "capturedAt": "2026-01-01T00:00:00Z",
-    "routeInventoryDigestSha256": "0ba5e5d3ff27afdba1e3c32619af26e66ff26022570a6a730b1ce93145ccffd9"
+    "revision": "e5dcc5632f9adee81f54b9cf923983917a64ef75",
+    "capturedAt": "2026-09-08T08:47:03Z",
+    "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
   },
   "route": {
     "method": "GET",
@@ -16,20 +16,27 @@
     "tenantOwned": true
   },
   "context": {
-    "tenant": { "id": "fixture-tenant-alpha", "synthetic": true },
-    "actor": { "id": "fixture-actor-admin", "synthetic": true }
+    "tenant": {
+      "id": "fixture-tenant-9001",
+      "synthetic": true
+    },
+    "actor": {
+      "id": "fixture-browser-user-9001",
+      "synthetic": true
+    }
   },
   "request": {
     "headers": {
-      "Accept": "application/json",
-      "X-Correlation-ID": "fixture-correlation-platform-brands"
+      "Accept": "application/json"
     },
     "query": {},
     "body": null
   },
   "response": {
     "status": 200,
-    "headers": { "Content-Type": "application/json" },
+    "headers": {
+      "Content-Type": "application/json"
+    },
     "body": [
       {
         "id": 1,
@@ -45,29 +52,7 @@
       }
     ]
   },
-  "normalizations": [
-    {
-      "path": "$.request.headers.X-Correlation-ID",
-      "rule": "Replace the generated correlation identifier with a stable fixture value."
-    },
-    {
-      "path": "$.source.capturedAt",
-      "rule": "Use a fixed UTC timestamp."
-    },
-    {
-      "path": "$.source.revision",
-      "rule": "Use a zero revision until the route has a captured Go owner commit."
-    }
-  ],
-  "redactions": [
-    {
-      "path": "$.request.headers.Authorization",
-      "rule": "Remove the browser credential before the fixture is persisted."
-    },
-    {
-      "path": "$.request.headers.Cookie",
-      "rule": "Remove all session and CSRF cookies before the fixture is persisted."
-    }
-  ],
+  "normalizations": [],
+  "redactions": [],
   "sideEffects": []
 }
