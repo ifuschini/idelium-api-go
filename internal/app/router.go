@@ -163,7 +163,7 @@ func NewRouter(
 	router.Post("/sso/{identityProvider}/oidc/callback", identityHandler.OIDCCallback)
 	router.Post("/sso/{identityProvider}/saml/callback", identityHandler.SAMLCallback)
 
-	legacyAPIKeyHandler := legacyapikeys.NewHandler(logger)
+	legacyAPIKeyHandler := legacyapikeys.NewHandler(logger, browserAuthRepository, legacyKeyRepository)
 	router.Get("/admin/apikey", legacyAPIKeyHandler.Show)
 	router.Head("/admin/apikey", legacyAPIKeyHandler.Show)
 	router.Put("/admin/apikey", legacyAPIKeyHandler.Replace)

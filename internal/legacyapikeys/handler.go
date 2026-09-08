@@ -1,54 +1,70 @@
-// Package legacyapikeys contains fail-closed gates for browser-managed legacy
-// API-key lifecycle routes.
+// Package legacyapikeys implements browser-managed legacy API-key lifecycle.
 package legacyapikeys
 
 import (
+	"context"
+	"github.com/idelium/idelium-api-go/internal/browserauth"
+	"github.com/idelium/idelium-api-go/internal/httpx"
 	"log/slog"
 	"net/http"
-
-	"github.com/idelium/idelium-api-go/internal/httpx"
+	"time"
 )
 
-// Handler exposes legacy API-key lifecycle routes only after Go-native browser
-// authentication and tenant ownership gates have been completed.
+type Lifecycle interface {
+	Show(context.Context, int64, time.Time) (map[string]any, error)
+	Replace(context.Context, int64, time.Time) (string, map[string]any, error)
+}
 type Handler struct {
-	logger *slog.Logger
+	logger    *slog.Logger
+	sessions  browserauth.SessionRepository
+	lifecycle Lifecycle
+	now       func() time.Time
 }
 
-// NewHandler creates a legacy API-key lifecycle migration gate.
-func NewHandler(logger *slog.Logger) Handler {
-	return Handler{logger: logger}
-}
-
-// Show blocks legacy API-key reads until Go owns browser-session
-// authentication and tenant-scoped customer administration.
-func (handler Handler) Show(writer http.ResponseWriter, request *http.Request) {
-	handler.writeMigrationDisabled(writer, request, "legacy-api-key-show")
-}
-
-// Replace blocks legacy API-key replacement until Go owns key generation,
-// expiration policy, audit logging, and tenant-scoped writes.
-func (handler Handler) Replace(writer http.ResponseWriter, request *http.Request) {
-	handler.writeMigrationDisabled(writer, request, "legacy-api-key-replace")
-}
-
-func (handler Handler) writeMigrationDisabled(
-	writer http.ResponseWriter,
-	request *http.Request,
-	surface string,
-) {
-	if handler.logger != nil {
-		handler.logger.Info(
-			"Legacy API-key lifecycle route rejected before Go-native cutover",
-			"surface", surface,
-			"correlation_id", httpx.GetCorrelationID(request.Context()),
-		)
+func NewHandler(logger *slog.Logger, deps ...any) Handler {
+	h := Handler{logger: logger, now: func() time.Time { return time.Now().UTC() }}
+	if len(deps) > 0 {
+		h.sessions, _ = deps[0].(browserauth.SessionRepository)
 	}
-	httpx.WriteError(
-		writer,
-		request,
-		http.StatusNotImplemented,
-		"LEGACY_API_KEY_MIGRATION_DISABLED",
-		"Legacy API-key lifecycle migration is not enabled for the Go runtime.",
-	)
+	if len(deps) > 1 {
+		h.lifecycle, _ = deps[1].(Lifecycle)
+	}
+	return h
+}
+func (h Handler) user(w http.ResponseWriter, r *http.Request) (browserauth.User, bool) {
+	if h.lifecycle == nil {
+		httpx.WriteError(w, r, 501, "LEGACY_API_KEY_MIGRATION_DISABLED", "Legacy API-key lifecycle migration is not enabled for the Go runtime.")
+		return browserauth.User{}, false
+	}
+	u, ok := browserauth.AuthenticateRequest(r.Context(), r, h.sessions, h.now())
+	if !ok {
+		httpx.WriteError(w, r, 401, "UNAUTHENTICATED", "An active browser session is required.")
+		return browserauth.User{}, false
+	}
+	return u, true
+}
+func (h Handler) Show(w http.ResponseWriter, r *http.Request) {
+	u, ok := h.user(w, r)
+	if !ok {
+		return
+	}
+	v, e := h.lifecycle.Show(r.Context(), u.ActiveTenant(), h.now())
+	if e != nil {
+		httpx.WriteError(w, r, 500, "LEGACY_API_KEY_UNAVAILABLE", "API-key metadata could not be loaded.")
+		return
+	}
+	httpx.WriteJSON(w, 200, v)
+}
+func (h Handler) Replace(w http.ResponseWriter, r *http.Request) {
+	u, ok := h.user(w, r)
+	if !ok {
+		return
+	}
+	secret, v, e := h.lifecycle.Replace(r.Context(), u.ActiveTenant(), h.now())
+	if e != nil {
+		httpx.WriteError(w, r, 500, "LEGACY_API_KEY_UNAVAILABLE", "API key could not be rotated.")
+		return
+	}
+	v["apiKey"] = secret
+	httpx.WriteJSON(w, 200, v)
 }
