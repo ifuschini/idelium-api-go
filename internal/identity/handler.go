@@ -13,6 +13,7 @@ import (
 	"encoding/base32"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -40,6 +41,7 @@ type Handler struct {
 	mfa       MFARepository
 	scim      SCIMRepository
 	users     browserauth.UserRepository
+	sso       SSOStateRepository
 }
 
 type Provider struct {
@@ -50,6 +52,9 @@ type Provider struct {
 	Audience string `json:"audience,omitempty"`
 	Status   string `json:"status"`
 }
+
+var ErrProviderNotFound = errors.New("identity provider not found")
+
 type ProviderRepository interface {
 	ListProviders(context.Context, int64) ([]Provider, error)
 	CreateProvider(context.Context, int64, Provider) (Provider, error)
@@ -61,6 +66,11 @@ type MFARepository interface {
 }
 type SCIMRepository interface {
 	CreateSCIMUser(context.Context, int64, string, string, bool) (browserauth.User, error)
+}
+type SSOStateRepository interface {
+	CreateSSOState(context.Context, int64, int64, string, string, time.Time) error
+	ConsumeSSOState(context.Context, string, time.Time) (int64, int64, error)
+	Provider(context.Context, int64, string) (Provider, error)
 }
 
 // NewHandler creates an advanced identity migration gate.
@@ -77,6 +87,9 @@ func NewHandler(logger *slog.Logger, deps ...any) Handler {
 	}
 	if len(deps) > 3 {
 		h.scim, _ = deps[3].(SCIMRepository)
+	}
+	if len(deps) > 4 {
+		h.sso, _ = deps[4].(SSOStateRepository)
 	}
 	if len(deps) > 0 {
 		if repository, ok := deps[0].(browserauth.Repository); ok {
@@ -338,7 +351,39 @@ func (handler Handler) SSOStart(writer http.ResponseWriter, request *http.Reques
 		httpx.WriteError(writer, request, http.StatusBadRequest, "INVALID_IDENTITY_PROVIDER", "The identity provider identifier is required.")
 		return
 	}
-	handler.writeMigrationDisabled(writer, request, "sso-start")
+	if handler.sso == nil || handler.sessions == nil {
+		handler.writeMigrationDisabled(writer, request, "sso-start")
+		return
+	}
+	user, ok := browserauth.AuthenticateRequest(request.Context(), request, handler.sessions, time.Now().UTC())
+	if !ok {
+		httpx.WriteError(writer, request, 401, "UNAUTHENTICATED", "An active browser session is required.")
+		return
+	}
+	provider, err := handler.sso.Provider(request.Context(), user.ActiveTenant(), chi.URLParam(request, "identityProvider"))
+	if err != nil || provider.Status != "active" {
+		httpx.WriteError(writer, request, 404, "IDENTITY_PROVIDER_NOT_FOUND", "Identity provider not found.")
+		return
+	}
+	stateBytes := make([]byte, 32)
+	challengeBytes := make([]byte, 32)
+	if _, err = rand.Read(stateBytes); err != nil {
+		httpx.WriteError(writer, request, 500, "SSO_UNAVAILABLE", "SSO state could not be created.")
+		return
+	}
+	if _, err = rand.Read(challengeBytes); err != nil {
+		httpx.WriteError(writer, request, 500, "SSO_UNAVAILABLE", "SSO state could not be created.")
+		return
+	}
+	state := hex.EncodeToString(stateBytes)
+	challenge := hex.EncodeToString(challengeBytes)
+	expires := time.Now().UTC().Add(10 * time.Minute)
+	if err = handler.sso.CreateSSOState(request.Context(), user.ActiveTenant(), provider.ID, state, challenge, expires); err != nil {
+		httpx.WriteError(writer, request, 500, "SSO_UNAVAILABLE", "SSO state could not be persisted.")
+		return
+	}
+	httpx.WriteJSON(writer, 200, map[string]any{"state": state, "codeChallenge": challenge, "expiresAt": expires, "provider": provider.Name})
+	return
 }
 
 // OIDCCallback blocks OIDC callbacks until Go-native SSO is enabled.

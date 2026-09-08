@@ -215,6 +215,18 @@ CREATE TABLE identity_providers (
   UNIQUE KEY identity_provider_name_unique (idCostumer, type, name)
 );
 
+CREATE TABLE sso_states (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  idCostumer BIGINT NOT NULL,
+  identityProviderId BIGINT NOT NULL,
+  state CHAR(64) NOT NULL UNIQUE,
+  codeChallenge CHAR(64) NOT NULL,
+  expiresAt TIMESTAMP NOT NULL,
+  consumedAt TIMESTAMP NULL,
+  created_at TIMESTAMP NULL,
+  UNIQUE KEY sso_state_provider (idCostumer, identityProviderId, state)
+);
+
 CREATE TABLE audit_events (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   idCostumer BIGINT NULL,
