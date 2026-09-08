@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "project-capture.v1",
+  "consumer": "idelium-api-go-project-differential",
+  "baseUrlEnv": "CAPTURE_LARAVEL_BASE_URL",
+  "routes": [
+    {
+      "id": "project-list",
+      "method": "GET",
+      "path": "/api/admin/projects",
+      "authentication": "browser-session",
+      "operationKind": "read",
+      "expectedStatus": 200,
+      "output": "project-list.fixture.json"
+    },
+    {
+      "id": "project-show",
+      "method": "GET",
+      "path": "/api/admin/projects/9001",
+      "authentication": "browser-session",
+      "operationKind": "read",
+      "expectedStatus": 200,
+      "output": "project-show.fixture.json"
+    },
+    {
+      "id": "project-update",
+      "method": "PUT",
+      "path": "/api/admin/projects/9001",
+      "authentication": "browser-session",
+      "operationKind": "mutation",
+      "expectedStatus": 200,
+      "output": "project-update.fixture.json",
+      "body": {"name": "fixture-project-updated", "description": "Disposable updated project"}
+    },
+    {
+      "id": "project-delete",
+      "method": "DELETE",
+      "path": "/api/admin/projects/9001",
+      "authentication": "browser-session",
+      "operationKind": "mutation",
+      "expectedStatus": 200,
+      "output": "project-delete.fixture.json"
+    }
+  ],
+  "sanitization": {
+    "removeHeaders": ["authorization", "cookie", "set-cookie", "x-xsrf-token"],
+    "redactKeys": ["apiKey", "token", "tokenHash", "password", "session", "cookie", "authorization"],
+    "normalizeTimestamps": true
+  }
+}
