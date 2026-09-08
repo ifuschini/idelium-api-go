@@ -11,6 +11,7 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base32"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -336,13 +337,104 @@ func validTOTP(secret, code string, now time.Time) bool {
 	return false
 }
 
-// OIDCTokenExchange blocks workload identity exchange until Go-native trust
-// validation is enabled.
+// OIDCTokenExchange validates a signed OIDC workload token and consumes its
+// persisted SSO state exactly once.
 func (handler Handler) OIDCTokenExchange(writer http.ResponseWriter, request *http.Request) {
 	if !validateSignedPayload(writer, request) {
 		return
 	}
-	handler.writeMigrationDisabled(writer, request, "oidc-token-exchange")
+	var in struct {
+		IDToken string `json:"id_token"`
+		State   string `json:"state"`
+		Nonce   string `json:"nonce"`
+	}
+	if json.NewDecoder(request.Body).Decode(&in) != nil || in.IDToken == "" || in.State == "" || in.Nonce == "" {
+		httpx.WriteError(writer, request, 400, "INVALID_OIDC_REQUEST", "id_token, state and nonce are required.")
+		return
+	}
+	claims, err := validateOIDCJWT(in.IDToken, in.Nonce)
+	if err != nil {
+		httpx.WriteError(writer, request, 401, "INVALID_OIDC_TOKEN", err.Error())
+		return
+	}
+	if handler.sso == nil {
+		httpx.WriteError(writer, request, 503, "OIDC_UNAVAILABLE", "OIDC state storage is unavailable.")
+		return
+	}
+	if _, _, err = handler.sso.ConsumeSSOState(request.Context(), in.State, time.Now().UTC()); err != nil {
+		httpx.WriteError(writer, request, 401, "INVALID_OIDC_STATE", "The OIDC state is invalid or expired.")
+		return
+	}
+	httpx.WriteJSON(writer, 200, map[string]any{"validated": true, "issuer": claims.Issuer, "subject": claims.Subject, "email": claims.Email})
+	return
+}
+
+type oidcClaims struct {
+	Issuer   string `json:"iss"`
+	Subject  string `json:"sub"`
+	Audience any    `json:"aud"`
+	Exp      int64  `json:"exp"`
+	Nonce    string `json:"nonce"`
+	Email    string `json:"email"`
+}
+
+func validateOIDCJWT(token, expectedNonce string) (oidcClaims, error) {
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return oidcClaims{}, fmt.Errorf("malformed JWT")
+	}
+	decode := func(s string) ([]byte, error) { return base64.RawURLEncoding.DecodeString(s) }
+	head, e := decode(parts[0])
+	if e != nil {
+		return oidcClaims{}, fmt.Errorf("malformed JWT header")
+	}
+	var h struct {
+		Alg string `json:"alg"`
+	}
+	if json.Unmarshal(head, &h) != nil || h.Alg != "HS256" {
+		return oidcClaims{}, fmt.Errorf("unsupported JWT algorithm")
+	}
+	payload, e := decode(parts[1])
+	if e != nil {
+		return oidcClaims{}, fmt.Errorf("malformed JWT claims")
+	}
+	var c oidcClaims
+	if json.Unmarshal(payload, &c) != nil || c.Issuer == "" || c.Subject == "" || c.Exp <= time.Now().Unix() || c.Nonce != expectedNonce {
+		return oidcClaims{}, fmt.Errorf("invalid JWT claims")
+	}
+	expectedIssuer := strings.TrimSpace(os.Getenv("IDELIUM_OIDC_ISSUER"))
+	if expectedIssuer == "" || c.Issuer != expectedIssuer {
+		return oidcClaims{}, fmt.Errorf("invalid JWT issuer")
+	}
+	expectedAudience := strings.TrimSpace(os.Getenv("IDELIUM_OIDC_AUDIENCE"))
+	if expectedAudience == "" {
+		return oidcClaims{}, fmt.Errorf("OIDC audience is not configured")
+	}
+	audOK := false
+	switch a := c.Audience.(type) {
+	case string:
+		audOK = a == expectedAudience
+	case []any:
+		for _, v := range a {
+			if s, _ := v.(string); s == expectedAudience {
+				audOK = true
+			}
+		}
+	}
+	if !audOK {
+		return oidcClaims{}, fmt.Errorf("invalid JWT audience")
+	}
+	secret := os.Getenv("IDELIUM_OIDC_HS256_SECRET")
+	if secret == "" {
+		return oidcClaims{}, fmt.Errorf("OIDC verification key unavailable")
+	}
+	mac := hmac.New(sha256.New, []byte(secret))
+	_, _ = mac.Write([]byte(parts[0] + "." + parts[1]))
+	sig, e := decode(parts[2])
+	if e != nil || !hmac.Equal(sig, mac.Sum(nil)) {
+		return oidcClaims{}, fmt.Errorf("invalid JWT signature")
+	}
+	return c, nil
 }
 
 // SSOStart blocks SSO bootstrap until Go-native SSO is enabled.

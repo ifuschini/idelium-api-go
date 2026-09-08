@@ -16,7 +16,7 @@ when traffic is pointed at Go before the final compatibility gates pass.
 
 ## Current behavior
 
-The following routes return `IDENTITY_LARAVEL_OWNER` from Go:
+The following routes still return `IDENTITY_LARAVEL_OWNER` from Go:
 
 - `GET /api/admin/identity/providers`
 - `POST /api/admin/identity/providers`
@@ -26,7 +26,6 @@ The following routes return `IDENTITY_LARAVEL_OWNER` from Go:
 - `POST /api/admin/profile/mfa/enroll`
 - `POST /api/admin/profile/mfa/confirm`
 - `POST /api/admin/profile/mfa/step-up`
-- `POST /api/oidc/token-exchange`
 - `POST /api/sso/{identityProvider}/start`
 - `POST /api/sso/{identityProvider}/oidc/callback`
 - `POST /api/sso/{identityProvider}/saml/callback`
@@ -35,6 +34,20 @@ The response envelope follows the standard API error contract and includes a
 correlation ID. The handlers do not read or echo callback payloads, assertions,
 SAML documents, OIDC tokens, secrets, cookies, session identifiers, or
 authorization headers.
+
+`POST /api/oidc/token-exchange` is enabled as a fail-closed Go validator. It
+requires the signed callback envelope and validates a compact JWT with
+`HS256`, exact `iss`, `aud` (string or array), `exp`, `sub`, and nonce claims.
+The one-time SSO state is consumed only after token validation. Configure the
+verification inputs through secret-managed environment variables:
+
+- `IDELIUM_OIDC_ISSUER`
+- `IDELIUM_OIDC_AUDIENCE`
+- `IDELIUM_OIDC_HS256_SECRET`
+
+The signing key is never logged or returned. Production providers using
+asymmetric keys/JWKS remain behind the cutover gate until their key discovery
+and rotation policy is implemented.
 
 ## OpenAPI contract
 
