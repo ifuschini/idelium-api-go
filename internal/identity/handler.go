@@ -179,6 +179,23 @@ func (handler Handler) SCIMUsers(writer http.ResponseWriter, request *http.Reque
 			httpx.WriteError(writer, request, 401, "UNAUTHENTICATED", "An active browser session is required.")
 			return
 		}
+		providerID, parseProviderErr := strconv.ParseInt(chi.URLParam(request, "identityProvider"), 10, 64)
+		if parseProviderErr != nil || providerID <= 0 || handler.providers == nil {
+			httpx.WriteError(writer, request, 404, "IDENTITY_PROVIDER_NOT_FOUND", "Identity provider not found.")
+			return
+		}
+		providers, listErr := handler.providers.ListProviders(request.Context(), user.ActiveTenant())
+		providerOK := false
+		for _, provider := range providers {
+			if provider.ID == providerID && provider.Status == "active" {
+				providerOK = true
+				break
+			}
+		}
+		if listErr != nil || !providerOK {
+			httpx.WriteError(writer, request, 404, "IDENTITY_PROVIDER_NOT_FOUND", "Identity provider not found.")
+			return
+		}
 		userID, _ := strconv.ParseInt(chi.URLParam(request, "user"), 10, 64)
 		if request.Method == http.MethodDelete {
 			if userID <= 0 {
