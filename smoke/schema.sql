@@ -199,6 +199,20 @@ CREATE TABLE service_accounts (
   INDEX service_account_scope (idCostumer, idProject, revokedAt, expiresAt)
 );
 
+CREATE TABLE identity_providers (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  idCostumer BIGINT NOT NULL,
+  type VARCHAR(32) NOT NULL,
+  name VARCHAR(128) NOT NULL,
+  issuer VARCHAR(512) NULL,
+  audience VARCHAR(512) NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'active',
+  metadata JSON NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  UNIQUE KEY identity_provider_name_unique (idCostumer, type, name)
+);
+
 CREATE TABLE audit_events (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   idCostumer BIGINT NULL,

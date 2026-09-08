@@ -34,7 +34,7 @@ func NewRouter(
 	pluginRepository cliapi.PluginRepository,
 	environmentRepository cliapi.EnvironmentRepository,
 	browserAuthRepository browserauth.Repository,
-	serviceAccountRepositories ...serviceaccounts.Repository,
+	optionalRepositories ...any,
 ) http.Handler {
 	router := chi.NewRouter()
 	router.Use(httpx.CorrelationID)
@@ -149,7 +149,13 @@ func NewRouter(
 	router.Get("/admin/platforms/manageplatforms/{type}", platformHandler.ManagedPlatforms)
 	router.Get("/admin/launch/targets/{idProject}", platformHandler.LaunchTargets)
 
-	identityHandler := identity.NewHandler(logger)
+	var identityProviderRepository identity.ProviderRepository
+	for _, candidate := range optionalRepositories {
+		if repository, ok := candidate.(identity.ProviderRepository); ok {
+			identityProviderRepository = repository
+		}
+	}
+	identityHandler := identity.NewHandler(logger, browserAuthRepository, identityProviderRepository)
 	router.Get("/admin/identity/providers", identityHandler.Providers)
 	router.Post("/admin/identity/providers", identityHandler.Providers)
 	router.Put("/admin/identity/accounts/{user}/break-glass", identityHandler.BreakGlass)
@@ -169,8 +175,10 @@ func NewRouter(
 	router.Put("/admin/apikey", legacyAPIKeyHandler.Replace)
 
 	var serviceAccountRepository serviceaccounts.Repository
-	if len(serviceAccountRepositories) > 0 {
-		serviceAccountRepository = serviceAccountRepositories[0]
+	for _, candidate := range optionalRepositories {
+		if repository, ok := candidate.(serviceaccounts.Repository); ok {
+			serviceAccountRepository = repository
+		}
 	}
 	serviceAccountHandler := serviceaccounts.NewHandler(logger, browserAuthRepository, serviceAccountRepository)
 	router.Get("/admin/service-accounts", serviceAccountHandler.Index)
