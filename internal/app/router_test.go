@@ -566,12 +566,12 @@ func TestRouterFailsClosedForAdvancedIdentityRoutes(t *testing.T) {
 		httptest.NewRequest(http.MethodPost, "/sso/7/oidc/callback", strings.NewReader("id_token=must-not-leak")),
 	)
 
-	if response.Code != http.StatusConflict {
-		t.Fatalf("expected status 409, got %d", response.Code)
+	if response.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status 401, got %d", response.Code)
 	}
 	body := response.Body.String()
-	if !strings.Contains(body, "IDENTITY_LARAVEL_OWNER") {
-		t.Fatalf("stable identity migration code missing: %s", body)
+	if !strings.Contains(body, "IDENTITY_SIGNATURE_REQUIRED") {
+		t.Fatalf("stable identity signature error missing: %s", body)
 	}
 	if strings.Contains(body, "must-not-leak") || strings.Contains(body, "id_token") {
 		t.Fatalf("identity route leaked callback payload: %s", body)

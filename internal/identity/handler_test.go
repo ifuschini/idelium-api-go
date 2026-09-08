@@ -59,11 +59,17 @@ func TestAdvancedIdentityRoutesFailClosedWithoutPayloadLeak(t *testing.T) {
 
 			router.ServeHTTP(response, request)
 
-			if response.Code != http.StatusConflict {
-				t.Fatalf("expected status 409, got %d", response.Code)
+			expectedCode := http.StatusConflict
+			expectedError := "IDENTITY_LARAVEL_OWNER"
+			if strings.Contains(tt.path, "callback") || strings.Contains(tt.path, "scim") || tt.path == "/oidc/token-exchange" {
+				expectedCode = http.StatusUnauthorized
+				expectedError = "IDENTITY_SIGNATURE_REQUIRED"
+			}
+			if response.Code != expectedCode {
+				t.Fatalf("expected status %d, got %d", expectedCode, response.Code)
 			}
 			body := response.Body.String()
-			if !strings.Contains(body, "IDENTITY_LARAVEL_OWNER") {
+			if !strings.Contains(body, expectedError) {
 				t.Fatalf("stable error code missing: %s", body)
 			}
 			if !strings.Contains(body, "correlationId") {

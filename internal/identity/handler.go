@@ -3,10 +3,16 @@ package identity
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
+	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -14,6 +20,9 @@ import (
 	"github.com/idelium/idelium-api-go/internal/browserauth"
 	"github.com/idelium/idelium-api-go/internal/httpx"
 )
+
+var replayMu sync.Mutex
+var replayedNonces = map[string]time.Time{}
 
 // Handler exposes advanced identity routes only after migration gates enable a
 // Go-native implementation. Until then it fails closed with safe diagnostics.
@@ -109,6 +118,9 @@ func (handler Handler) SCIMUsers(writer http.ResponseWriter, request *http.Reque
 		httpx.WriteError(writer, request, http.StatusBadRequest, "INVALID_IDENTITY_PROVIDER", "The identity provider identifier is required.")
 		return
 	}
+	if !validateSignedPayload(writer, request) {
+		return
+	}
 	handler.writeMigrationDisabled(writer, request, "scim-users")
 }
 
@@ -130,6 +142,9 @@ func (handler Handler) MFAStepUp(writer http.ResponseWriter, request *http.Reque
 // OIDCTokenExchange blocks workload identity exchange until Go-native trust
 // validation is enabled.
 func (handler Handler) OIDCTokenExchange(writer http.ResponseWriter, request *http.Request) {
+	if !validateSignedPayload(writer, request) {
+		return
+	}
 	handler.writeMigrationDisabled(writer, request, "oidc-token-exchange")
 }
 
@@ -148,6 +163,9 @@ func (handler Handler) OIDCCallback(writer http.ResponseWriter, request *http.Re
 		httpx.WriteError(writer, request, http.StatusBadRequest, "INVALID_IDENTITY_PROVIDER", "The identity provider identifier is required.")
 		return
 	}
+	if !validateSignedPayload(writer, request) {
+		return
+	}
 	handler.writeMigrationDisabled(writer, request, "oidc-callback")
 }
 
@@ -157,7 +175,47 @@ func (handler Handler) SAMLCallback(writer http.ResponseWriter, request *http.Re
 		httpx.WriteError(writer, request, http.StatusBadRequest, "INVALID_IDENTITY_PROVIDER", "The identity provider identifier is required.")
 		return
 	}
+	if !validateSignedPayload(writer, request) {
+		return
+	}
 	handler.writeMigrationDisabled(writer, request, "saml-callback")
+}
+
+// validateSignedPayload verifies an HMAC signature and single-use nonce before
+// any identity assertion is considered. Payload bytes are never logged or echoed.
+func validateSignedPayload(writer http.ResponseWriter, request *http.Request) bool {
+	secret := os.Getenv("IDELIUM_IDENTITY_CALLBACK_SECRET")
+	nonce := strings.TrimSpace(request.Header.Get("Idelium-Identity-Nonce"))
+	signature := strings.TrimSpace(request.Header.Get("Idelium-Identity-Signature"))
+	body, err := io.ReadAll(http.MaxBytesReader(writer, request.Body, 256<<10))
+	if secret == "" || nonce == "" || signature == "" || err != nil {
+		httpx.WriteError(writer, request, http.StatusUnauthorized, "IDENTITY_SIGNATURE_REQUIRED", "A signed identity payload is required.")
+		return false
+	}
+	mac := hmac.New(sha256.New, []byte(secret))
+	_, _ = mac.Write(body)
+	if !hmac.Equal([]byte(signature), []byte(fmt.Sprintf("%x", mac.Sum(nil)))) {
+		httpx.WriteError(writer, request, http.StatusUnauthorized, "IDENTITY_SIGNATURE_INVALID", "The identity payload signature is invalid.")
+		return false
+	}
+	replayMu.Lock()
+	defer replayMu.Unlock()
+	now := time.Now().UTC()
+	for key, at := range replayedNonces {
+		if now.Sub(at) > 10*time.Minute {
+			delete(replayedNonces, key)
+		}
+	}
+	if _, exists := replayedNonces[nonce]; exists {
+		httpx.WriteError(writer, request, http.StatusConflict, "IDENTITY_REPLAY_DETECTED", "The identity payload nonce was already used.")
+		return false
+	}
+	if len(replayedNonces) >= 10000 {
+		httpx.WriteError(writer, request, http.StatusServiceUnavailable, "IDENTITY_REPLAY_CACHE_FULL", "Identity replay protection is temporarily unavailable.")
+		return false
+	}
+	replayedNonces[nonce] = now
+	return true
 }
 
 func (handler Handler) writeMigrationDisabled(
