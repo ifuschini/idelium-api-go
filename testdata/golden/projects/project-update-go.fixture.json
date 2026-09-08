@@ -1,0 +1,62 @@
+{
+  "fixtureVersion": "1.0",
+  "id": "project-update",
+  "description": "Sanitized Laravel parallel-run capture.",
+  "source": {
+    "runtime": "go",
+    "repository": "idelium/idelium-api-go",
+    "revision": "bd1f9febb9883d4c4125a354a93f498308bf2fd2",
+    "capturedAt": "2026-09-08T08:35:13Z",
+    "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
+  },
+  "route": {
+    "method": "PUT",
+    "path": "/api/admin/projects/9001",
+    "trustPath": "browser-session",
+    "tenantOwned": true
+  },
+  "context": {
+    "tenant": {
+      "id": "fixture-tenant-9001",
+      "synthetic": true
+    },
+    "actor": {
+      "id": "fixture-browser-user-9001",
+      "synthetic": true
+    }
+  },
+  "request": {
+    "headers": {
+      "Accept": "application/json"
+    },
+    "query": {},
+    "body": {
+      "name": "fixture-project-updated",
+      "description": "Disposable updated project"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": [
+      {
+        "id": 9001,
+        "name": "fixture-project-updated",
+        "description": "Disposable updated project",
+        "updated_at": "2026-09-08T08:35:13Z",
+        "idCostumer": 9001
+      }
+    ]
+  },
+  "normalizations": [],
+  "redactions": [],
+  "sideEffects": [
+    {
+      "kind": "route-mutation",
+      "method": "PUT",
+      "path": "/api/admin/projects/9001"
+    }
+  ]
+}

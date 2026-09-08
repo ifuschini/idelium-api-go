@@ -7,7 +7,7 @@ VALUES (9001, 'fixture-customer-smoke', 'Disposable smoke tenant',
 INSERT INTO users (id, name, email, password, role, idCostumer, status)
 VALUES (9001, 'Smoke Browser User', 'fixture-smoke@example.invalid',
         '$2y$12$vjGbzVIBFwfjJG21xaVEUua1ATd1RcszC5XikxqtWa8qDzCvv3NWy',
-        2, 9001, 'active');
+        1, 9001, 'active');
 
 -- Deterministic opaque browser session for read-only Web smoke capture.
 -- Only SHA-256 digests are persisted; the cookie value is injected at runtime.
@@ -17,7 +17,7 @@ VALUES ('15a274aee751754e7a13c4373e2fdfcc385f31b1e92b183d419b0bcc6e885c76',
         9001, 9001, CURRENT_TIMESTAMP + INTERVAL 1 HOUR);
 
 INSERT INTO projects (id, name, description, idCostumer)
-VALUES (9001, 'fixture-project-smoke', 'Disposable smoke project', 9001);
+VALUES (9001, 'fixture-project-smoke', 'Disposable capture project', 9001);
 
 INSERT INTO environments (id, name, code, description, config, idProject, idCostumer)
 VALUES (9001, 'fixture-environment-smoke', 'fixture-environment-smoke', 'Disposable smoke environment', '{}', 9001, 9001);

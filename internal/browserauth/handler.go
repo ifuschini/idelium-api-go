@@ -336,7 +336,7 @@ func (h *Handler) authenticatedSession(writer http.ResponseWriter, request *http
 func capabilitiesForRole(role int64) []string {
 	switch role {
 	case 1:
-		return []string{"tenant.switch", "accounts.manage", "customers.manage", "api_keys.manage", "agents.manage", "agents.read", "audit_events.read", "artifacts.manage", "artifacts.read", "integrations.manage", "integrations.read", "identity.manage", "identity.read", "projects.manage", "resources.manage", "resources.read", "runs.launch", "profile.manage"}
+		return []string{"tenant.switch", "accounts.manage", "customers.manage", "api_keys.manage", "agents.manage", "agents.read", "audit_events.read", "artifacts.manage", "artifacts.read", "integrations.manage", "integrations.read", "identity.manage", "identity.read", "projects.manage", "projects.read", "resources.manage", "resources.read", "runs.launch", "profile.manage"}
 	case 2:
 		return []string{"accounts.manage", "api_keys.manage", "agents.manage", "agents.read", "audit_events.read", "artifacts.manage", "artifacts.read", "integrations.manage", "integrations.read", "identity.manage", "identity.read", "projects.manage", "resources.manage", "resources.read", "runs.launch", "profile.manage"}
 	case 3:

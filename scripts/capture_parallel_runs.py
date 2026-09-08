@@ -46,6 +46,22 @@ def extract(value: Any, path: str) -> str:
     return current
 
 
+def load_cookie_header(path: str) -> str:
+    """Convert a Netscape cookie jar into a request Cookie header."""
+    parts = []
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
+        if not line:
+            continue
+        if line.startswith("#HttpOnly_"):
+            line = line[len("#HttpOnly_") :]
+        elif line.startswith("#"):
+            continue
+        fields = line.split("\t")
+        if len(fields) >= 7:
+            parts.append(f"{fields[5]}={fields[6]}")
+    return "; ".join(parts)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", type=Path, required=True)
@@ -59,6 +75,9 @@ def main() -> int:
     if not base_url:
         raise SystemExit(f"Missing required environment variable: {plan['baseUrlEnv']}")
     cookie = os.environ.get("CAPTURE_BROWSER_COOKIE", "")
+    cookie_file = os.environ.get("CAPTURE_BROWSER_COOKIE_FILE", "")
+    if cookie_file:
+        cookie = load_cookie_header(cookie_file)
     xsrf = os.environ.get("CAPTURE_XSRF_TOKEN", "")
     api_key = os.environ.get("CAPTURE_API_KEY", "")
     run_token = os.environ.get("CAPTURE_RUN_TOKEN", "")
@@ -143,7 +162,7 @@ def main() -> int:
             "source": {"runtime": args.runtime, "repository": args.repository, "revision": revision, "capturedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"},
             "route": {"method": route["method"], "path": route["path"], "trustPath": route["authentication"], "tenantOwned": True},
             "context": {"tenant": {"id": "fixture-tenant-9001", "synthetic": True}, "actor": {"id": "fixture-browser-user-9001", "synthetic": True}},
-            "request": {"headers": {"Accept": "application/json"}, "query": {}, "body": None},
+            "request": {"headers": {"Accept": "application/json"}, "query": {}, "body": sanitize(route.get("body"))},
             "response": {"status": status, "headers": {"Content-Type": "application/json"}, "body": sanitize(body)},
             "normalizations": [], "redactions": [],
             "sideEffects": ([{"kind": "route-mutation", "method": route["method"], "path": route["path"]}]

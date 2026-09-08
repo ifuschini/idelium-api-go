@@ -55,6 +55,26 @@ CREATE TABLE tests (
   updated_at TIMESTAMP NULL
 );
 
+-- Minimal execution records required by the project deletion transaction.
+-- These tables intentionally remain tenant-scoped and disposable in smoke.
+CREATE TABLE performed_test_cycles (
+  id BIGINT PRIMARY KEY,
+  idCostumer BIGINT NOT NULL,
+  testCycleId BIGINT NOT NULL
+);
+
+CREATE TABLE performed_steps (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  idCostumer BIGINT NOT NULL,
+  testCycleDoneId BIGINT NOT NULL
+);
+
+CREATE TABLE performed_tests (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  idCostumer BIGINT NOT NULL,
+  testCycleDoneId BIGINT NOT NULL
+);
+
 CREATE TABLE steps (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
