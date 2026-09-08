@@ -68,6 +68,20 @@ type Repository interface {
 	SessionRepository
 }
 
+// AuthenticateRequest resolves the active Go browser session for companion
+// administration handlers. It never returns credentials or raw session data.
+func AuthenticateRequest(ctx context.Context, request *http.Request, repository SessionRepository, now time.Time) (User, bool) {
+	cookie, err := request.Cookie(sessionCookieName)
+	if err != nil || cookie.Value == "" {
+		return User{}, false
+	}
+	user, err := repository.Get(ctx, cookie.Value, now)
+	if err != nil || user.Status != "active" {
+		return User{}, false
+	}
+	return user, true
+}
+
 // Handler preserves the frontend-visible Laravel browser-auth response contract.
 type Handler struct {
 	users                 UserRepository

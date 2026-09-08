@@ -34,6 +34,7 @@ func NewRouter(
 	pluginRepository cliapi.PluginRepository,
 	environmentRepository cliapi.EnvironmentRepository,
 	browserAuthRepository browserauth.Repository,
+	serviceAccountRepositories ...serviceaccounts.Repository,
 ) http.Handler {
 	router := chi.NewRouter()
 	router.Use(httpx.CorrelationID)
@@ -167,7 +168,11 @@ func NewRouter(
 	router.Head("/admin/apikey", legacyAPIKeyHandler.Show)
 	router.Put("/admin/apikey", legacyAPIKeyHandler.Replace)
 
-	serviceAccountHandler := serviceaccounts.NewHandler(logger)
+	var serviceAccountRepository serviceaccounts.Repository
+	if len(serviceAccountRepositories) > 0 {
+		serviceAccountRepository = serviceAccountRepositories[0]
+	}
+	serviceAccountHandler := serviceaccounts.NewHandler(logger, browserAuthRepository, serviceAccountRepository)
 	router.Get("/admin/service-accounts", serviceAccountHandler.Index)
 	router.Post("/admin/service-accounts", serviceAccountHandler.Store)
 	router.Post("/admin/service-accounts/{serviceAccount}/revoke", serviceAccountHandler.Revoke)

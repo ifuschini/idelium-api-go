@@ -183,6 +183,22 @@ CREATE TABLE go_browser_sessions (
   updated_at TIMESTAMP NULL
 );
 
+CREATE TABLE service_accounts (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  idCostumer BIGINT NOT NULL,
+  idProject BIGINT NULL,
+  name VARCHAR(128) NOT NULL,
+  credentialId VARCHAR(64) NOT NULL UNIQUE,
+  secretHash VARCHAR(255) NOT NULL,
+  scopes JSON NULL,
+  expiresAt TIMESTAMP NULL,
+  revokedAt TIMESTAMP NULL,
+  lastUsedAt TIMESTAMP NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  INDEX service_account_scope (idCostumer, idProject, revokedAt, expiresAt)
+);
+
 CREATE TABLE audit_events (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   idCostumer BIGINT NULL,
