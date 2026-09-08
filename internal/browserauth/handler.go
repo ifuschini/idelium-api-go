@@ -49,6 +49,13 @@ type Session struct {
 	ExpiresAt time.Time
 }
 
+// SetSessionCookies writes the browser session and CSRF cookies for trusted
+// identity callbacks without exposing their values in logs or responses.
+func SetSessionCookies(writer http.ResponseWriter, sessionID, csrf string) {
+	http.SetCookie(writer, &http.Cookie{Name: sessionCookieName, Value: sessionID, Path: "/", HttpOnly: true, SameSite: http.SameSiteLaxMode, Secure: true})
+	http.SetCookie(writer, &http.Cookie{Name: csrfCookieName, Value: csrf, Path: "/", SameSite: http.SameSiteLaxMode, Secure: true})
+}
+
 type UserRepository interface {
 	FindByEmail(context.Context, string) (User, error)
 }

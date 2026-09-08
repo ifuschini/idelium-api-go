@@ -2,6 +2,7 @@
 package identity
 
 import (
+	"bytes"
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
@@ -37,6 +38,8 @@ type Handler struct {
 	sessions  browserauth.SessionRepository
 	providers ProviderRepository
 	mfa       MFARepository
+	scim      SCIMRepository
+	users     browserauth.UserRepository
 }
 
 type Provider struct {
@@ -56,6 +59,9 @@ type MFARepository interface {
 	GetMFASecret(context.Context, int64) (string, error)
 	MarkMFAConfirmed(context.Context, int64, time.Time) error
 }
+type SCIMRepository interface {
+	CreateSCIMUser(context.Context, int64, string, string, bool) (browserauth.User, error)
+}
 
 // NewHandler creates an advanced identity migration gate.
 func NewHandler(logger *slog.Logger, deps ...any) Handler {
@@ -68,6 +74,14 @@ func NewHandler(logger *slog.Logger, deps ...any) Handler {
 	}
 	if len(deps) > 2 {
 		h.mfa, _ = deps[2].(MFARepository)
+	}
+	if len(deps) > 3 {
+		h.scim, _ = deps[3].(SCIMRepository)
+	}
+	if len(deps) > 0 {
+		if repository, ok := deps[0].(browserauth.Repository); ok {
+			h.users = repository
+		}
 	}
 	return h
 }
@@ -134,6 +148,32 @@ func (handler Handler) SCIMUsers(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 	if !validateSignedPayload(writer, request) {
+		return
+	}
+	if handler.scim != nil {
+		var in struct {
+			Name, Email string `json:"name"`
+			Active      *bool  `json:"active"`
+		}
+		if json.NewDecoder(http.MaxBytesReader(writer, request.Body, 64<<10)).Decode(&in) != nil || !strings.Contains(in.Email, "@") {
+			httpx.WriteError(writer, request, 400, "INVALID_SCIM_USER", "A valid SCIM email is required.")
+			return
+		}
+		active := true
+		if in.Active != nil {
+			active = *in.Active
+		}
+		user, err := browserauth.AuthenticateRequest(request.Context(), request, handler.sessions, time.Now().UTC())
+		if !err {
+			httpx.WriteError(writer, request, 401, "UNAUTHENTICATED", "An active browser session is required.")
+			return
+		}
+		created, e := handler.scim.CreateSCIMUser(request.Context(), user.ActiveTenant(), strings.TrimSpace(in.Email), strings.TrimSpace(in.Name), active)
+		if e != nil {
+			httpx.WriteError(writer, request, 500, "SCIM_UNAVAILABLE", "SCIM user could not be persisted.")
+			return
+		}
+		httpx.WriteJSON(writer, 201, map[string]any{"id": created.ID, "userName": created.Email, "active": active})
 		return
 	}
 	handler.writeMigrationDisabled(writer, request, "scim-users")
@@ -310,6 +350,10 @@ func (handler Handler) OIDCCallback(writer http.ResponseWriter, request *http.Re
 	if !validateSignedPayload(writer, request) {
 		return
 	}
+	if handler.users != nil {
+		handler.issueSSOSession(writer, request)
+		return
+	}
 	handler.writeMigrationDisabled(writer, request, "oidc-callback")
 }
 
@@ -322,7 +366,43 @@ func (handler Handler) SAMLCallback(writer http.ResponseWriter, request *http.Re
 	if !validateSignedPayload(writer, request) {
 		return
 	}
+	if handler.users != nil {
+		handler.issueSSOSession(writer, request)
+		return
+	}
 	handler.writeMigrationDisabled(writer, request, "saml-callback")
+}
+
+func (handler Handler) issueSSOSession(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Email string `json:"email"`
+	}
+	if json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&in) != nil || !strings.Contains(in.Email, "@") {
+		httpx.WriteError(w, r, 400, "INVALID_SSO_ASSERTION", "A validated subject email is required.")
+		return
+	}
+	user, e := handler.users.FindByEmail(r.Context(), strings.TrimSpace(in.Email))
+	if e != nil || user.Status != "active" {
+		httpx.WriteError(w, r, 401, "SSO_USER_NOT_FOUND", "The validated SSO subject is not an active user.")
+		return
+	}
+	sid := make([]byte, 32)
+	csrf := make([]byte, 32)
+	if _, e = rand.Read(sid); e != nil {
+		httpx.WriteError(w, r, 500, "SSO_UNAVAILABLE", "SSO session could not be created.")
+		return
+	}
+	if _, e = rand.Read(csrf); e != nil {
+		httpx.WriteError(w, r, 500, "SSO_UNAVAILABLE", "SSO session could not be created.")
+		return
+	}
+	session := browserauth.Session{ID: hex.EncodeToString(sid), UserID: user.ID, TenantID: user.TenantID, CSRFToken: hex.EncodeToString(csrf), ExpiresAt: time.Now().UTC().Add(8 * time.Hour)}
+	if e = handler.sessions.Create(r.Context(), session); e != nil {
+		httpx.WriteError(w, r, 500, "SSO_UNAVAILABLE", "SSO session could not be created.")
+		return
+	}
+	browserauth.SetSessionCookies(w, session.ID, session.CSRFToken)
+	httpx.WriteJSON(w, 200, map[string]any{"authenticated": true, "userId": user.ID})
 }
 
 // validateSignedPayload verifies an HMAC signature and single-use nonce before
@@ -332,6 +412,7 @@ func validateSignedPayload(writer http.ResponseWriter, request *http.Request) bo
 	nonce := strings.TrimSpace(request.Header.Get("Idelium-Identity-Nonce"))
 	signature := strings.TrimSpace(request.Header.Get("Idelium-Identity-Signature"))
 	body, err := io.ReadAll(http.MaxBytesReader(writer, request.Body, 256<<10))
+	request.Body = io.NopCloser(bytes.NewReader(body))
 	if secret == "" || nonce == "" || signature == "" || err != nil {
 		httpx.WriteError(writer, request, http.StatusUnauthorized, "IDENTITY_SIGNATURE_REQUIRED", "A signed identity payload is required.")
 		return false
