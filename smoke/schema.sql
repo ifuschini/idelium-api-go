@@ -19,6 +19,8 @@ CREATE TABLE users (
   role INT NOT NULL DEFAULT 2,
   idCostumer BIGINT NOT NULL,
   status VARCHAR(32) NOT NULL DEFAULT 'active',
+  mfaSecretEncrypted TEXT NULL,
+  mfaConfirmedAt TIMESTAMP NULL,
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL
 );

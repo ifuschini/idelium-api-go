@@ -155,7 +155,7 @@ func NewRouter(
 			identityProviderRepository = repository
 		}
 	}
-	identityHandler := identity.NewHandler(logger, browserAuthRepository, identityProviderRepository)
+	identityHandler := identity.NewHandler(logger, browserAuthRepository, identityProviderRepository, browserAuthRepository)
 	router.Get("/admin/identity/providers", identityHandler.Providers)
 	router.Post("/admin/identity/providers", identityHandler.Providers)
 	router.Put("/admin/identity/accounts/{user}/break-glass", identityHandler.BreakGlass)

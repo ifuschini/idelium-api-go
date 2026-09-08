@@ -3,8 +3,14 @@ package identity
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/hmac"
+	"crypto/rand"
+	"crypto/sha1"
 	"crypto/sha256"
+	"encoding/base32"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -30,6 +36,7 @@ type Handler struct {
 	logger    *slog.Logger
 	sessions  browserauth.SessionRepository
 	providers ProviderRepository
+	mfa       MFARepository
 }
 
 type Provider struct {
@@ -44,6 +51,11 @@ type ProviderRepository interface {
 	ListProviders(context.Context, int64) ([]Provider, error)
 	CreateProvider(context.Context, int64, Provider) (Provider, error)
 }
+type MFARepository interface {
+	SetMFASecret(context.Context, int64, string) error
+	GetMFASecret(context.Context, int64) (string, error)
+	MarkMFAConfirmed(context.Context, int64, time.Time) error
+}
 
 // NewHandler creates an advanced identity migration gate.
 func NewHandler(logger *slog.Logger, deps ...any) Handler {
@@ -53,6 +65,9 @@ func NewHandler(logger *slog.Logger, deps ...any) Handler {
 	}
 	if len(deps) > 1 {
 		h.providers, _ = deps[1].(ProviderRepository)
+	}
+	if len(deps) > 2 {
+		h.mfa, _ = deps[2].(MFARepository)
 	}
 	return h
 }
@@ -126,17 +141,146 @@ func (handler Handler) SCIMUsers(writer http.ResponseWriter, request *http.Reque
 
 // MFAEnroll blocks MFA enrollment until Go-native browser authentication is enabled.
 func (handler Handler) MFAEnroll(writer http.ResponseWriter, request *http.Request) {
+	if handler.mfa != nil && handler.sessions != nil {
+		user, ok := browserauth.AuthenticateRequest(request.Context(), request, handler.sessions, time.Now().UTC())
+		if !ok {
+			httpx.WriteError(writer, request, 401, "UNAUTHENTICATED", "An active browser session is required.")
+			return
+		}
+		secret, err := newTOTPSecret()
+		if err != nil || handler.mfa.SetMFASecret(request.Context(), user.ID, encryptSecret(secret)) != nil {
+			httpx.WriteError(writer, request, 500, "MFA_UNAVAILABLE", "MFA enrollment could not be started.")
+			return
+		}
+		httpx.WriteJSON(writer, 201, map[string]string{"secret": secret, "algorithm": "SHA1", "digits": "6", "period": "30"})
+		return
+	}
 	handler.writeMigrationDisabled(writer, request, "mfa-enroll")
 }
 
 // MFAConfirm blocks MFA confirmation until Go-native browser authentication is enabled.
 func (handler Handler) MFAConfirm(writer http.ResponseWriter, request *http.Request) {
+	if handler.verifyMFA(writer, request, true) {
+		return
+	}
 	handler.writeMigrationDisabled(writer, request, "mfa-confirm")
 }
 
 // MFAStepUp blocks MFA step-up until Go-native browser authentication is enabled.
 func (handler Handler) MFAStepUp(writer http.ResponseWriter, request *http.Request) {
+	if handler.verifyMFA(writer, request, false) {
+		return
+	}
 	handler.writeMigrationDisabled(writer, request, "mfa-step-up")
+}
+
+func (handler Handler) verifyMFA(w http.ResponseWriter, r *http.Request, confirm bool) bool {
+	if handler.mfa == nil || handler.sessions == nil {
+		return false
+	}
+	u, ok := browserauth.AuthenticateRequest(r.Context(), r, handler.sessions, time.Now().UTC())
+	if !ok {
+		httpx.WriteError(w, r, 401, "UNAUTHENTICATED", "An active browser session is required.")
+		return true
+	}
+	var in struct {
+		Code string `json:"code"`
+	}
+	if json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&in) != nil || len(in.Code) != 6 {
+		httpx.WriteError(w, r, 400, "INVALID_MFA_CODE", "A six-digit MFA code is required.")
+		return true
+	}
+	enc, e := handler.mfa.GetMFASecret(r.Context(), u.ID)
+	if e != nil {
+		httpx.WriteError(w, r, 400, "MFA_NOT_ENROLLED", "MFA enrollment is required.")
+		return true
+	}
+	secret, e := decryptSecret(enc)
+	if e != nil || !validTOTP(secret, in.Code, time.Now().UTC()) {
+		httpx.WriteError(w, r, 401, "INVALID_MFA_CODE", "The MFA code is invalid.")
+		return true
+	}
+	if confirm {
+		if e = handler.mfa.MarkMFAConfirmed(r.Context(), u.ID, time.Now().UTC()); e != nil {
+			httpx.WriteError(w, r, 500, "MFA_UNAVAILABLE", "MFA confirmation could not be saved.")
+			return true
+		}
+	}
+	httpx.WriteJSON(w, 200, map[string]any{"verified": true, "stepUp": !confirm})
+	return true
+}
+func newTOTPSecret() (string, error) {
+	b := make([]byte, 20)
+	if _, e := rand.Read(b); e != nil {
+		return "", e
+	}
+	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(b), nil
+}
+func encryptionKey() []byte {
+	raw := os.Getenv("IDELIUM_MFA_ENCRYPTION_KEY")
+	b, _ := hex.DecodeString(raw)
+	if len(b) == 32 {
+		return b
+	}
+	return nil
+}
+func encryptSecret(secret string) string {
+	key := encryptionKey()
+	if len(key) != 32 {
+		return ""
+	}
+	block, _ := aes.NewCipher(key)
+	gcm, _ := cipher.NewGCM(block)
+	nonce := make([]byte, gcm.NonceSize())
+	_, _ = rand.Read(nonce)
+	out := gcm.Seal(nonce, nonce, []byte(secret), nil)
+	return hex.EncodeToString(out)
+}
+func decryptSecret(value string) (string, error) {
+	key := encryptionKey()
+	if len(key) != 32 {
+		return "", fmt.Errorf("MFA encryption key unavailable")
+	}
+	raw, e := hex.DecodeString(value)
+	if e != nil {
+		return "", e
+	}
+	block, e := aes.NewCipher(key)
+	if e != nil {
+		return "", e
+	}
+	gcm, e := cipher.NewGCM(block)
+	if e != nil {
+		return "", e
+	}
+	if len(raw) < gcm.NonceSize() {
+		return "", fmt.Errorf("invalid encrypted MFA secret")
+	}
+	plain, e := gcm.Open(nil, raw[:gcm.NonceSize()], raw[gcm.NonceSize():], nil)
+	return string(plain), e
+}
+func validTOTP(secret, code string, now time.Time) bool {
+	key, e := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(strings.ToUpper(strings.TrimSpace(secret)))
+	if e != nil || len(code) != 6 {
+		return false
+	}
+	for offset := -1; offset <= 1; offset++ {
+		counter := uint64(now.Unix()/30 + int64(offset))
+		buf := make([]byte, 8)
+		for i := 7; i >= 0; i-- {
+			buf[i] = byte(counter)
+			counter >>= 8
+		}
+		mac := hmac.New(sha1.New, key)
+		_, _ = mac.Write(buf)
+		sum := mac.Sum(nil)
+		n := int(sum[len(sum)-1] & 15)
+		value := (int(sum[n])<<24 | int(sum[n+1])<<16 | int(sum[n+2])<<8 | int(sum[n+3])) & 0x7fffffff
+		if fmt.Sprintf("%06d", value%1000000) == code {
+			return true
+		}
+	}
+	return false
 }
 
 // OIDCTokenExchange blocks workload identity exchange until Go-native trust
