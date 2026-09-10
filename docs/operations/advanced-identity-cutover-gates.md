@@ -57,6 +57,11 @@ The generated OpenAPI compatibility block no longer advertises migration-gate
 responses for these routes. Repository misconfiguration is represented by the
 runtime `503` availability contract.
 
+The SCIM `PUT`, `PATCH`, and `DELETE` user lifecycle endpoints are Go-native
+extensions under `/admin/identity/providers/{identityProvider}/scim/users/{user}`.
+They are intentionally not added to the Laravel route inventory because no
+corresponding Laravel route exists; clients must use the Go OpenAPI surface.
+
 ## Cutover requirements
 
 Remove the cutover gate only after:
