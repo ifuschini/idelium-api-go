@@ -65,6 +65,19 @@ after issuer, audience, destination, `InResponseTo`, `NotBefore`/`NotOnOrAfter`,
 and replay checks pass. Never commit the metadata or certificate to this
 repository.
 
+Validation is deterministic and fail-closed:
+
+```sh
+python3 scripts/validate_saml_metadata.py /run/secrets/idp-metadata.xml \
+  /run/secrets/idp-signing.crt \
+  --issuer "$IDELIUM_SAML_ISSUER" \
+  --audience "$IDELIUM_SAML_AUDIENCE"
+```
+
+The command verifies the signing `KeyDescriptor`, certificate validity,
+SHA-256 fingerprint, metadata/certificate correspondence, issuer/entityID,
+configured audience, and `validUntil` expiry.
+
 ## OpenAPI contract
 
 The generated OpenAPI compatibility block no longer advertises migration-gate
