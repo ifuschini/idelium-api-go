@@ -5,8 +5,8 @@
   "source": {
     "runtime": "go",
     "repository": "idelium/idelium-api-go",
-    "revision": "7a89491567bb861d69c174bb23a931286e24ea18",
-    "capturedAt": "2026-09-07T13:09:50Z",
+    "revision": "acf26ce069a2017b0d961097a8369138a7aeadbd",
+    "capturedAt": "2026-09-10T15:20:27Z",
     "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
   },
   "route": {
@@ -30,7 +30,21 @@
       "Accept": "application/json"
     },
     "query": {},
-    "body": null
+    "body": {
+      "testCycleId": 9001,
+      "idempotencyKey": "capture-cli-matrix",
+      "matrix": {
+        "platforms": [
+          9001
+        ],
+        "browsers": [
+          9001
+        ],
+        "environments": [
+          9001
+        ]
+      }
+    }
   },
   "response": {
     "status": 201,
@@ -40,8 +54,8 @@
     "body": {
       "data": [
         {
-          "id": 9005,
-          "runUrl": "/api/admin/projects/9001/parallel-runs/9005",
+          "id": 9007,
+          "runUrl": "/api/admin/projects/9001/parallel-runs/9007",
           "idProject": 9001,
           "testCycleId": 9001,
           "performedTestCycleId": null,
@@ -100,7 +114,7 @@
             }
           },
           "resultSummary": {},
-          "scheduledAt": "2026-09-07T13:09:50Z",
+          "scheduledAt": "2026-09-10T15:20:27Z",
           "startedAt": null,
           "completedAt": null,
           "cancelledAt": null
@@ -114,5 +128,11 @@
   },
   "normalizations": [],
   "redactions": [],
-  "sideEffects": []
+  "sideEffects": [
+    {
+      "kind": "route-mutation",
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/9001/parallel-runs/matrix"
+    }
+  ]
 }

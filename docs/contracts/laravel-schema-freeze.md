@@ -10,10 +10,10 @@ during the final handover wave.
 | --- | --- |
 | Freeze status | `frozen` |
 | Baseline ID | `go-baseline-2026-08-25` |
-| Expected migrations | 69 |
-| Current migrations | 69 |
-| Expected aggregate SHA-256 | `f54df2c9f302d89231b127deaef226e4f37cd0e1058c7db4f3ed218f3c886698` |
-| Current aggregate SHA-256 | `f54df2c9f302d89231b127deaef226e4f37cd0e1058c7db4f3ed218f3c886698` |
+| Expected migrations | 70 |
+| Current migrations | 70 |
+| Expected aggregate SHA-256 | `85dc94d3ac2b14b7ec46370ffff712cc26797185997b6256fb19920174c2a68e` |
+| Current aggregate SHA-256 | `85dc94d3ac2b14b7ec46370ffff712cc26797185997b6256fb19920174c2a68e` |
 
 ## Policy
 

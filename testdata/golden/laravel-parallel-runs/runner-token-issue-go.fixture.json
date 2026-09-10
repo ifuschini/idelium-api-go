@@ -5,8 +5,8 @@
   "source": {
     "runtime": "go",
     "repository": "idelium/idelium-api-go",
-    "revision": "7a89491567bb861d69c174bb23a931286e24ea18",
-    "capturedAt": "2026-09-07T13:09:50Z",
+    "revision": "acf26ce069a2017b0d961097a8369138a7aeadbd",
+    "capturedAt": "2026-09-10T15:20:28Z",
     "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
   },
   "route": {
@@ -30,7 +30,9 @@
       "Accept": "application/json"
     },
     "query": {},
-    "body": null
+    "body": {
+      "agentId": "fixture-agent-smoke"
+    }
   },
   "response": {
     "status": 201,
@@ -38,11 +40,17 @@
       "Content-Type": "application/json"
     },
     "body": {
-      "expiresAt": "2026-09-07T13:14:50.436416Z",
+      "expiresAt": "2026-09-10T15:25:27.979798Z",
       "agentId": "fixture-agent-smoke"
     }
   },
   "normalizations": [],
   "redactions": [],
-  "sideEffects": []
+  "sideEffects": [
+    {
+      "kind": "route-mutation",
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/9001/parallel-runs/9001/tokens"
+    }
+  ]
 }

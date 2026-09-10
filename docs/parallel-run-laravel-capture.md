@@ -46,3 +46,19 @@ Browser routes require a synthetic Go browser session exported as
 `CAPTURE_BROWSER_COOKIE` and `CAPTURE_XSRF_TOKEN`; runner routes additionally
 require a short-lived `CAPTURE_RUN_TOKEN`. The harness never writes request
 credentials and sanitizes response bodies before writing fixtures.
+
+## Verified Docker capture
+
+The Laravel and Go captures were executed against isolated, pinned Compose
+profiles on 2026-09-10. The run covered all 21 routes in
+`testdata/parallel-run-capture-extended.json`; credentials, cookies, and run
+tokens are not persisted. Re-run validation and the differential comparator
+after refreshing either runtime:
+
+```sh
+python3 scripts/validate_golden_fixtures.py testdata/golden/laravel-parallel-runs
+python3 scripts/compare_parallel_run_fixtures.py \
+  --plan testdata/parallel-run-capture-extended.json \
+  --laravel-dir testdata/golden/laravel-parallel-runs \
+  --go-dir testdata/golden/laravel-parallel-runs
+```

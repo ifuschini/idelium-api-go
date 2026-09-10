@@ -5,8 +5,8 @@
   "source": {
     "runtime": "laravel",
     "repository": "idelium/idelium-api",
-    "revision": "30843a0cfd57650150319ddde3e66db379fdfd8f",
-    "capturedAt": "2026-09-07T10:48:25Z",
+    "revision": "ef97a6b3f42105cad583b3f1a68acf637a9d086a",
+    "capturedAt": "2026-09-10T15:14:22Z",
     "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
   },
   "route": {
@@ -30,7 +30,9 @@
       "Accept": "application/json"
     },
     "query": {},
-    "body": null
+    "body": {
+      "workerId": "fixture-agent-smoke"
+    }
   },
   "response": {
     "status": 200,
@@ -65,13 +67,19 @@
           }
         }
       ],
-      "scheduledAt": "2026-09-07T10:48:24.000000Z",
-      "startedAt": "2026-09-07T10:48:25.000000Z",
+      "scheduledAt": "2026-09-10T15:11:26.000000Z",
+      "startedAt": "2026-09-10T15:14:22.000000Z",
       "completedAt": null,
       "cancelledAt": null
     }
   },
   "normalizations": [],
   "redactions": [],
-  "sideEffects": []
+  "sideEffects": [
+    {
+      "kind": "route-mutation",
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/9001/parallel-runs/9001/claim"
+    }
+  ]
 }

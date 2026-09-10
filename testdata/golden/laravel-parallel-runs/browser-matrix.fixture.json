@@ -5,8 +5,8 @@
   "source": {
     "runtime": "laravel",
     "repository": "idelium/idelium-api",
-    "revision": "30843a0cfd57650150319ddde3e66db379fdfd8f",
-    "capturedAt": "2026-09-07T10:48:25Z",
+    "revision": "ef97a6b3f42105cad583b3f1a68acf637a9d086a",
+    "capturedAt": "2026-09-10T15:14:22Z",
     "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
   },
   "route": {
@@ -30,7 +30,21 @@
       "Accept": "application/json"
     },
     "query": {},
-    "body": null
+    "body": {
+      "testCycleId": 9001,
+      "idempotencyKey": "capture-browser-matrix",
+      "matrix": {
+        "platforms": [
+          9001
+        ],
+        "browsers": [
+          9001
+        ],
+        "environments": [
+          9001
+        ]
+      }
+    }
   },
   "response": {
     "status": 201,
@@ -48,11 +62,11 @@
           "idempotencyKey": "capture-browser-matrix-247fe3f8aa6e1bc1",
           "status": "queued",
           "requestedConcurrency": 1,
-          "activeWorkers": null,
-          "totalWorkers": null,
-          "completedWorkers": null,
-          "failedWorkers": null,
-          "cancelledWorkers": null,
+          "activeWorkers": 0,
+          "totalWorkers": 0,
+          "completedWorkers": 0,
+          "failedWorkers": 0,
+          "cancelledWorkers": 0,
           "lostWorkers": 0,
           "aggregateStatus": null,
           "metadata": {
@@ -94,7 +108,7 @@
             }
           },
           "resultSummary": [],
-          "scheduledAt": "2026-09-07T10:48:25.000000Z",
+          "scheduledAt": "2026-09-10T15:13:47.000000Z",
           "startedAt": null,
           "completedAt": null,
           "cancelledAt": null
@@ -108,5 +122,11 @@
   },
   "normalizations": [],
   "redactions": [],
-  "sideEffects": []
+  "sideEffects": [
+    {
+      "kind": "route-mutation",
+      "method": "POST",
+      "path": "/api/admin/projects/9001/parallel-runs/matrix"
+    }
+  ]
 }

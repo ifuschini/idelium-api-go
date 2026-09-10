@@ -5,8 +5,8 @@
   "source": {
     "runtime": "go",
     "repository": "idelium/idelium-api-go",
-    "revision": "7a89491567bb861d69c174bb23a931286e24ea18",
-    "capturedAt": "2026-09-07T13:09:50Z",
+    "revision": "acf26ce069a2017b0d961097a8369138a7aeadbd",
+    "capturedAt": "2026-09-10T15:20:27Z",
     "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
   },
   "route": {
@@ -38,10 +38,16 @@
       "Content-Type": "application/json"
     },
     "body": {
-      "revokedAt": "2026-09-07T13:09:50.430352Z"
+      "revokedAt": "2026-09-10T15:20:27.975402Z"
     }
   },
   "normalizations": [],
   "redactions": [],
-  "sideEffects": []
+  "sideEffects": [
+    {
+      "kind": "route-mutation",
+      "method": "POST",
+      "path": "/api/ideliumcl/projects/9001/parallel-runs/9001/tokens/{{runTokenId}}/revoke"
+    }
+  ]
 }

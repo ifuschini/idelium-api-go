@@ -5,8 +5,8 @@
   "source": {
     "runtime": "go",
     "repository": "idelium/idelium-api-go",
-    "revision": "7a89491567bb861d69c174bb23a931286e24ea18",
-    "capturedAt": "2026-09-07T13:09:50Z",
+    "revision": "acf26ce069a2017b0d961097a8369138a7aeadbd",
+    "capturedAt": "2026-09-10T15:20:28Z",
     "routeInventoryDigestSha256": "dc2a622d5825effb47aa810dfbc296348c7bcc4b16b4692c31094ed1534bbc48"
   },
   "route": {
@@ -30,7 +30,12 @@
       "Accept": "application/json"
     },
     "query": {},
-    "body": null
+    "body": {
+      "idProject": 9001,
+      "parallelRun": 9001,
+      "workerId": "fixture-agent-smoke",
+      "leaseSeconds": 60
+    }
   },
   "response": {
     "status": 200,
@@ -73,14 +78,14 @@
       "workers": [
         {
           "capabilities": [],
-          "claimedAt": "2026-09-07T13:09:50.146394Z",
-          "lastHeartbeatAt": "2026-09-07T13:09:50.769422Z",
-          "leaseExpiresAt": "2026-09-07T13:10:50.769422Z",
+          "claimedAt": "2026-09-10T15:20:27.710269Z",
+          "lastHeartbeatAt": "2026-09-10T15:20:28.284035Z",
+          "leaseExpiresAt": "2026-09-10T15:21:28.284035Z",
           "result": {
             "ok": true
           },
           "status": "running",
-          "updatedAt": "2026-09-07T13:09:50.769422Z",
+          "updatedAt": "2026-09-10T15:20:28.284035Z",
           "workerId": "fixture-agent-smoke"
         },
         {
@@ -88,13 +93,19 @@
           "workerId": "worker-smoke"
         }
       ],
-      "scheduledAt": "2026-09-07T13:09:41Z",
-      "startedAt": "2026-09-07T13:09:50Z",
+      "scheduledAt": "2026-09-10T15:18:08Z",
+      "startedAt": "2026-09-10T15:20:27Z",
       "completedAt": null,
       "cancelledAt": null
     }
   },
   "normalizations": [],
   "redactions": [],
-  "sideEffects": []
+  "sideEffects": [
+    {
+      "kind": "route-mutation",
+      "method": "POST",
+      "path": "/api/ideliumrunner/heartbeat"
+    }
+  ]
 }
