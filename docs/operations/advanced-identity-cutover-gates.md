@@ -71,12 +71,15 @@ Validation is deterministic and fail-closed:
 python3 scripts/validate_saml_metadata.py /run/secrets/idp-metadata.xml \
   /run/secrets/idp-signing.crt \
   --issuer "$IDELIUM_SAML_ISSUER" \
-  --audience "$IDELIUM_SAML_AUDIENCE"
+  --audience "$IDELIUM_SAML_AUDIENCE" \
+  --assertion /run/secrets/ephemeral-saml-assertion.xml
 ```
 
 The command verifies the signing `KeyDescriptor`, certificate validity,
 SHA-256 fingerprint, metadata/certificate correspondence, issuer/entityID,
-configured audience, and `validUntil` expiry.
+assertion audience and conditions, and `validUntil` expiry. The assertion is a
+third, ephemeral runtime input because standard IdP metadata does not contain
+the SP audience. Delete it immediately after validation and never commit it.
 
 ## OpenAPI contract
 
