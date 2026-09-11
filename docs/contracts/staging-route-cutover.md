@@ -12,10 +12,10 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | Cutover status | `blocked` |
 | Production enabled | `false` |
 | Route count | 168 |
-| Go-owned routes | 63 |
+| Go-owned routes | 85 |
 | Go fail-closed routes | 0 |
-| Laravel blocker routes | 105 |
-| Gateway Go routes | 27 |
+| Laravel blocker routes | 83 |
+| Gateway Go routes | 85 |
 
 ## Staging policy
 
@@ -37,19 +37,15 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `artifacts` | 7 |
 | `asset-versions` | 5 |
 | `audit-events` | 1 |
-| `browser-identity` | 8 |
 | `customers` | 6 |
-| `enterprise-identity` | 9 |
 | `environments` | 5 |
 | `execution-results` | 3 |
 | `grid-jobs` | 4 |
 | `integrations` | 7 |
-| `legacy-api-keys` | 2 |
 | `operations` | 4 |
 | `plugins` | 5 |
 | `projects` | 7 |
 | `result-exports` | 3 |
-| `service-accounts` | 3 |
 | `steps` | 6 |
 | `test-cycles` | 4 |
 | `test-launches` | 1 |
@@ -66,8 +62,8 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `PUT` | `/api/admin/accounts/{idUser}` | `accounts` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/admin/agents` | `agent-registry` | `blocked` | `laravel` | `keep-on-laravel` |
 | `PUT` | `/api/admin/agents/{agentRegistration}/status` | `agent-registry` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/apikey` | `legacy-api-keys` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/apikey` | `legacy-api-keys` | `blocked` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/api/admin/apikey` | `legacy-api-keys` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/apikey` | `legacy-api-keys` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/costumers` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |
 | `POST` | `/api/admin/costumers` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |
 | `DELETE` | `/api/admin/costumers/{idCostumer}` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |
@@ -81,11 +77,11 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}` | `grid-jobs` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}/export` | `grid-jobs` | `blocked` | `laravel` | `keep-on-laravel` |
 | `POST` | `/api/admin/grid/query-snapshots` | `grid-jobs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/identity/accounts/{user}/break-glass` | `enterprise-identity` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/identity/accounts/{user}/break-glass/test` | `enterprise-identity` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/identity/providers` | `enterprise-identity` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/identity/providers` | `enterprise-identity` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/identity/providers/{identityProvider}/scim/users` | `enterprise-identity` | `blocked` | `laravel` | `keep-on-laravel` |
+| `PUT` | `/api/admin/identity/accounts/{user}/break-glass` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/identity/accounts/{user}/break-glass/test` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/identity/providers` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/identity/providers` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/identity/providers/{identityProvider}/scim/users` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/importtest` | `tests` | `blocked` | `laravel` | `keep-on-laravel` |
 | `POST` | `/api/admin/launchtest` | `test-launches` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/admin/platforms/brands` | `platform-catalog` | `ready` | `go` | `send-to-go` |
@@ -120,11 +116,11 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `DELETE` | `/api/admin/plugins/{idProject}/{plugin}` | `plugins` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/admin/plugins/{idProject}/{plugin}` | `plugins` | `blocked` | `laravel` | `keep-on-laravel` |
 | `PUT` | `/api/admin/plugins/{idProject}/{step}` | `plugins` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/profile` | `browser-identity` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/profile` | `browser-identity` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/profile/mfa/confirm` | `browser-identity` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/profile/mfa/enroll` | `browser-identity` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/profile/mfa/step-up` | `browser-identity` | `blocked` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/api/admin/profile` | `browser-identity` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/profile` | `browser-identity` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/profile/mfa/confirm` | `browser-identity` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/profile/mfa/enroll` | `browser-identity` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/profile/mfa/step-up` | `browser-identity` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/projects` | `projects` | `blocked` | `laravel` | `keep-on-laravel` |
 | `POST` | `/api/admin/projects` | `projects` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/admin/projects/create` | `projects` | `blocked` | `laravel` | `keep-on-laravel` |
@@ -164,9 +160,9 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `GET|HEAD` | `/api/admin/result-exports/{resultExport}` | `result-exports` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/admin/result-exports/{resultExport}/download` | `result-exports` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/admin/roles` | `access-control` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/service-accounts` | `service-accounts` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/service-accounts` | `service-accounts` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/service-accounts/{serviceAccount}/revoke` | `service-accounts` | `blocked` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/api/admin/service-accounts` | `service-accounts` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/service-accounts` | `service-accounts` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/service-accounts/{serviceAccount}/revoke` | `service-accounts` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/steps` | `steps` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/admin/steps/{idProject}` | `steps` | `blocked` | `laravel` | `keep-on-laravel` |
 | `POST` | `/api/admin/steps/{idProject}/updateorder` | `steps` | `blocked` | `laravel` | `keep-on-laravel` |
@@ -215,18 +211,18 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `POST` | `/api/ideliumrunner/claim` | `parallel-runs` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/ideliumrunner/heartbeat` | `parallel-runs` | `ready` | `go` | `send-to-go` |
 | `PUT` | `/api/ideliumrunner/worker` | `parallel-runs` | `ready` | `go` | `send-to-go` |
-| `POST` | `/api/login` | `browser-identity` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/logout` | `browser-identity` | `blocked` | `laravel` | `keep-on-laravel` |
+| `POST` | `/api/login` | `browser-identity` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/logout` | `browser-identity` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/me/capabilities` | `access-control` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/menu/header` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |
 | `PUT` | `/api/menu/header/{idCostumer}` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/menu/sidebar` | `access-control` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/oidc/token-exchange` | `enterprise-identity` | `blocked` | `laravel` | `keep-on-laravel` |
+| `POST` | `/api/oidc/token-exchange` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/sanctum/csrf-cookie` | `operations` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/sso/{identityProvider}/oidc/callback` | `enterprise-identity` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/sso/{identityProvider}/saml/callback` | `enterprise-identity` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/sso/{identityProvider}/start` | `enterprise-identity` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/user` | `browser-identity` | `blocked` | `laravel` | `keep-on-laravel` |
+| `POST` | `/api/sso/{identityProvider}/oidc/callback` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/sso/{identityProvider}/saml/callback` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/sso/{identityProvider}/start` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/user` | `browser-identity` | `ready` | `go` | `send-to-go` |
 
 ## Regeneration
 

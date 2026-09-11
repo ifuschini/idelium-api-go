@@ -23,24 +23,24 @@ Application-level dual writes are prohibited.
 | `artifacts` | laravel | 7 | 4 | 7 | laravel-primary |
 | `asset-versions` | laravel | 5 | 1 | 5 | laravel-primary |
 | `audit-events` | none | 1 | 0 | 1 | laravel-primary |
-| `browser-identity` | laravel | 8 | 6 | 7 | laravel-primary |
+| `browser-identity` | go | 8 | 6 | 7 | laravel-primary |
 | `cli-performed-cycles` | go | 2 | 2 | 0 | laravel-primary |
 | `cli-performed-steps` | go | 2 | 2 | 0 | laravel-primary |
 | `cli-performed-tests` | go | 2 | 2 | 0 | laravel-primary |
 | `customers` | laravel | 6 | 4 | 6 | laravel-primary |
-| `enterprise-identity` | laravel | 9 | 8 | 5 | laravel-primary |
+| `enterprise-identity` | go | 9 | 8 | 5 | laravel-primary |
 | `environments` | laravel | 7 | 3 | 5 | laravel-primary |
 | `execution-results` | none | 3 | 0 | 3 | laravel-primary |
 | `grid-jobs` | laravel | 4 | 2 | 4 | laravel-primary |
 | `integrations` | laravel | 7 | 5 | 7 | laravel-primary |
-| `legacy-api-keys` | laravel | 2 | 1 | 2 | laravel-primary |
+| `legacy-api-keys` | go | 2 | 1 | 2 | laravel-primary |
 | `operations` | none | 4 | 0 | 0 | laravel-primary |
 | `parallel-runs` | go | 23 | 17 | 9 | laravel-primary |
 | `platform-catalog` | go | 27 | 17 | 27 | laravel-primary |
 | `plugins` | laravel | 7 | 3 | 5 | laravel-primary |
 | `projects` | laravel | 7 | 3 | 7 | laravel-primary |
 | `result-exports` | laravel | 3 | 1 | 3 | laravel-primary |
-| `service-accounts` | laravel | 3 | 2 | 3 | laravel-primary |
+| `service-accounts` | go | 3 | 2 | 3 | laravel-primary |
 | `steps` | laravel | 7 | 4 | 6 | laravel-primary |
 | `test-cycles` | laravel | 5 | 2 | 4 | laravel-primary |
 | `test-launches` | laravel | 1 | 1 | 1 | laravel-primary |
@@ -69,8 +69,8 @@ does not require database restoration or reverse data replication.
 | `PUT` | `/api/admin/accounts/{idUser}` | `accounts` | mutation | laravel | yes | 9 |
 | `GET|HEAD` | `/api/admin/agents` | `agent-registry` | read | laravel | yes | 8 |
 | `PUT` | `/api/admin/agents/{agentRegistration}/status` | `agent-registry` | mutation | laravel | yes | 8 |
-| `GET|HEAD` | `/api/admin/apikey` | `legacy-api-keys` | read | laravel | yes | 9 |
-| `PUT` | `/api/admin/apikey` | `legacy-api-keys` | mutation | laravel | yes | 9 |
+| `GET|HEAD` | `/api/admin/apikey` | `legacy-api-keys` | read | go | yes | 9 |
+| `PUT` | `/api/admin/apikey` | `legacy-api-keys` | mutation | go | yes | 9 |
 | `GET|HEAD` | `/api/admin/costumers` | `customers` | read | laravel | yes | 9 |
 | `POST` | `/api/admin/costumers` | `customers` | mutation | laravel | yes | 9 |
 | `DELETE` | `/api/admin/costumers/{idCostumer}` | `customers` | mutation | laravel | yes | 9 |
@@ -84,11 +84,11 @@ does not require database restoration or reverse data replication.
 | `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}` | `grid-jobs` | read | laravel | yes | 7 |
 | `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}/export` | `grid-jobs` | read | laravel | yes | 7 |
 | `POST` | `/api/admin/grid/query-snapshots` | `grid-jobs` | mutation | laravel | yes | 7 |
-| `PUT` | `/api/admin/identity/accounts/{user}/break-glass` | `enterprise-identity` | mutation | laravel | yes | 9 |
-| `POST` | `/api/admin/identity/accounts/{user}/break-glass/test` | `enterprise-identity` | mutation | laravel | yes | 9 |
-| `GET|HEAD` | `/api/admin/identity/providers` | `enterprise-identity` | read | laravel | yes | 9 |
-| `POST` | `/api/admin/identity/providers` | `enterprise-identity` | mutation | laravel | yes | 9 |
-| `POST` | `/api/admin/identity/providers/{identityProvider}/scim/users` | `enterprise-identity` | mutation | laravel | yes | 9 |
+| `PUT` | `/api/admin/identity/accounts/{user}/break-glass` | `enterprise-identity` | mutation | go | yes | 9 |
+| `POST` | `/api/admin/identity/accounts/{user}/break-glass/test` | `enterprise-identity` | mutation | go | yes | 9 |
+| `GET|HEAD` | `/api/admin/identity/providers` | `enterprise-identity` | read | go | yes | 9 |
+| `POST` | `/api/admin/identity/providers` | `enterprise-identity` | mutation | go | yes | 9 |
+| `POST` | `/api/admin/identity/providers/{identityProvider}/scim/users` | `enterprise-identity` | mutation | go | yes | 9 |
 | `POST` | `/api/admin/importtest` | `tests` | mutation | laravel | yes | 6 |
 | `POST` | `/api/admin/launchtest` | `test-launches` | mutation | laravel | yes | 8 |
 | `GET|HEAD` | `/api/admin/platforms/brands` | `platform-catalog` | read | go | yes | 3 |
@@ -123,11 +123,11 @@ does not require database restoration or reverse data replication.
 | `DELETE` | `/api/admin/plugins/{idProject}/{plugin}` | `plugins` | mutation | laravel | yes | 6 |
 | `GET|HEAD` | `/api/admin/plugins/{idProject}/{plugin}` | `plugins` | read | laravel | yes | 6 |
 | `PUT` | `/api/admin/plugins/{idProject}/{step}` | `plugins` | mutation | laravel | yes | 6 |
-| `GET|HEAD` | `/api/admin/profile` | `browser-identity` | read | laravel | yes | 9 |
-| `PUT` | `/api/admin/profile` | `browser-identity` | mutation | laravel | yes | 9 |
-| `POST` | `/api/admin/profile/mfa/confirm` | `browser-identity` | mutation | laravel | yes | 9 |
-| `POST` | `/api/admin/profile/mfa/enroll` | `browser-identity` | mutation | laravel | yes | 9 |
-| `POST` | `/api/admin/profile/mfa/step-up` | `browser-identity` | mutation | laravel | yes | 9 |
+| `GET|HEAD` | `/api/admin/profile` | `browser-identity` | read | go | yes | 9 |
+| `PUT` | `/api/admin/profile` | `browser-identity` | mutation | go | yes | 9 |
+| `POST` | `/api/admin/profile/mfa/confirm` | `browser-identity` | mutation | go | yes | 9 |
+| `POST` | `/api/admin/profile/mfa/enroll` | `browser-identity` | mutation | go | yes | 9 |
+| `POST` | `/api/admin/profile/mfa/step-up` | `browser-identity` | mutation | go | yes | 9 |
 | `GET|HEAD` | `/api/admin/projects` | `projects` | read | laravel | yes | 6 |
 | `POST` | `/api/admin/projects` | `projects` | mutation | laravel | yes | 6 |
 | `GET|HEAD` | `/api/admin/projects/create` | `projects` | read | laravel | yes | 6 |
@@ -167,9 +167,9 @@ does not require database restoration or reverse data replication.
 | `GET|HEAD` | `/api/admin/result-exports/{resultExport}` | `result-exports` | read | laravel | yes | 7 |
 | `GET|HEAD` | `/api/admin/result-exports/{resultExport}/download` | `result-exports` | read | laravel | yes | 7 |
 | `GET|HEAD` | `/api/admin/roles` | `access-control` | read | laravel | yes | 9 |
-| `GET|HEAD` | `/api/admin/service-accounts` | `service-accounts` | read | laravel | yes | 9 |
-| `POST` | `/api/admin/service-accounts` | `service-accounts` | mutation | laravel | yes | 9 |
-| `POST` | `/api/admin/service-accounts/{serviceAccount}/revoke` | `service-accounts` | mutation | laravel | yes | 9 |
+| `GET|HEAD` | `/api/admin/service-accounts` | `service-accounts` | read | go | yes | 9 |
+| `POST` | `/api/admin/service-accounts` | `service-accounts` | mutation | go | yes | 9 |
+| `POST` | `/api/admin/service-accounts/{serviceAccount}/revoke` | `service-accounts` | mutation | go | yes | 9 |
 | `POST` | `/api/admin/steps` | `steps` | mutation | laravel | yes | 6 |
 | `GET|HEAD` | `/api/admin/steps/{idProject}` | `steps` | read | laravel | yes | 6 |
 | `POST` | `/api/admin/steps/{idProject}/updateorder` | `steps` | mutation | laravel | yes | 6 |
@@ -218,18 +218,18 @@ does not require database restoration or reverse data replication.
 | `POST` | `/api/ideliumrunner/claim` | `parallel-runs` | mutation | go | no | 8 |
 | `POST` | `/api/ideliumrunner/heartbeat` | `parallel-runs` | mutation | go | no | 8 |
 | `PUT` | `/api/ideliumrunner/worker` | `parallel-runs` | mutation | go | no | 8 |
-| `POST` | `/api/login` | `browser-identity` | mutation | laravel | no | 9 |
-| `POST` | `/api/logout` | `browser-identity` | mutation | laravel | yes | 9 |
+| `POST` | `/api/login` | `browser-identity` | mutation | go | no | 9 |
+| `POST` | `/api/logout` | `browser-identity` | mutation | go | yes | 9 |
 | `GET|HEAD` | `/api/me/capabilities` | `access-control` | read | laravel | yes | 9 |
 | `GET|HEAD` | `/api/menu/header` | `customers` | read | laravel | yes | 9 |
 | `PUT` | `/api/menu/header/{idCostumer}` | `customers` | mutation | laravel | yes | 9 |
 | `GET|HEAD` | `/api/menu/sidebar` | `access-control` | read | laravel | yes | 9 |
-| `POST` | `/api/oidc/token-exchange` | `enterprise-identity` | mutation | laravel | no | 9 |
+| `POST` | `/api/oidc/token-exchange` | `enterprise-identity` | mutation | go | no | 9 |
 | `GET|HEAD` | `/api/sanctum/csrf-cookie` | `operations` | read | laravel | no | 9 |
-| `POST` | `/api/sso/{identityProvider}/oidc/callback` | `enterprise-identity` | mutation | laravel | no | 9 |
-| `POST` | `/api/sso/{identityProvider}/saml/callback` | `enterprise-identity` | mutation | laravel | no | 9 |
-| `POST` | `/api/sso/{identityProvider}/start` | `enterprise-identity` | mutation | laravel | no | 9 |
-| `GET|HEAD` | `/api/user` | `browser-identity` | read | laravel | yes | 9 |
+| `POST` | `/api/sso/{identityProvider}/oidc/callback` | `enterprise-identity` | mutation | go | no | 9 |
+| `POST` | `/api/sso/{identityProvider}/saml/callback` | `enterprise-identity` | mutation | go | no | 9 |
+| `POST` | `/api/sso/{identityProvider}/start` | `enterprise-identity` | mutation | go | no | 9 |
+| `GET|HEAD` | `/api/user` | `browser-identity` | read | go | yes | 9 |
 
 ## Deployment and rollback
 

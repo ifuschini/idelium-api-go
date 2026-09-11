@@ -233,7 +233,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -264,7 +264,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -688,7 +688,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -717,7 +717,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -746,7 +746,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -775,7 +775,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -804,7 +804,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -1889,7 +1889,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -1920,7 +1920,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -1949,7 +1949,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -1978,7 +1978,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -2007,7 +2007,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -3201,7 +3201,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -3230,7 +3230,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -3259,7 +3259,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -4761,7 +4761,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -4792,7 +4792,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -4943,7 +4943,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -5004,7 +5004,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -5033,7 +5033,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -5062,7 +5062,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",
@@ -5091,7 +5091,7 @@
       "fixture_status": "pending",
       "differential_test_status": "pending",
       "security_review_status": "pending",
-      "rollout_status": "laravel-owned",
+      "rollout_status": "go-owned",
       "required_contract_evidence": [
         "request-and-validation",
         "response-and-status-codes",

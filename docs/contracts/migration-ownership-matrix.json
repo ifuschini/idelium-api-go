@@ -15,8 +15,8 @@
     "route_count": 168,
     "mutation_route_count": 98,
     "route_owner_counts": {
-      "go": 63,
-      "laravel": 105
+      "go": 85,
+      "laravel": 83
     }
   },
   "aggregates": [
@@ -82,7 +82,7 @@
     },
     {
       "aggregate": "browser-identity",
-      "mutation_owner": "laravel",
+      "mutation_owner": "go",
       "route_count": 8,
       "mutation_route_count": 6,
       "tenant_scoped_route_count": 7,
@@ -132,7 +132,7 @@
     },
     {
       "aggregate": "enterprise-identity",
-      "mutation_owner": "laravel",
+      "mutation_owner": "go",
       "route_count": 9,
       "mutation_route_count": 8,
       "tenant_scoped_route_count": 5,
@@ -182,7 +182,7 @@
     },
     {
       "aggregate": "legacy-api-keys",
-      "mutation_owner": "laravel",
+      "mutation_owner": "go",
       "route_count": 2,
       "mutation_route_count": 1,
       "tenant_scoped_route_count": 2,
@@ -252,7 +252,7 @@
     },
     {
       "aggregate": "service-accounts",
-      "mutation_owner": "laravel",
+      "mutation_owner": "go",
       "route_count": 3,
       "mutation_route_count": 2,
       "tenant_scoped_route_count": 3,
@@ -385,8 +385,8 @@
       "path": "/api/admin/apikey",
       "aggregate": "legacy-api-keys",
       "operation_kind": "read",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -396,8 +396,8 @@
       "path": "/api/admin/apikey",
       "aggregate": "legacy-api-keys",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -550,8 +550,8 @@
       "path": "/api/admin/identity/accounts/{user}/break-glass",
       "aggregate": "enterprise-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -561,8 +561,8 @@
       "path": "/api/admin/identity/accounts/{user}/break-glass/test",
       "aggregate": "enterprise-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -572,8 +572,8 @@
       "path": "/api/admin/identity/providers",
       "aggregate": "enterprise-identity",
       "operation_kind": "read",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -583,8 +583,8 @@
       "path": "/api/admin/identity/providers",
       "aggregate": "enterprise-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -594,8 +594,8 @@
       "path": "/api/admin/identity/providers/{identityProvider}/scim/users",
       "aggregate": "enterprise-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -979,8 +979,8 @@
       "path": "/api/admin/profile",
       "aggregate": "browser-identity",
       "operation_kind": "read",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -990,8 +990,8 @@
       "path": "/api/admin/profile",
       "aggregate": "browser-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -1001,8 +1001,8 @@
       "path": "/api/admin/profile/mfa/confirm",
       "aggregate": "browser-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -1012,8 +1012,8 @@
       "path": "/api/admin/profile/mfa/enroll",
       "aggregate": "browser-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -1023,8 +1023,8 @@
       "path": "/api/admin/profile/mfa/step-up",
       "aggregate": "browser-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -1463,8 +1463,8 @@
       "path": "/api/admin/service-accounts",
       "aggregate": "service-accounts",
       "operation_kind": "read",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -1474,8 +1474,8 @@
       "path": "/api/admin/service-accounts",
       "aggregate": "service-accounts",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -1485,8 +1485,8 @@
       "path": "/api/admin/service-accounts/{serviceAccount}/revoke",
       "aggregate": "service-accounts",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -2024,8 +2024,8 @@
       "path": "/api/login",
       "aggregate": "browser-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 9
     },
@@ -2035,8 +2035,8 @@
       "path": "/api/logout",
       "aggregate": "browser-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     },
@@ -2090,8 +2090,8 @@
       "path": "/api/oidc/token-exchange",
       "aggregate": "enterprise-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 9
     },
@@ -2112,8 +2112,8 @@
       "path": "/api/sso/{identityProvider}/oidc/callback",
       "aggregate": "enterprise-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 9
     },
@@ -2123,8 +2123,8 @@
       "path": "/api/sso/{identityProvider}/saml/callback",
       "aggregate": "enterprise-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 9
     },
@@ -2134,8 +2134,8 @@
       "path": "/api/sso/{identityProvider}/start",
       "aggregate": "enterprise-identity",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": false,
       "migration_wave": 9
     },
@@ -2145,8 +2145,8 @@
       "path": "/api/user",
       "aggregate": "browser-identity",
       "operation_kind": "read",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 9
     }

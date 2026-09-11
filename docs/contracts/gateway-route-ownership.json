@@ -292,6 +292,604 @@
       "go_path": "/admin/platforms/osversion",
       "owner": "go",
       "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/apikey",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/apikey",
+      "go_path": "/admin/apikey",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/apikey",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/apikey",
+      "go_path": "/admin/apikey",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/identity/accounts/{user}/break-glass",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/identity/accounts/{user}/break-glass",
+      "go_path": "/admin/identity/accounts/{user}/break-glass",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/identity/accounts/{user}/break-glass/test",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/identity/accounts/{user}/break-glass/test",
+      "go_path": "/admin/identity/accounts/{user}/break-glass/test",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/identity/providers",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/identity/providers",
+      "go_path": "/admin/identity/providers",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/identity/providers",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/identity/providers",
+      "go_path": "/admin/identity/providers",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/identity/providers/{identityProvider}/scim/users",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/identity/providers/{identityProvider}/scim/users",
+      "go_path": "/admin/identity/providers/{identityProvider}/scim/users",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/profile",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/profile",
+      "go_path": "/admin/profile",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/profile",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/profile",
+      "go_path": "/admin/profile",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/profile/mfa/confirm",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/profile/mfa/confirm",
+      "go_path": "/admin/profile/mfa/confirm",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/profile/mfa/enroll",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/profile/mfa/enroll",
+      "go_path": "/admin/profile/mfa/enroll",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/profile/mfa/step-up",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/profile/mfa/step-up",
+      "go_path": "/admin/profile/mfa/step-up",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{idProject}/parallel-runs",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/parallel-runs",
+      "go_path": "/admin/projects/{idProject}/parallel-runs",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects/{idProject}/parallel-runs",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/parallel-runs",
+      "go_path": "/admin/projects/{idProject}/parallel-runs",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects/{idProject}/parallel-runs/matrix",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/parallel-runs/matrix",
+      "go_path": "/admin/projects/{idProject}/parallel-runs/matrix",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{idProject}/parallel-runs/{parallelRun}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}",
+      "go_path": "/admin/projects/{idProject}/parallel-runs/{parallelRun}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
+      "go_path": "/admin/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim",
+      "go_path": "/admin/projects/{idProject}/parallel-runs/{parallelRun}/claim",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results",
+      "go_path": "/admin/projects/{idProject}/parallel-runs/{parallelRun}/results",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
+      "go_path": "/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
+      "go_path": "/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/service-accounts",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/service-accounts",
+      "go_path": "/admin/service-accounts",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/service-accounts",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/service-accounts",
+      "go_path": "/admin/service-accounts",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/service-accounts/{serviceAccount}/revoke",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/service-accounts/{serviceAccount}/revoke",
+      "go_path": "/admin/service-accounts/{serviceAccount}/revoke",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/ideliumcl/environment/{idEnvironment}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/ideliumcl/environment/{idEnvironment}",
+      "go_path": "/ideliumcl/environment/{idEnvironment}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/ideliumcl/environments/{idProject}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/ideliumcl/environments/{idProject}",
+      "go_path": "/ideliumcl/environments/{idProject}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/ideliumcl/plugin/{idPlugin}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/ideliumcl/plugin/{idPlugin}",
+      "go_path": "/ideliumcl/plugin/{idPlugin}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/ideliumcl/plugins/{idProject}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/ideliumcl/plugins/{idProject}",
+      "go_path": "/ideliumcl/plugins/{idProject}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/ideliumcl/projects/{idProject}/parallel-runs",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/ideliumcl/projects/{idProject}/parallel-runs",
+      "go_path": "/ideliumcl/projects/{idProject}/parallel-runs",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/ideliumcl/projects/{idProject}/parallel-runs",
+      "go_path": "/ideliumcl/projects/{idProject}/parallel-runs",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/matrix",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/ideliumcl/projects/{idProject}/parallel-runs/matrix",
+      "go_path": "/ideliumcl/projects/{idProject}/parallel-runs/matrix",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}",
+      "go_path": "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
+      "go_path": "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/cancel",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim",
+      "go_path": "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/claim",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results",
+      "go_path": "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/results",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens",
+      "go_path": "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke",
+      "go_path": "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/tokens/{tokenId}/revoke",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
+      "go_path": "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
+      "go_path": "/ideliumcl/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/ideliumcl/step",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/ideliumcl/step",
+      "go_path": "/ideliumcl/step",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/ideliumcl/step",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/ideliumcl/step",
+      "go_path": "/ideliumcl/step",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/ideliumcl/step/{idStep}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/ideliumcl/step/{idStep}",
+      "go_path": "/ideliumcl/step/{idStep}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/ideliumcl/test",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/ideliumcl/test",
+      "go_path": "/ideliumcl/test",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/ideliumcl/test",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/ideliumcl/test",
+      "go_path": "/ideliumcl/test",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/ideliumcl/test/{idTest}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/ideliumcl/test/{idTest}",
+      "go_path": "/ideliumcl/test/{idTest}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/ideliumcl/testcycle",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/ideliumcl/testcycle",
+      "go_path": "/ideliumcl/testcycle",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/ideliumcl/testcycle",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/ideliumcl/testcycle",
+      "go_path": "/ideliumcl/testcycle",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/ideliumcl/testcycle/{idTestCycle}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/ideliumcl/testcycle/{idTestCycle}",
+      "go_path": "/ideliumcl/testcycle/{idTestCycle}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/ideliumrunner/claim",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/ideliumrunner/claim",
+      "go_path": "/ideliumrunner/claim",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/ideliumrunner/heartbeat",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/ideliumrunner/heartbeat",
+      "go_path": "/ideliumrunner/heartbeat",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/ideliumrunner/worker",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/ideliumrunner/worker",
+      "go_path": "/ideliumrunner/worker",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/login",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/login",
+      "go_path": "/login",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/logout",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/logout",
+      "go_path": "/logout",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/oidc/token-exchange",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/oidc/token-exchange",
+      "go_path": "/oidc/token-exchange",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/sso/{identityProvider}/oidc/callback",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/sso/{identityProvider}/oidc/callback",
+      "go_path": "/sso/{identityProvider}/oidc/callback",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/sso/{identityProvider}/saml/callback",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/sso/{identityProvider}/saml/callback",
+      "go_path": "/sso/{identityProvider}/saml/callback",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/sso/{identityProvider}/start",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/sso/{identityProvider}/start",
+      "go_path": "/sso/{identityProvider}/start",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/user",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/user",
+      "go_path": "/user",
+      "owner": "go",
+      "fallback_owner": "laravel"
     }
   ],
   "rollback": {
