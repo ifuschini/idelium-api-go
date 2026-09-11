@@ -36,7 +36,7 @@ Application-level dual writes are prohibited.
 | `legacy-api-keys` | laravel | 2 | 1 | 2 | laravel-primary |
 | `operations` | none | 4 | 0 | 0 | laravel-primary |
 | `parallel-runs` | go | 23 | 17 | 9 | laravel-primary |
-| `platform-catalog` | laravel | 27 | 17 | 27 | laravel-primary |
+| `platform-catalog` | go | 27 | 17 | 27 | laravel-primary |
 | `plugins` | laravel | 7 | 3 | 5 | laravel-primary |
 | `projects` | laravel | 7 | 3 | 7 | laravel-primary |
 | `result-exports` | laravel | 3 | 1 | 3 | laravel-primary |
@@ -92,29 +92,29 @@ does not require database restoration or reverse data replication.
 | `POST` | `/api/admin/importtest` | `tests` | mutation | laravel | yes | 6 |
 | `POST` | `/api/admin/launchtest` | `test-launches` | mutation | laravel | yes | 8 |
 | `GET|HEAD` | `/api/admin/platforms/brands` | `platform-catalog` | read | go | yes | 3 |
-| `POST` | `/api/admin/platforms/brands` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `PUT` | `/api/admin/platforms/brands` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `POST` | `/api/admin/platforms/browsers` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `PUT` | `/api/admin/platforms/browsers` | `platform-catalog` | mutation | laravel | yes | 6 |
+| `POST` | `/api/admin/platforms/brands` | `platform-catalog` | mutation | go | yes | 6 |
+| `PUT` | `/api/admin/platforms/brands` | `platform-catalog` | mutation | go | yes | 6 |
+| `POST` | `/api/admin/platforms/browsers` | `platform-catalog` | mutation | go | yes | 6 |
+| `PUT` | `/api/admin/platforms/browsers` | `platform-catalog` | mutation | go | yes | 6 |
 | `GET|HEAD` | `/api/admin/platforms/browsers/{idOs}` | `platform-catalog` | read | go | yes | 3 |
-| `POST` | `/api/admin/platforms/browserversions` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `PUT` | `/api/admin/platforms/browserversions` | `platform-catalog` | mutation | laravel | yes | 6 |
+| `POST` | `/api/admin/platforms/browserversions` | `platform-catalog` | mutation | go | yes | 6 |
+| `PUT` | `/api/admin/platforms/browserversions` | `platform-catalog` | mutation | go | yes | 6 |
 | `GET|HEAD` | `/api/admin/platforms/browserversions/{idBrowser}` | `platform-catalog` | read | go | yes | 3 |
 | `GET|HEAD` | `/api/admin/platforms/locations` | `platform-catalog` | read | go | yes | 3 |
-| `POST` | `/api/admin/platforms/locations` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `PUT` | `/api/admin/platforms/locations` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `POST` | `/api/admin/platforms/manageplatforms` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `PUT` | `/api/admin/platforms/manageplatforms` | `platform-catalog` | mutation | laravel | yes | 6 |
+| `POST` | `/api/admin/platforms/locations` | `platform-catalog` | mutation | go | yes | 6 |
+| `PUT` | `/api/admin/platforms/locations` | `platform-catalog` | mutation | go | yes | 6 |
+| `POST` | `/api/admin/platforms/manageplatforms` | `platform-catalog` | mutation | go | yes | 6 |
+| `PUT` | `/api/admin/platforms/manageplatforms` | `platform-catalog` | mutation | go | yes | 6 |
 | `GET|HEAD` | `/api/admin/platforms/manageplatforms/{type}` | `platform-catalog` | read | go | yes | 3 |
-| `DELETE` | `/api/admin/platforms/manageplatforms/{type}/{id}` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `POST` | `/api/admin/platforms/models` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `PUT` | `/api/admin/platforms/models` | `platform-catalog` | mutation | laravel | yes | 6 |
+| `DELETE` | `/api/admin/platforms/manageplatforms/{type}/{id}` | `platform-catalog` | mutation | go | yes | 6 |
+| `POST` | `/api/admin/platforms/models` | `platform-catalog` | mutation | go | yes | 6 |
+| `PUT` | `/api/admin/platforms/models` | `platform-catalog` | mutation | go | yes | 6 |
 | `GET|HEAD` | `/api/admin/platforms/models/{idBrand}` | `platform-catalog` | read | go | yes | 3 |
-| `POST` | `/api/admin/platforms/os` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `PUT` | `/api/admin/platforms/os` | `platform-catalog` | mutation | laravel | yes | 6 |
+| `POST` | `/api/admin/platforms/os` | `platform-catalog` | mutation | go | yes | 6 |
+| `PUT` | `/api/admin/platforms/os` | `platform-catalog` | mutation | go | yes | 6 |
 | `GET|HEAD` | `/api/admin/platforms/os/{idType}` | `platform-catalog` | read | go | yes | 3 |
-| `POST` | `/api/admin/platforms/osversion` | `platform-catalog` | mutation | laravel | yes | 6 |
-| `PUT` | `/api/admin/platforms/osversion` | `platform-catalog` | mutation | laravel | yes | 6 |
+| `POST` | `/api/admin/platforms/osversion` | `platform-catalog` | mutation | go | yes | 6 |
+| `PUT` | `/api/admin/platforms/osversion` | `platform-catalog` | mutation | go | yes | 6 |
 | `GET|HEAD` | `/api/admin/platforms/osversion/{idOs}` | `platform-catalog` | read | go | yes | 3 |
 | `GET|HEAD` | `/api/admin/platforms/status` | `platform-catalog` | read | go | yes | 3 |
 | `GET|HEAD` | `/api/admin/platforms/types` | `platform-catalog` | read | go | yes | 3 |

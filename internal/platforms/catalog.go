@@ -422,3 +422,11 @@ type CatalogRepository interface {
 	ListManagedPlatforms(ctx context.Context, query ManagedPlatformQuery) (ManagedPlatformPage, error)
 	ListLaunchTargets(ctx context.Context, projectID int64) ([]LaunchTargetItem, error)
 }
+
+// CatalogMutationRepository persists administrator-managed global catalog rows.
+// Kind values are a closed allowlist implemented by the MySQL adapter.
+type CatalogMutationRepository interface {
+	CreateCatalog(ctx context.Context, kind string, values map[string]any) error
+	UpdateCatalog(ctx context.Context, kind string, id int64, values map[string]any) error
+	DeleteManagedPlatform(ctx context.Context, id int64) error
+}

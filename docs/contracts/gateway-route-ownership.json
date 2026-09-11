@@ -15,7 +15,10 @@
   "routes": [
     {
       "route_id": "GET|HEAD /api/admin/platforms/brands",
-      "methods": ["GET", "HEAD"],
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
       "public_path": "/api/admin/platforms/brands",
       "go_path": "/admin/platforms/brands",
       "owner": "go",
@@ -23,7 +26,10 @@
     },
     {
       "route_id": "GET|HEAD /api/admin/platforms/browsers/{idOs}",
-      "methods": ["GET", "HEAD"],
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
       "public_path": "/api/admin/platforms/browsers/{idOs}",
       "go_path": "/admin/platforms/browsers/{idOs}",
       "owner": "go",
@@ -31,7 +37,10 @@
     },
     {
       "route_id": "GET|HEAD /api/admin/platforms/browserversions/{idBrowser}",
-      "methods": ["GET", "HEAD"],
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
       "public_path": "/api/admin/platforms/browserversions/{idBrowser}",
       "go_path": "/admin/platforms/browserversions/{idBrowser}",
       "owner": "go",
@@ -39,7 +48,10 @@
     },
     {
       "route_id": "GET|HEAD /api/admin/platforms/locations",
-      "methods": ["GET", "HEAD"],
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
       "public_path": "/api/admin/platforms/locations",
       "go_path": "/admin/platforms/locations",
       "owner": "go",
@@ -47,7 +59,10 @@
     },
     {
       "route_id": "GET|HEAD /api/admin/platforms/manageplatforms/{type}",
-      "methods": ["GET", "HEAD"],
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
       "public_path": "/api/admin/platforms/manageplatforms/{type}",
       "go_path": "/admin/platforms/manageplatforms/{type}",
       "owner": "go",
@@ -55,7 +70,10 @@
     },
     {
       "route_id": "GET|HEAD /api/admin/platforms/models/{idBrand}",
-      "methods": ["GET", "HEAD"],
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
       "public_path": "/api/admin/platforms/models/{idBrand}",
       "go_path": "/admin/platforms/models/{idBrand}",
       "owner": "go",
@@ -63,7 +81,10 @@
     },
     {
       "route_id": "GET|HEAD /api/admin/platforms/os/{idType}",
-      "methods": ["GET", "HEAD"],
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
       "public_path": "/api/admin/platforms/os/{idType}",
       "go_path": "/admin/platforms/os/{idType}",
       "owner": "go",
@@ -71,7 +92,10 @@
     },
     {
       "route_id": "GET|HEAD /api/admin/platforms/osversion/{idOs}",
-      "methods": ["GET", "HEAD"],
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
       "public_path": "/api/admin/platforms/osversion/{idOs}",
       "go_path": "/admin/platforms/osversion/{idOs}",
       "owner": "go",
@@ -79,7 +103,10 @@
     },
     {
       "route_id": "GET|HEAD /api/admin/platforms/status",
-      "methods": ["GET", "HEAD"],
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
       "public_path": "/api/admin/platforms/status",
       "go_path": "/admin/platforms/status",
       "owner": "go",
@@ -87,9 +114,182 @@
     },
     {
       "route_id": "GET|HEAD /api/admin/platforms/types",
-      "methods": ["GET", "HEAD"],
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
       "public_path": "/api/admin/platforms/types",
       "go_path": "/admin/platforms/types",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/platforms/brands",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/platforms/brands",
+      "go_path": "/admin/platforms/brands",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/platforms/brands",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/platforms/brands",
+      "go_path": "/admin/platforms/brands",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/platforms/browsers",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/platforms/browsers",
+      "go_path": "/admin/platforms/browsers",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/platforms/browsers",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/platforms/browsers",
+      "go_path": "/admin/platforms/browsers",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/platforms/browserversions",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/platforms/browserversions",
+      "go_path": "/admin/platforms/browserversions",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/platforms/browserversions",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/platforms/browserversions",
+      "go_path": "/admin/platforms/browserversions",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/platforms/locations",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/platforms/locations",
+      "go_path": "/admin/platforms/locations",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/platforms/locations",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/platforms/locations",
+      "go_path": "/admin/platforms/locations",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/platforms/manageplatforms",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/platforms/manageplatforms",
+      "go_path": "/admin/platforms/manageplatforms",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/platforms/manageplatforms",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/platforms/manageplatforms",
+      "go_path": "/admin/platforms/manageplatforms",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "DELETE /api/admin/platforms/manageplatforms/{type}/{id}",
+      "methods": [
+        "DELETE"
+      ],
+      "public_path": "/api/admin/platforms/manageplatforms/{type}/{id}",
+      "go_path": "/admin/platforms/manageplatforms/{type}/{id}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/platforms/models",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/platforms/models",
+      "go_path": "/admin/platforms/models",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/platforms/models",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/platforms/models",
+      "go_path": "/admin/platforms/models",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/platforms/os",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/platforms/os",
+      "go_path": "/admin/platforms/os",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/platforms/os",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/platforms/os",
+      "go_path": "/admin/platforms/os",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/platforms/osversion",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/platforms/osversion",
+      "go_path": "/admin/platforms/osversion",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/platforms/osversion",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/platforms/osversion",
+      "go_path": "/admin/platforms/osversion",
       "owner": "go",
       "fallback_owner": "laravel"
     }

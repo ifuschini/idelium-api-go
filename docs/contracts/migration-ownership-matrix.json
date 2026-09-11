@@ -15,8 +15,8 @@
     "route_count": 168,
     "mutation_route_count": 98,
     "route_owner_counts": {
-      "go": 46,
-      "laravel": 122
+      "go": 63,
+      "laravel": 105
     }
   },
   "aggregates": [
@@ -212,7 +212,7 @@
     },
     {
       "aggregate": "platform-catalog",
-      "mutation_owner": "laravel",
+      "mutation_owner": "go",
       "route_count": 27,
       "mutation_route_count": 17,
       "tenant_scoped_route_count": 27,
@@ -638,8 +638,8 @@
       "path": "/api/admin/platforms/brands",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -649,8 +649,8 @@
       "path": "/api/admin/platforms/brands",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -660,8 +660,8 @@
       "path": "/api/admin/platforms/browsers",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -671,8 +671,8 @@
       "path": "/api/admin/platforms/browsers",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -693,8 +693,8 @@
       "path": "/api/admin/platforms/browserversions",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -704,8 +704,8 @@
       "path": "/api/admin/platforms/browserversions",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -737,8 +737,8 @@
       "path": "/api/admin/platforms/locations",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -748,8 +748,8 @@
       "path": "/api/admin/platforms/locations",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -759,8 +759,8 @@
       "path": "/api/admin/platforms/manageplatforms",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -770,8 +770,8 @@
       "path": "/api/admin/platforms/manageplatforms",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -792,8 +792,8 @@
       "path": "/api/admin/platforms/manageplatforms/{type}/{id}",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -803,8 +803,8 @@
       "path": "/api/admin/platforms/models",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -814,8 +814,8 @@
       "path": "/api/admin/platforms/models",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -836,8 +836,8 @@
       "path": "/api/admin/platforms/os",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -847,8 +847,8 @@
       "path": "/api/admin/platforms/os",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -869,8 +869,8 @@
       "path": "/api/admin/platforms/osversion",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },
@@ -880,8 +880,8 @@
       "path": "/api/admin/platforms/osversion",
       "aggregate": "platform-catalog",
       "operation_kind": "mutation",
-      "owner": "laravel",
-      "rollout_status": "laravel-owned",
+      "owner": "go",
+      "rollout_status": "go-owned",
       "tenant_context": true,
       "migration_wave": 6
     },

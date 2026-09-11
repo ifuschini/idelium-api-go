@@ -12,10 +12,10 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | Cutover status | `blocked` |
 | Production enabled | `false` |
 | Route count | 168 |
-| Go-owned routes | 46 |
+| Go-owned routes | 63 |
 | Go fail-closed routes | 0 |
-| Laravel blocker routes | 122 |
-| Gateway Go routes | 10 |
+| Laravel blocker routes | 105 |
+| Gateway Go routes | 27 |
 
 ## Staging policy
 
@@ -46,7 +46,6 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `integrations` | 7 |
 | `legacy-api-keys` | 2 |
 | `operations` | 4 |
-| `platform-catalog` | 17 |
 | `plugins` | 5 |
 | `projects` | 7 |
 | `result-exports` | 3 |
@@ -90,29 +89,29 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `POST` | `/api/admin/importtest` | `tests` | `blocked` | `laravel` | `keep-on-laravel` |
 | `POST` | `/api/admin/launchtest` | `test-launches` | `blocked` | `laravel` | `keep-on-laravel` |
 | `GET|HEAD` | `/api/admin/platforms/brands` | `platform-catalog` | `ready` | `go` | `send-to-go` |
-| `POST` | `/api/admin/platforms/brands` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/platforms/brands` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/platforms/browsers` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/platforms/browsers` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
+| `POST` | `/api/admin/platforms/brands` | `platform-catalog` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/platforms/brands` | `platform-catalog` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/platforms/browsers` | `platform-catalog` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/platforms/browsers` | `platform-catalog` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/platforms/browsers/{idOs}` | `platform-catalog` | `ready` | `go` | `send-to-go` |
-| `POST` | `/api/admin/platforms/browserversions` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/platforms/browserversions` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
+| `POST` | `/api/admin/platforms/browserversions` | `platform-catalog` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/platforms/browserversions` | `platform-catalog` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/platforms/browserversions/{idBrowser}` | `platform-catalog` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/platforms/locations` | `platform-catalog` | `ready` | `go` | `send-to-go` |
-| `POST` | `/api/admin/platforms/locations` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/platforms/locations` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/platforms/manageplatforms` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/platforms/manageplatforms` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
+| `POST` | `/api/admin/platforms/locations` | `platform-catalog` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/platforms/locations` | `platform-catalog` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/platforms/manageplatforms` | `platform-catalog` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/platforms/manageplatforms` | `platform-catalog` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/platforms/manageplatforms/{type}` | `platform-catalog` | `ready` | `go` | `send-to-go` |
-| `DELETE` | `/api/admin/platforms/manageplatforms/{type}/{id}` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/platforms/models` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/platforms/models` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
+| `DELETE` | `/api/admin/platforms/manageplatforms/{type}/{id}` | `platform-catalog` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/platforms/models` | `platform-catalog` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/platforms/models` | `platform-catalog` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/platforms/models/{idBrand}` | `platform-catalog` | `ready` | `go` | `send-to-go` |
-| `POST` | `/api/admin/platforms/os` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/platforms/os` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
+| `POST` | `/api/admin/platforms/os` | `platform-catalog` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/platforms/os` | `platform-catalog` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/platforms/os/{idType}` | `platform-catalog` | `ready` | `go` | `send-to-go` |
-| `POST` | `/api/admin/platforms/osversion` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/platforms/osversion` | `platform-catalog` | `blocked` | `laravel` | `keep-on-laravel` |
+| `POST` | `/api/admin/platforms/osversion` | `platform-catalog` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/platforms/osversion` | `platform-catalog` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/platforms/osversion/{idOs}` | `platform-catalog` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/platforms/status` | `platform-catalog` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/platforms/types` | `platform-catalog` | `ready` | `go` | `send-to-go` |

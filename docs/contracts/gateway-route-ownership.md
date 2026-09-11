@@ -1,6 +1,7 @@
 # Gateway Route Ownership
 
-This file records the Wave 3 gateway routing intent for platform catalog reads.
+This file records the gateway routing intent for platform catalog reads and the
+administrator mutation routes implemented by the Go service.
 It complements [`route-rollout-overrides.json`](route-rollout-overrides.json):
 the rollout override says which public Laravel route is Go-owned, while this
 gateway contract says how a gateway should route that public path.
@@ -19,8 +20,8 @@ operation without the `/api` gateway prefix, for example:
 | `/api/admin/platforms/status` | `/admin/platforms/status` |
 | `/api/admin/platforms/browsers/{idOs}` | `/admin/platforms/browsers/{idOs}` |
 
-Only `GET` and `HEAD` are routed to Go in this slice. Platform catalog
-mutations remain Laravel-owned until the Wave 6 mutation aggregate.
+Platform catalog reads and Wave 6 administrator mutations are routed to Go.
+All entries retain Laravel as the explicit route-level fallback.
 
 ## Rollback
 

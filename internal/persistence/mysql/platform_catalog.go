@@ -10,6 +10,104 @@ import (
 	"github.com/idelium/idelium-api-go/internal/platforms"
 )
 
+var catalogMutationColumns = map[string]struct {
+	table    string
+	columns  []string
+	required []string
+}{
+	"brand":            {table: "brand_devices", columns: []string{"brand"}, required: []string{"brand"}},
+	"browser":          {table: "browsers", columns: []string{"name", "idOs"}, required: []string{"name", "idOs"}},
+	"browser-version":  {table: "version_browsers", columns: []string{"version", "idBrowser"}, required: []string{"version", "idBrowser"}},
+	"location":         {table: "locations", columns: []string{"name"}, required: []string{"name"}},
+	"managed-platform": {table: "platforms", columns: []string{"type", "hostname", "location", "os", "osversion", "brand", "browser", "brandDescription", "osDescription", "browserDescription", "status"}, required: []string{"type", "hostname", "location", "os", "osversion", "brand", "browser", "status"}},
+	"model":            {table: "model_devices", columns: []string{"model", "idBrand"}, required: []string{"model", "idBrand"}},
+	"os":               {table: "os", columns: []string{"name", "type"}, required: []string{"name", "type"}},
+	"os-version":       {table: "version_os", columns: []string{"version", "idOs"}, required: []string{"version", "idOs"}},
+}
+
+// CreateCatalog inserts one administrator-managed global catalog row.
+func (repository *PlatformCatalogRepository) CreateCatalog(ctx context.Context, kind string, values map[string]any) error {
+	definition, ok := catalogMutationColumns[kind]
+	if !ok {
+		return fmt.Errorf("unsupported platform catalog kind %q", kind)
+	}
+	columns, args, err := mutationValues(definition.columns, definition.required, values)
+	if err != nil {
+		return err
+	}
+	placeholders := make([]string, len(columns))
+	for index := range placeholders {
+		placeholders[index] = "?"
+	}
+	query := "INSERT INTO " + definition.table + " (" + strings.Join(columns, ", ") + ") VALUES (" + strings.Join(placeholders, ", ") + ")"
+	if _, err := repository.database.ExecContext(ctx, query, args...); err != nil {
+		return fmt.Errorf("insert platform catalog row: %w", err)
+	}
+	return nil
+}
+
+// UpdateCatalog updates one administrator-managed global catalog row.
+func (repository *PlatformCatalogRepository) UpdateCatalog(ctx context.Context, kind string, id int64, values map[string]any) error {
+	definition, ok := catalogMutationColumns[kind]
+	if !ok || id <= 0 {
+		return fmt.Errorf("unsupported platform catalog update")
+	}
+	columns, args, err := mutationValues(definition.columns, definition.required, values)
+	if err != nil {
+		return err
+	}
+	assignments := make([]string, len(columns))
+	for index, column := range columns {
+		assignments[index] = column + " = ?"
+	}
+	args = append(args, id)
+	query := "UPDATE " + definition.table + " SET " + strings.Join(assignments, ", ") + ", updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+	result, err := repository.database.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("update platform catalog row: %w", err)
+	}
+	if affected, _ := result.RowsAffected(); affected != 1 {
+		return fmt.Errorf("platform catalog row not found")
+	}
+	return nil
+}
+
+// DeleteManagedPlatform deletes one managed execution platform.
+func (repository *PlatformCatalogRepository) DeleteManagedPlatform(ctx context.Context, id int64) error {
+	if id <= 0 {
+		return fmt.Errorf("managed platform identifier must be positive")
+	}
+	result, err := repository.database.ExecContext(ctx, "DELETE FROM platforms WHERE id = ?", id)
+	if err != nil {
+		return fmt.Errorf("delete managed platform: %w", err)
+	}
+	if affected, _ := result.RowsAffected(); affected != 1 {
+		return fmt.Errorf("managed platform not found")
+	}
+	return nil
+}
+
+func mutationValues(columns, required []string, values map[string]any) ([]string, []any, error) {
+	for _, field := range required {
+		value, ok := values[field]
+		if !ok || value == nil || (value == "") {
+			return nil, nil, fmt.Errorf("missing required platform field %q", field)
+		}
+	}
+	selected := make([]string, 0, len(columns))
+	args := make([]any, 0, len(columns))
+	for _, column := range columns {
+		if value, ok := values[column]; ok {
+			selected = append(selected, column)
+			args = append(args, value)
+		}
+	}
+	if len(selected) == 0 {
+		return nil, nil, fmt.Errorf("platform mutation has no fields")
+	}
+	return selected, args, nil
+}
+
 // PlatformCatalogRepository reads legacy global platform catalog tables.
 type PlatformCatalogRepository struct {
 	database *sql.DB

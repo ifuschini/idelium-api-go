@@ -1,13 +1,17 @@
 package platforms
 
 import (
+	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/idelium/idelium-api-go/internal/browserauth"
 	"github.com/idelium/idelium-api-go/internal/httpx"
 )
 
@@ -15,11 +19,156 @@ import (
 type Handler struct {
 	repository CatalogRepository
 	logger     *slog.Logger
+	sessions   browserauth.SessionRepository
 }
 
 // NewHandler creates a platform catalog handler.
-func NewHandler(repository CatalogRepository, logger *slog.Logger) *Handler {
-	return &Handler{repository: repository, logger: logger}
+func NewHandler(repository CatalogRepository, logger *slog.Logger, sessions ...browserauth.SessionRepository) *Handler {
+	var sessionRepository browserauth.SessionRepository
+	if len(sessions) > 0 {
+		sessionRepository = sessions[0]
+	}
+	return &Handler{repository: repository, logger: logger, sessions: sessionRepository}
+}
+
+func (handler *Handler) mutate(writer http.ResponseWriter, request *http.Request, kind string, id *int64) {
+	if handler.sessions == nil {
+		httpx.WriteError(writer, request, http.StatusServiceUnavailable, "PLATFORM_CATALOG_UNAVAILABLE", "The platform catalog is not available.")
+		return
+	}
+	user, ok := browserauth.AuthenticateRequest(request.Context(), request, handler.sessions, time.Now())
+	if !ok {
+		httpx.WriteError(writer, request, http.StatusUnauthorized, "UNAUTHENTICATED", "An active browser session is required.")
+		return
+	}
+	if user.Role != 1 {
+		httpx.WriteError(writer, request, http.StatusForbidden, "FORBIDDEN", "Administrator access is required.")
+		return
+	}
+	repository, ok := handler.repository.(CatalogMutationRepository)
+	if !ok {
+		httpx.WriteError(writer, request, http.StatusServiceUnavailable, "PLATFORM_CATALOG_UNAVAILABLE", "The platform catalog is not available.")
+		return
+	}
+	values := map[string]any{}
+	decoder := json.NewDecoder(io.LimitReader(request.Body, 64<<10))
+	decoder.UseNumber()
+	if err := decoder.Decode(&values); err != nil {
+		httpx.WriteError(writer, request, http.StatusUnprocessableEntity, "INVALID_PLATFORM_PAYLOAD", "The platform catalog payload is invalid.")
+		return
+	}
+	var err error
+	if id == nil && request.Method == http.MethodPut {
+		if raw, present := values["id"]; present {
+			number, valid := raw.(json.Number)
+			if !valid {
+				httpx.WriteError(writer, request, http.StatusUnprocessableEntity, "INVALID_PLATFORM_ID", "The platform identifier must be a positive integer.")
+				return
+			}
+			parsed, parseErr := number.Int64()
+			if parseErr != nil || parsed <= 0 {
+				httpx.WriteError(writer, request, http.StatusUnprocessableEntity, "INVALID_PLATFORM_ID", "The platform identifier must be a positive integer.")
+				return
+			}
+			id = &parsed
+		}
+		if id == nil {
+			httpx.WriteError(writer, request, http.StatusUnprocessableEntity, "INVALID_PLATFORM_ID", "The platform identifier is required for updates.")
+			return
+		}
+	}
+	if id == nil {
+		err = repository.CreateCatalog(request.Context(), kind, values)
+	} else {
+		err = repository.UpdateCatalog(request.Context(), kind, *id, values)
+	}
+	if err != nil {
+		handler.logger.ErrorContext(request.Context(), "mutate platform catalog failed", "kind", kind, "error", err)
+		httpx.WriteError(writer, request, http.StatusUnprocessableEntity, "PLATFORM_CATALOG_MUTATION_FAILED", "The platform catalog mutation was rejected.")
+		return
+	}
+	httpx.WriteJSON(writer, http.StatusOK, map[string]any{"status": "ok"})
+}
+
+func (handler *Handler) DeleteManagedPlatform(writer http.ResponseWriter, request *http.Request) {
+	if handler.sessions == nil {
+		httpx.WriteError(writer, request, http.StatusServiceUnavailable, "PLATFORM_CATALOG_UNAVAILABLE", "The platform catalog is not available.")
+		return
+	}
+	user, ok := browserauth.AuthenticateRequest(request.Context(), request, handler.sessions, time.Now())
+	if !ok {
+		httpx.WriteError(writer, request, http.StatusUnauthorized, "UNAUTHENTICATED", "An active browser session is required.")
+		return
+	}
+	if user.Role != 1 {
+		httpx.WriteError(writer, request, http.StatusForbidden, "FORBIDDEN", "Administrator access is required.")
+		return
+	}
+	repository, ok := handler.repository.(CatalogMutationRepository)
+	if !ok {
+		httpx.WriteError(writer, request, http.StatusServiceUnavailable, "PLATFORM_CATALOG_UNAVAILABLE", "The platform catalog is not available.")
+		return
+	}
+	id, err := parsePositivePathID(chi.URLParam(request, "id"))
+	if err != nil {
+		httpx.WriteError(writer, request, http.StatusBadRequest, "INVALID_PLATFORM_ID", "The platform identifier must be a positive integer.")
+		return
+	}
+	if err := repository.DeleteManagedPlatform(request.Context(), id); err != nil {
+		handler.logger.ErrorContext(request.Context(), "delete managed platform failed", "error", err)
+		httpx.WriteError(writer, request, http.StatusUnprocessableEntity, "PLATFORM_CATALOG_MUTATION_FAILED", "The platform catalog mutation was rejected.")
+		return
+	}
+	httpx.WriteJSON(writer, http.StatusOK, map[string]any{"status": "ok"})
+}
+
+func (handler *Handler) CreateBrand(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "brand", nil)
+}
+func (handler *Handler) UpdateBrand(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "brand", nil)
+}
+func (handler *Handler) CreateBrowser(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "browser", nil)
+}
+func (handler *Handler) UpdateBrowser(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "browser", nil)
+}
+func (handler *Handler) CreateBrowserVersion(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "browser-version", nil)
+}
+func (handler *Handler) UpdateBrowserVersion(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "browser-version", nil)
+}
+func (handler *Handler) CreateLocation(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "location", nil)
+}
+func (handler *Handler) UpdateLocation(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "location", nil)
+}
+func (handler *Handler) CreateManagedPlatform(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "managed-platform", nil)
+}
+func (handler *Handler) UpdateManagedPlatform(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "managed-platform", nil)
+}
+func (handler *Handler) CreateModel(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "model", nil)
+}
+func (handler *Handler) UpdateModel(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "model", nil)
+}
+func (handler *Handler) CreateOperatingSystem(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "os", nil)
+}
+func (handler *Handler) UpdateOperatingSystem(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "os", nil)
+}
+func (handler *Handler) CreateOperatingSystemVersion(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "os-version", nil)
+}
+func (handler *Handler) UpdateOperatingSystemVersion(w http.ResponseWriter, r *http.Request) {
+	handler.mutate(w, r, "os-version", nil)
 }
 
 // Types returns the legacy platform type list contract.
