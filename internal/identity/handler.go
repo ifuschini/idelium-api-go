@@ -279,9 +279,10 @@ func (handler Handler) SCIMUsers(writer http.ResponseWriter, request *http.Reque
 			return
 		}
 		var in struct {
-			ID          int64  `json:"id"`
-			Name, Email string `json:"name"`
-			Active      *bool  `json:"active"`
+			ID     int64  `json:"id"`
+			Name   string `json:"name"`
+			Email  string `json:"email"`
+			Active *bool  `json:"active"`
 		}
 		if json.NewDecoder(http.MaxBytesReader(writer, request.Body, 64<<10)).Decode(&in) != nil || !strings.Contains(in.Email, "@") {
 			httpx.WriteError(writer, request, 400, "INVALID_SCIM_USER", "A valid SCIM email is required.")
