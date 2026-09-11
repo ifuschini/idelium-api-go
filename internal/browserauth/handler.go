@@ -170,6 +170,9 @@ func (h *Handler) Login(writer http.ResponseWriter, request *http.Request) {
 	var input struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
+		// Token is the optional legacy reCAPTCHA field emitted by the Web FE.
+		// Go validates the browser session and does not expose or persist it.
+		Token *string `json:"token"`
 	}
 	decoder := json.NewDecoder(http.MaxBytesReader(writer, request.Body, 16<<10))
 	decoder.DisallowUnknownFields()

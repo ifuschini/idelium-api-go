@@ -378,6 +378,19 @@ func TestLoginCreatesOpaqueSecureSessionForActiveTenantUser(t *testing.T) {
 	}
 }
 
+func TestLoginAcceptsLegacyFrontendTokenField(t *testing.T) {
+	hash, err := bcrypt.GenerateFromPassword([]byte("SensitivePassword123!"), bcrypt.MinCost)
+	if err != nil {
+		t.Fatal(err)
+	}
+	handler := NewHandler(usersStub{user: User{ID: 7, TenantID: 11, Email: "browser@example.test", PasswordHash: string(hash), Status: "active"}}, &sessionsStub{}, testLogger())
+	response := httptest.NewRecorder()
+	handler.Login(response, httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(`{"email":"browser@example.test","password":"SensitivePassword123!","token":null}`)))
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected 200 for the frontend-compatible token field, got %d: %s", response.Code, response.Body.String())
+	}
+}
+
 func TestLoginRejectsBadOrDisabledCredentialsWithLaravelCompatibleResponse(t *testing.T) {
 	hash, err := bcrypt.GenerateFromPassword([]byte("correct"), bcrypt.MinCost)
 	if err != nil {
