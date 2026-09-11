@@ -6,9 +6,15 @@ CREATE TABLE costumers (
   apiKey VARCHAR(255) NULL,
   apiKeyExpiresAt TIMESTAMP NULL,
   apiKeyLastUsedAt TIMESTAMP NULL,
+  licenseExpiration TIMESTAMP NULL,
   licenseExpiredAt TIMESTAMP NULL,
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL
+);
+
+CREATE TABLE roles (
+  id INT PRIMARY KEY,
+  name VARCHAR(64) NOT NULL UNIQUE
 );
 
 CREATE TABLE users (

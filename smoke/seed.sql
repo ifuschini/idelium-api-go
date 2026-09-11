@@ -4,6 +4,9 @@ INSERT INTO costumers (id, costumer, description, apiKey, apiKeyExpiresAt)
 VALUES (9001, 'fixture-customer-smoke', 'Disposable smoke tenant',
         'fixture-cli-key-9001', CURRENT_TIMESTAMP + INTERVAL 1 DAY);
 
+INSERT INTO roles (id, name)
+VALUES (1, 'Administrator'), (2, 'User'), (3, 'Manager');
+
 INSERT INTO users (id, name, email, password, role, idCostumer, status)
 VALUES (9001, 'Smoke Browser User', 'fixture-smoke@example.invalid',
         '$2y$12$vjGbzVIBFwfjJG21xaVEUua1ATd1RcszC5XikxqtWa8qDzCvv3NWy',
