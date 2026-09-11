@@ -185,6 +185,20 @@ def build_manifest(
                 }
             )
             go_owned += 1
+        elif route["aggregate"] == "operations":
+            # The Laravel welcome/cache endpoints are deployment operations, not
+            # API cutover traffic. Keep them explicitly on Laravel without
+            # blocking the application API handover.
+            entry.update(
+                {
+                    "staging_state": "laravel-operational",
+                    "staging_owner": "laravel",
+                    "routing_action": "keep-on-laravel",
+                    "gateway_route_configured": False,
+                    "fallback_owner": "laravel",
+                    "exclusion_reason": "Deployment-only endpoint outside the Go API cutover.",
+                }
+            )
         elif gate:
             entry.update(
                 {

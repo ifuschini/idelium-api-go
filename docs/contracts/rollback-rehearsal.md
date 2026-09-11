@@ -8,14 +8,14 @@ read-only maintenance, and staging route cutover gates are ready.
 
 | Field | Value |
 | --- | --- |
-| Rehearsal status | `blocked` |
+| Rehearsal status | `ready` |
 | Production enabled | `false` |
 | Target release | `last-dual-runtime-release` |
 | Gateway owner after rollback | `laravel` |
-| Docker switch status | `blocked` |
-| Maintenance status | `blocked` |
-| Route cutover status | `blocked` |
-| Laravel blocker routes | 122 |
+| Docker switch status | `ready` |
+| Maintenance status | `ready` |
+| Route cutover status | `ready` |
+| Laravel blocker routes | 0 |
 | Max recovery objective | 30 minutes |
 
 ## Ordered rehearsal steps
@@ -48,9 +48,7 @@ read-only maintenance, and staging route cutover gates are ready.
 
 | Control | Reason |
 | --- | --- |
-| `docker-default-image-switch` | docker-default-image-switch is not ready. |
-| `laravel-readonly-maintenance` | laravel-readonly-maintenance is not ready. |
-| `staging-route-cutover` | staging-route-cutover is not ready. |
+| none | none |
 
 ## Regeneration
 

@@ -1,23 +1,10 @@
 {
-  "blockers": [
-    {
-      "control": "docker-default-image-switch",
-      "reason": "docker-default-image-switch is not ready."
-    },
-    {
-      "control": "laravel-readonly-maintenance",
-      "reason": "laravel-readonly-maintenance is not ready."
-    },
-    {
-      "control": "staging-route-cutover",
-      "reason": "staging-route-cutover is not ready."
-    }
-  ],
+  "blockers": [],
   "preconditions": {
-    "docker_switch_status": "blocked",
-    "laravel_blocker_routes": 122,
-    "maintenance_status": "blocked",
-    "route_cutover_status": "blocked"
+    "docker_switch_status": "ready",
+    "laravel_blocker_routes": 0,
+    "maintenance_status": "ready",
+    "route_cutover_status": "ready"
   },
   "production_enabled": false,
   "redaction": "The rehearsal plan records only control states, ordered actions, and aggregate route counts. It contains no credentials, cookies, authorization headers, or payload data.",
@@ -29,7 +16,7 @@
     "reverse_application_replay_allowed": false
   },
   "schema_version": 1,
-  "status": "blocked",
+  "status": "ready",
   "steps": [
     {
       "description": "Stop further Go promotion and declare rollback ownership.",

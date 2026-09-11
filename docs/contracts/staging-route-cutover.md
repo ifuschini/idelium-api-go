@@ -9,13 +9,13 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 
 | Field | Value |
 | --- | --- |
-| Cutover status | `blocked` |
+| Cutover status | `ready` |
 | Production enabled | `false` |
 | Route count | 168 |
-| Go-owned routes | 85 |
-| Go fail-closed routes | 0 |
-| Laravel blocker routes | 83 |
-| Gateway Go routes | 85 |
+| Go-owned routes | 165 |
+| Go fail-closed routes | 1 |
+| Laravel blocker routes | 0 |
+| Gateway Go routes | 164 |
 
 ## Staging policy
 
@@ -31,59 +31,41 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 
 | Aggregate | Blocked routes |
 | --- | ---: |
-| `access-control` | 3 |
-| `accounts` | 4 |
-| `agent-registry` | 3 |
-| `artifacts` | 7 |
-| `asset-versions` | 5 |
-| `audit-events` | 1 |
-| `customers` | 6 |
-| `environments` | 5 |
-| `execution-results` | 3 |
-| `grid-jobs` | 4 |
-| `integrations` | 7 |
-| `operations` | 4 |
-| `plugins` | 5 |
-| `projects` | 7 |
-| `result-exports` | 3 |
-| `steps` | 6 |
-| `test-cycles` | 4 |
-| `test-launches` | 1 |
-| `tests` | 5 |
+| none | 0 |
 
 ## Route decisions
 
 | Method | Path | Aggregate | State | Staging owner | Action |
 | --- | --- | --- | --- | --- | --- |
-| `GET|HEAD` | `/` | `operations` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/accounts` | `accounts` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/accounts` | `accounts` | `blocked` | `laravel` | `keep-on-laravel` |
-| `DELETE` | `/api/admin/accounts/{idUser}` | `accounts` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/accounts/{idUser}` | `accounts` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/agents` | `agent-registry` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/agents/{agentRegistration}/status` | `agent-registry` | `blocked` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/` | `operations` | `laravel-operational` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/api/admin/accounts` | `accounts` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/accounts` | `accounts` | `ready` | `go` | `send-to-go` |
+| `DELETE` | `/api/admin/accounts/{idUser}` | `accounts` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/accounts/{idUser}` | `accounts` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/agents` | `agent-registry` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/agents/{agentRegistration}/status` | `agent-registry` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/apikey` | `legacy-api-keys` | `ready` | `go` | `send-to-go` |
 | `PUT` | `/api/admin/apikey` | `legacy-api-keys` | `ready` | `go` | `send-to-go` |
-| `GET|HEAD` | `/api/admin/costumers` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/costumers` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |
-| `DELETE` | `/api/admin/costumers/{idCostumer}` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/costumers/{idCostumer}` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/environments` | `environments` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/environments/{idProject}` | `environments` | `blocked` | `laravel` | `keep-on-laravel` |
-| `DELETE` | `/api/admin/environments/{idProject}/{environment}` | `environments` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/environments/{idProject}/{environment}` | `environments` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/environments/{idProject}/{environment}` | `environments` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/grid/bulk-jobs` | `grid-jobs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}` | `grid-jobs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}/export` | `grid-jobs` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/grid/query-snapshots` | `grid-jobs` | `blocked` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/api/admin/costumers` | `customers` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/costumers` | `customers` | `ready` | `go` | `send-to-go` |
+| `DELETE` | `/api/admin/costumers/{idCostumer}` | `customers` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/costumers/{idCostumer}` | `customers` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/environments` | `environments` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/environments/{idProject}` | `environments` | `ready` | `go` | `send-to-go` |
+| `DELETE` | `/api/admin/environments/{idProject}/{environment}` | `environments` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/environments/{idProject}/{environment}` | `environments` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/environments/{idProject}/{environment}` | `environments` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/grid/bulk-jobs` | `grid-jobs` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}` | `grid-jobs` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/grid/bulk-jobs/{jobId}/export` | `grid-jobs` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/grid/query-snapshots` | `grid-jobs` | `ready` | `go` | `send-to-go` |
 | `PUT` | `/api/admin/identity/accounts/{user}/break-glass` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/identity/accounts/{user}/break-glass/test` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/identity/providers` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/identity/providers` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/identity/providers/{identityProvider}/scim/users` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
-| `POST` | `/api/admin/importtest` | `tests` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/launchtest` | `test-launches` | `blocked` | `laravel` | `keep-on-laravel` |
+| `POST` | `/api/admin/importtest` | `tests` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/launchtest` | `test-launches` | `gated` | `go-fail-closed` | `send-to-go-gate` |
 | `GET|HEAD` | `/api/admin/platforms/brands` | `platform-catalog` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/platforms/brands` | `platform-catalog` | `ready` | `go` | `send-to-go` |
 | `PUT` | `/api/admin/platforms/brands` | `platform-catalog` | `ready` | `go` | `send-to-go` |
@@ -111,31 +93,31 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `GET|HEAD` | `/api/admin/platforms/osversion/{idOs}` | `platform-catalog` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/platforms/status` | `platform-catalog` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/platforms/types` | `platform-catalog` | `ready` | `go` | `send-to-go` |
-| `POST` | `/api/admin/plugins` | `plugins` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/plugins/{idProject}` | `plugins` | `blocked` | `laravel` | `keep-on-laravel` |
-| `DELETE` | `/api/admin/plugins/{idProject}/{plugin}` | `plugins` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/plugins/{idProject}/{plugin}` | `plugins` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/plugins/{idProject}/{step}` | `plugins` | `blocked` | `laravel` | `keep-on-laravel` |
+| `POST` | `/api/admin/plugins` | `plugins` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/plugins/{idProject}` | `plugins` | `ready` | `go` | `send-to-go` |
+| `DELETE` | `/api/admin/plugins/{idProject}/{plugin}` | `plugins` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/plugins/{idProject}/{plugin}` | `plugins` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/plugins/{idProject}/{step}` | `plugins` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/profile` | `browser-identity` | `ready` | `go` | `send-to-go` |
 | `PUT` | `/api/admin/profile` | `browser-identity` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/profile/mfa/confirm` | `browser-identity` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/profile/mfa/enroll` | `browser-identity` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/profile/mfa/step-up` | `browser-identity` | `ready` | `go` | `send-to-go` |
-| `GET|HEAD` | `/api/admin/projects` | `projects` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects` | `projects` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/create` | `projects` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}` | `asset-versions` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}` | `asset-versions` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-versions/{assetVersion}` | `asset-versions` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events` | `asset-versions` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}` | `asset-versions` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/integration-deliveries` | `integrations` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay` | `integrations` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/integrations` | `integrations` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects/{idProject}/integrations` | `integrations` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret` | `integrations` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status` | `integrations` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test` | `integrations` | `blocked` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/api/admin/projects` | `projects` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects` | `projects` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/projects/create` | `projects` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}` | `asset-versions` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}` | `asset-versions` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-versions/{assetVersion}` | `asset-versions` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events` | `asset-versions` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}` | `asset-versions` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/integration-deliveries` | `integrations` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay` | `integrations` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/integrations` | `integrations` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects/{idProject}/integrations` | `integrations` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret` | `integrations` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status` | `integrations` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test` | `integrations` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs` | `parallel-runs` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/projects/{idProject}/parallel-runs` | `parallel-runs` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/projects/{idProject}/parallel-runs/matrix` | `parallel-runs` | `ready` | `go` | `send-to-go` |
@@ -145,45 +127,45 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `GET|HEAD` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/results` | `parallel-runs` | `ready` | `go` | `send-to-go` |
 | `PUT` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}` | `parallel-runs` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/projects/{idProject}/parallel-runs/{parallelRun}/workers/{workerId}/heartbeat` | `parallel-runs` | `ready` | `go` | `send-to-go` |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts` | `artifacts` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}` | `artifacts` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive` | `artifacts` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker` | `artifacts` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact` | `artifacts` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold` | `artifacts` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore` | `artifacts` | `blocked` | `laravel` | `keep-on-laravel` |
-| `DELETE` | `/api/admin/projects/{project}` | `projects` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/{project}` | `projects` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT|PATCH` | `/api/admin/projects/{project}` | `projects` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/projects/{project}/edit` | `projects` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/result-exports` | `result-exports` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/result-exports/{resultExport}` | `result-exports` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/result-exports/{resultExport}/download` | `result-exports` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/roles` | `access-control` | `blocked` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts` | `artifacts` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}` | `artifacts` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive` | `artifacts` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker` | `artifacts` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact` | `artifacts` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold` | `artifacts` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore` | `artifacts` | `ready` | `go` | `send-to-go` |
+| `DELETE` | `/api/admin/projects/{project}` | `projects` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/projects/{project}` | `projects` | `ready` | `go` | `send-to-go` |
+| `PUT|PATCH` | `/api/admin/projects/{project}` | `projects` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/projects/{project}/edit` | `projects` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/result-exports` | `result-exports` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/result-exports/{resultExport}` | `result-exports` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/result-exports/{resultExport}/download` | `result-exports` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/roles` | `access-control` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/admin/service-accounts` | `service-accounts` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/service-accounts` | `service-accounts` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/admin/service-accounts/{serviceAccount}/revoke` | `service-accounts` | `ready` | `go` | `send-to-go` |
-| `POST` | `/api/admin/steps` | `steps` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/steps/{idProject}` | `steps` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/steps/{idProject}/updateorder` | `steps` | `blocked` | `laravel` | `keep-on-laravel` |
-| `DELETE` | `/api/admin/steps/{idProject}/{environment}` | `steps` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/steps/{idProject}/{step}` | `steps` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/steps/{idProject}/{step}` | `steps` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/stepsperfomed/{idTestPerformed}` | `execution-results` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/testcycles` | `test-cycles` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/testcycles/{idProject}` | `test-cycles` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/testcycles/{idProject}/{testcycle}` | `test-cycles` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/testcycles/{idProject}/{testcycle}` | `test-cycles` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/testcyclesperfomed/{idTestCyclePerformed}` | `execution-results` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/admin/tests` | `tests` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/tests/{idProject}` | `tests` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/tests/{idProject}/{test}` | `tests` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/admin/tests/{idProject}/{test}` | `tests` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/admin/testsperfomed/{idTestPerformed}` | `execution-results` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/audit-events` | `audit-events` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/clear` | `operations` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/csrf-cookie` | `operations` | `blocked` | `laravel` | `keep-on-laravel` |
-| `POST` | `/api/ideliumcl/agents/register` | `agent-registry` | `blocked` | `laravel` | `keep-on-laravel` |
+| `POST` | `/api/admin/steps` | `steps` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/steps/{idProject}` | `steps` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/steps/{idProject}/updateorder` | `steps` | `ready` | `go` | `send-to-go` |
+| `DELETE` | `/api/admin/steps/{idProject}/{environment}` | `steps` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/steps/{idProject}/{step}` | `steps` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/steps/{idProject}/{step}` | `steps` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/stepsperfomed/{idTestPerformed}` | `execution-results` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/testcycles` | `test-cycles` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/testcycles/{idProject}` | `test-cycles` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/testcycles/{idProject}/{testcycle}` | `test-cycles` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/testcycles/{idProject}/{testcycle}` | `test-cycles` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/testcyclesperfomed/{idTestCyclePerformed}` | `execution-results` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/admin/tests` | `tests` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/tests/{idProject}` | `tests` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/tests/{idProject}/{test}` | `tests` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/admin/tests/{idProject}/{test}` | `tests` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/admin/testsperfomed/{idTestPerformed}` | `execution-results` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/audit-events` | `audit-events` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/clear` | `operations` | `laravel-operational` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/api/csrf-cookie` | `operations` | `ready` | `go` | `send-to-go` |
+| `POST` | `/api/ideliumcl/agents/register` | `agent-registry` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/ideliumcl/environment/{idEnvironment}` | `environments` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/ideliumcl/environments/{idProject}` | `environments` | `ready` | `go` | `send-to-go` |
 | `GET|HEAD` | `/api/ideliumcl/plugin/{idPlugin}` | `plugins` | `ready` | `go` | `send-to-go` |
@@ -213,12 +195,12 @@ Go fail-closed gate. Application-level dual writes remain prohibited.
 | `PUT` | `/api/ideliumrunner/worker` | `parallel-runs` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/login` | `browser-identity` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/logout` | `browser-identity` | `ready` | `go` | `send-to-go` |
-| `GET|HEAD` | `/api/me/capabilities` | `access-control` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/menu/header` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |
-| `PUT` | `/api/menu/header/{idCostumer}` | `customers` | `blocked` | `laravel` | `keep-on-laravel` |
-| `GET|HEAD` | `/api/menu/sidebar` | `access-control` | `blocked` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/api/me/capabilities` | `access-control` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/menu/header` | `customers` | `ready` | `go` | `send-to-go` |
+| `PUT` | `/api/menu/header/{idCostumer}` | `customers` | `ready` | `go` | `send-to-go` |
+| `GET|HEAD` | `/api/menu/sidebar` | `access-control` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/oidc/token-exchange` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
-| `GET|HEAD` | `/api/sanctum/csrf-cookie` | `operations` | `blocked` | `laravel` | `keep-on-laravel` |
+| `GET|HEAD` | `/api/sanctum/csrf-cookie` | `operations` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/sso/{identityProvider}/oidc/callback` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/sso/{identityProvider}/saml/callback` | `enterprise-identity` | `ready` | `go` | `send-to-go` |
 | `POST` | `/api/sso/{identityProvider}/start` | `enterprise-identity` | `ready` | `go` | `send-to-go` |

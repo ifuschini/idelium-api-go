@@ -16,7 +16,9 @@ HTTP_METHODS = {"DELETE", "GET", "PATCH", "POST", "PUT"}
 # All identity, service-account, and legacy API-key routes in this inventory
 # are Go-owned after the Wave 9 cutover. Keep this map empty so generated
 # contracts do not advertise obsolete migration-gate responses.
-GO_CUTOVER_GATED_ROUTES: dict[str, str] = {}
+GO_CUTOVER_GATED_ROUTES: dict[str, str] = {
+    "POST /api/admin/launchtest": "GO_CUTOVER_GATE",
+}
 
 
 def parse_args() -> argparse.Namespace:

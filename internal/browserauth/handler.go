@@ -16,6 +16,8 @@ import (
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/idelium/idelium-api-go/internal/httpx"
 )
 
 const (
@@ -155,6 +157,13 @@ func (h *Handler) CSRF(writer http.ResponseWriter, request *http.Request) {
 	}
 	http.SetCookie(writer, &http.Cookie{Name: csrfCookieName, Value: token, Path: "/", MaxAge: 7200, Secure: true, HttpOnly: false, SameSite: http.SameSiteLaxMode})
 	writer.WriteHeader(http.StatusNoContent)
+}
+
+// LaunchTest is an explicit fail-closed gate until the execution launcher is
+// migrated. It prevents an accidental 404 or an unsafe Laravel fallback when
+// a staging gateway points this route at Go.
+func (h *Handler) LaunchTest(writer http.ResponseWriter, request *http.Request) {
+	httpx.WriteError(writer, request, http.StatusNotImplemented, "GO_CUTOVER_GATE", "The test launcher is not enabled in the Go runtime.")
 }
 
 func (h *Handler) Login(writer http.ResponseWriter, request *http.Request) {

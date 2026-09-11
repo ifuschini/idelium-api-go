@@ -9,15 +9,15 @@ route cutover gates are ready.
 
 | Field | Value |
 | --- | --- |
-| Switch status | `blocked` |
+| Switch status | `ready` |
 | Production enabled | `false` |
 | Target API image | `idelium/api-go` |
 | Image reference policy | `pin-by-immutable-digest` |
 | Runtime user | `65532:65532` |
 | Readiness path | `/readyz` |
-| Maintenance status | `blocked` |
-| Route cutover status | `blocked` |
-| Laravel blocker routes | 83 |
+| Maintenance status | `ready` |
+| Route cutover status | `ready` |
+| Laravel blocker routes | 0 |
 
 ## Switch controls
 
@@ -31,8 +31,7 @@ route cutover gates are ready.
 
 | Control | Reason | Count |
 | --- | --- | ---: |
-| `laravel-readonly-maintenance` | The Laravel read-only maintenance gate is not ready. | 1 |
-| `staging-route-cutover` | The staging route cutover manifest still has Laravel blockers. | 83 |
+| none | none | 0 |
 
 ## Rollback
 

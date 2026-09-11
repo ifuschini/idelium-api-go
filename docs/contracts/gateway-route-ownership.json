@@ -890,6 +890,836 @@
       "go_path": "/user",
       "owner": "go",
       "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/accounts",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/accounts",
+      "go_path": "/admin/accounts",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/accounts",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/accounts",
+      "go_path": "/admin/accounts",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "DELETE /api/admin/accounts/{idUser}",
+      "methods": [
+        "DELETE"
+      ],
+      "public_path": "/api/admin/accounts/{idUser}",
+      "go_path": "/admin/accounts/{idUser}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/accounts/{idUser}",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/accounts/{idUser}",
+      "go_path": "/admin/accounts/{idUser}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/agents",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/agents",
+      "go_path": "/admin/agents",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/agents/{agentRegistration}/status",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/agents/{agentRegistration}/status",
+      "go_path": "/admin/agents/{agentRegistration}/status",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/costumers",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/costumers",
+      "go_path": "/admin/costumers",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/costumers",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/costumers",
+      "go_path": "/admin/costumers",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "DELETE /api/admin/costumers/{idCostumer}",
+      "methods": [
+        "DELETE"
+      ],
+      "public_path": "/api/admin/costumers/{idCostumer}",
+      "go_path": "/admin/costumers/{idCostumer}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/costumers/{idCostumer}",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/costumers/{idCostumer}",
+      "go_path": "/admin/costumers/{idCostumer}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/environments",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/environments",
+      "go_path": "/admin/environments",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/environments/{idProject}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/environments/{idProject}",
+      "go_path": "/admin/environments/{idProject}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "DELETE /api/admin/environments/{idProject}/{environment}",
+      "methods": [
+        "DELETE"
+      ],
+      "public_path": "/api/admin/environments/{idProject}/{environment}",
+      "go_path": "/admin/environments/{idProject}/{environment}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/environments/{idProject}/{environment}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/environments/{idProject}/{environment}",
+      "go_path": "/admin/environments/{idProject}/{environment}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/environments/{idProject}/{environment}",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/environments/{idProject}/{environment}",
+      "go_path": "/admin/environments/{idProject}/{environment}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/grid/bulk-jobs",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/grid/bulk-jobs",
+      "go_path": "/admin/grid/bulk-jobs",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/grid/bulk-jobs/{jobId}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/grid/bulk-jobs/{jobId}",
+      "go_path": "/admin/grid/bulk-jobs/{jobId}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/grid/bulk-jobs/{jobId}/export",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/grid/bulk-jobs/{jobId}/export",
+      "go_path": "/admin/grid/bulk-jobs/{jobId}/export",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/grid/query-snapshots",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/grid/query-snapshots",
+      "go_path": "/admin/grid/query-snapshots",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/importtest",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/importtest",
+      "go_path": "/admin/importtest",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/plugins",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/plugins",
+      "go_path": "/admin/plugins",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/plugins/{idProject}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/plugins/{idProject}",
+      "go_path": "/admin/plugins/{idProject}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "DELETE /api/admin/plugins/{idProject}/{plugin}",
+      "methods": [
+        "DELETE"
+      ],
+      "public_path": "/api/admin/plugins/{idProject}/{plugin}",
+      "go_path": "/admin/plugins/{idProject}/{plugin}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/plugins/{idProject}/{plugin}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/plugins/{idProject}/{plugin}",
+      "go_path": "/admin/plugins/{idProject}/{plugin}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/plugins/{idProject}/{step}",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/plugins/{idProject}/{step}",
+      "go_path": "/admin/plugins/{idProject}/{step}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects",
+      "go_path": "/admin/projects",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects",
+      "go_path": "/admin/projects",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/create",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/create",
+      "go_path": "/admin/projects/create",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}",
+      "go_path": "/admin/projects/{idProject}/asset-impact/{assetType}/{assetId}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}",
+      "go_path": "/admin/projects/{idProject}/asset-versions/{assetType}/{assetId}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{idProject}/asset-versions/{assetVersion}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/asset-versions/{assetVersion}",
+      "go_path": "/admin/projects/{idProject}/asset-versions/{assetVersion}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events",
+      "go_path": "/admin/projects/{idProject}/asset-versions/{assetVersion}/review-events",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}",
+      "go_path": "/admin/projects/{idProject}/asset-versions/{fromVersion}/diff/{toVersion}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{idProject}/integration-deliveries",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/integration-deliveries",
+      "go_path": "/admin/projects/{idProject}/integration-deliveries",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay",
+      "go_path": "/admin/projects/{idProject}/integration-deliveries/{integrationDelivery}/replay",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{idProject}/integrations",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/integrations",
+      "go_path": "/admin/projects/{idProject}/integrations",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects/{idProject}/integrations",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/integrations",
+      "go_path": "/admin/projects/{idProject}/integrations",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret",
+      "go_path": "/admin/projects/{idProject}/integrations/{integrationEndpoint}/rotate-secret",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/status",
+      "go_path": "/admin/projects/{idProject}/integrations/{integrationEndpoint}/status",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/integrations/{integrationEndpoint}/test",
+      "go_path": "/admin/projects/{idProject}/integrations/{integrationEndpoint}/test",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts",
+      "go_path": "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}",
+      "go_path": "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive",
+      "go_path": "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/archive",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker",
+      "go_path": "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/delete-marker",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact",
+      "go_path": "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/impact",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold",
+      "go_path": "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/legal-hold",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore",
+      "go_path": "/admin/projects/{idProject}/performed-test-cycles/{performedTestCycleId}/artifacts/{artifactDescriptor}/restore",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "DELETE /api/admin/projects/{project}",
+      "methods": [
+        "DELETE"
+      ],
+      "public_path": "/api/admin/projects/{project}",
+      "go_path": "/admin/projects/{project}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{project}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{project}",
+      "go_path": "/admin/projects/{project}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT|PATCH /api/admin/projects/{project}",
+      "methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "public_path": "/api/admin/projects/{project}",
+      "go_path": "/admin/projects/{project}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/projects/{project}/edit",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/projects/{project}/edit",
+      "go_path": "/admin/projects/{project}/edit",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/result-exports",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/result-exports",
+      "go_path": "/admin/result-exports",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/result-exports/{resultExport}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/result-exports/{resultExport}",
+      "go_path": "/admin/result-exports/{resultExport}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/result-exports/{resultExport}/download",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/result-exports/{resultExport}/download",
+      "go_path": "/admin/result-exports/{resultExport}/download",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/roles",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/roles",
+      "go_path": "/admin/roles",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/steps",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/steps",
+      "go_path": "/admin/steps",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/steps/{idProject}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/steps/{idProject}",
+      "go_path": "/admin/steps/{idProject}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/steps/{idProject}/updateorder",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/steps/{idProject}/updateorder",
+      "go_path": "/admin/steps/{idProject}/updateorder",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "DELETE /api/admin/steps/{idProject}/{environment}",
+      "methods": [
+        "DELETE"
+      ],
+      "public_path": "/api/admin/steps/{idProject}/{environment}",
+      "go_path": "/admin/steps/{idProject}/{environment}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/steps/{idProject}/{step}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/steps/{idProject}/{step}",
+      "go_path": "/admin/steps/{idProject}/{step}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/steps/{idProject}/{step}",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/steps/{idProject}/{step}",
+      "go_path": "/admin/steps/{idProject}/{step}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/stepsperfomed/{idTestPerformed}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/stepsperfomed/{idTestPerformed}",
+      "go_path": "/admin/stepsperfomed/{idTestPerformed}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/testcycles",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/testcycles",
+      "go_path": "/admin/testcycles",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/testcycles/{idProject}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/testcycles/{idProject}",
+      "go_path": "/admin/testcycles/{idProject}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/testcycles/{idProject}/{testcycle}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/testcycles/{idProject}/{testcycle}",
+      "go_path": "/admin/testcycles/{idProject}/{testcycle}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/testcycles/{idProject}/{testcycle}",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/testcycles/{idProject}/{testcycle}",
+      "go_path": "/admin/testcycles/{idProject}/{testcycle}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/testcyclesperfomed/{idTestCyclePerformed}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/testcyclesperfomed/{idTestCyclePerformed}",
+      "go_path": "/admin/testcyclesperfomed/{idTestCyclePerformed}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/admin/tests",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/admin/tests",
+      "go_path": "/admin/tests",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/tests/{idProject}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/tests/{idProject}",
+      "go_path": "/admin/tests/{idProject}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/tests/{idProject}/{test}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/tests/{idProject}/{test}",
+      "go_path": "/admin/tests/{idProject}/{test}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/admin/tests/{idProject}/{test}",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/admin/tests/{idProject}/{test}",
+      "go_path": "/admin/tests/{idProject}/{test}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/admin/testsperfomed/{idTestPerformed}",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/admin/testsperfomed/{idTestPerformed}",
+      "go_path": "/admin/testsperfomed/{idTestPerformed}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/audit-events",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/audit-events",
+      "go_path": "/audit-events",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "POST /api/ideliumcl/agents/register",
+      "methods": [
+        "POST"
+      ],
+      "public_path": "/api/ideliumcl/agents/register",
+      "go_path": "/ideliumcl/agents/register",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/me/capabilities",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/me/capabilities",
+      "go_path": "/me/capabilities",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/menu/header",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/menu/header",
+      "go_path": "/menu/header",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "PUT /api/menu/header/{idCostumer}",
+      "methods": [
+        "PUT"
+      ],
+      "public_path": "/api/menu/header/{idCostumer}",
+      "go_path": "/menu/header/{idCostumer}",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/menu/sidebar",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/menu/sidebar",
+      "go_path": "/menu/sidebar",
+      "owner": "go",
+      "fallback_owner": "laravel"
+    },
+    {
+      "route_id": "GET|HEAD /api/csrf-cookie",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "public_path": "/api/csrf-cookie",
+      "go_path": "/csrf-cookie",
+      "owner": "go",
+      "fallback_owner": "laravel"
     }
   ],
   "rollback": {

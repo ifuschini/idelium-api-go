@@ -1,11 +1,5 @@
 {
-  "blockers": [
-    {
-      "control": "route-cutover",
-      "count": 83,
-      "reason": "Routes without Go implementation or fail-closed gates remain on Laravel."
-    }
-  ],
+  "blockers": [],
   "controls": [
     {
       "description": "Block Laravel-owned mutation traffic at the gateway during the approved window.",
@@ -47,10 +41,10 @@
   ],
   "maintenance_id": "laravel-readonly-maintenance",
   "preconditions": {
-    "go_fail_closed_routes": 0,
-    "go_owned_routes": 85,
-    "laravel_blocker_routes": 83,
-    "route_cutover_status": "blocked",
+    "go_fail_closed_routes": 1,
+    "go_owned_routes": 165,
+    "laravel_blocker_routes": 0,
+    "route_cutover_status": "ready",
     "schema_freeze_status": "frozen"
   },
   "production_enabled": false,
@@ -61,7 +55,7 @@
     "strategy": "Remove the gateway mutation block, resume Laravel workers and scheduled jobs, and route traffic back to Laravel before retrying the handover."
   },
   "schema_version": 1,
-  "status": "blocked",
+  "status": "ready",
   "timebox": {
     "default_state": "not-scheduled",
     "max_duration_minutes": 60,

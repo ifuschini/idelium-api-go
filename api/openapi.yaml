@@ -3233,6 +3233,8 @@ paths:
       x-idelium-authentication-mode: "browser-session"
       x-idelium-tenant-context: true
       x-idelium-consumers: ["idelium-web"]
+      x-idelium-go-cutover-gate: true
+      x-idelium-go-cutover-error-code: "GO_CUTOVER_GATE"
       requestBody:
         required: false
         content:
@@ -3245,6 +3247,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/LegacyCompatibilityResponse"
+        "501":
+          $ref: "#/components/responses/LegacyCompatibilityError"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":

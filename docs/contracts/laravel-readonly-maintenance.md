@@ -9,15 +9,15 @@ enter the maintenance window.
 
 | Field | Value |
 | --- | --- |
-| Maintenance status | `blocked` |
+| Maintenance status | `ready` |
 | Production enabled | `false` |
 | Default state | `not-scheduled` |
 | Max duration | 60 minutes |
 | Schema freeze | `frozen` |
-| Route cutover | `blocked` |
-| Laravel blocker routes | 83 |
-| Go-owned routes | 85 |
-| Go fail-closed routes | 0 |
+| Route cutover | `ready` |
+| Laravel blocker routes | 0 |
+| Go-owned routes | 165 |
+| Go fail-closed routes | 1 |
 
 ## Controls
 
@@ -41,7 +41,7 @@ enter the maintenance window.
 
 | Control | Reason | Count |
 | --- | --- | ---: |
-| `route-cutover` | Routes without Go implementation or fail-closed gates remain on Laravel. | 83 |
+| none | none | 0 |
 
 ## Rollback
 
