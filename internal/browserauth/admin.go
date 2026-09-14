@@ -1469,7 +1469,13 @@ func (h *Handler) ChangeAccountRole(writer http.ResponseWriter, request *http.Re
 		return
 	}
 	var input struct {
-		RoleID any `json:"roleId"`
+		AccountID          any            `json:"accountId"`
+		Operation          string         `json:"operation"`
+		Reason             string         `json:"reason"`
+		ReplacementAdminID any            `json:"replacementAdminId"`
+		RoleID             any            `json:"roleId"`
+		TenantID           any            `json:"tenantId"`
+		Audit              map[string]any `json:"audit"`
 	}
 	if err := decodeJSON(writer, request, &input); err != nil {
 		validationError(writer, "roleId", "The role id field is required.")
