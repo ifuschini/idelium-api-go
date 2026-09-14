@@ -567,6 +567,13 @@ func (r *BrowserAuthRepository) UpdateAccount(request *http.Request, actor brows
 		}
 		return requireAffected(result)
 	}
+	if account.Password == "" {
+		result, err := r.database.ExecContext(request.Context(), `UPDATE users SET name = ?, updated_at = ? WHERE id = ?`, account.Name, now, account.ID)
+		if err != nil {
+			return safeDatabaseFailure("update browser account profile", err)
+		}
+		return requireAffected(result)
+	}
 	hash, err := browserauth.HashPasswordForRepository(account.Password)
 	if err != nil {
 		return err

@@ -1437,9 +1437,7 @@ func (h *Handler) UpdateAccount(writer http.ResponseWriter, request *http.Reques
 	if strings.TrimSpace(input.Name) == "" {
 		errorsByField["name"] = []string{"The name field is required."}
 	}
-	if input.Password == "" && !input.ForceActivate {
-		errorsByField["password"] = []string{"The password field is required."}
-	} else if input.Password != "" {
+	if input.Password != "" {
 		if violations := passwordViolations(input.Password); len(violations) > 0 {
 			errorsByField["password"] = violations
 		}
