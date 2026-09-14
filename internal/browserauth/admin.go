@@ -1469,18 +1469,22 @@ func (h *Handler) ChangeAccountRole(writer http.ResponseWriter, request *http.Re
 		return
 	}
 	var input struct {
-		RoleID json.RawMessage `json:"roleId"`
+		RoleID any `json:"roleId"`
 	}
 	if err := decodeJSON(writer, request, &input); err != nil {
 		validationError(writer, "roleId", "The role id field is required.")
 		return
 	}
 	var roleID int64
-	if err := json.Unmarshal(input.RoleID, &roleID); err != nil {
-		var roleValue string
-		if json.Unmarshal(input.RoleID, &roleValue) == nil {
-			roleID, _ = strconv.ParseInt(strings.TrimSpace(roleValue), 10, 64)
+	switch value := input.RoleID.(type) {
+	case float64:
+		if value == float64(int64(value)) {
+			roleID = int64(value)
 		}
+	case string:
+		roleID, _ = strconv.ParseInt(strings.TrimSpace(value), 10, 64)
+	case json.Number:
+		roleID, _ = strconv.ParseInt(string(value), 10, 64)
 	}
 	if roleID <= 0 {
 		validationError(writer, "roleId", "The role id field is required.")
