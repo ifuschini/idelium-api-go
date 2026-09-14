@@ -59,6 +59,7 @@ func NewRouter(
 	router.Get("/admin/profile", browserAuthHandler.Profile)
 	router.Put("/admin/profile", browserAuthHandler.UpdateProfile)
 	router.Get("/admin/accounts", browserAuthHandler.Accounts)
+	router.Get("/admin/accounts/{idUser}/audit", browserAuthHandler.AccountAudit)
 	router.Get("/admin/projects", browserAuthHandler.Projects)
 	router.Get("/admin/projects/{idProject}", browserAuthHandler.ShowProject)
 	router.Post("/admin/projects", browserAuthHandler.CreateProject)

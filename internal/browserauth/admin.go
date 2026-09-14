@@ -2545,6 +2545,25 @@ func (h *Handler) AuditEvents(writer http.ResponseWriter, request *http.Request)
 	writeJSON(writer, http.StatusOK, map[string]any{"data": events})
 }
 
+// AccountAudit keeps the account-scoped URL used by the web application while
+// reusing the tenant-scoped audit reader and its authorization checks.
+func (h *Handler) AccountAudit(writer http.ResponseWriter, request *http.Request) {
+	accountID := request.PathValue("idUser")
+	if _, err := parsePathID(accountID); err != nil {
+		h.notFound(writer)
+		return
+	}
+	clone := request.Clone(request.Context())
+	values := clone.URL.Query()
+	values.Set("targetType", "user")
+	values.Set("targetId", accountID)
+	if pageSize := values.Get("pageSize"); pageSize != "" && values.Get("limit") == "" {
+		values.Set("limit", pageSize)
+	}
+	clone.URL.RawQuery = values.Encode()
+	h.AuditEvents(writer, clone)
+}
+
 func parseAuditDate(value string) (time.Time, bool) {
 	for _, format := range []string{time.RFC3339Nano, "2006-01-02 15:04:05", "2006-01-02"} {
 		if parsed, err := time.Parse(format, value); err == nil {
