@@ -80,6 +80,7 @@ func NewRouter(
 	router.Post("/admin/accounts", browserAuthHandler.CreateAccount)
 	router.Post("/admin/accounts/invitations", browserAuthHandler.CreateAccountInvitation)
 	router.Put("/admin/accounts/{idUser}", browserAuthHandler.UpdateAccount)
+	router.Post("/admin/accounts/{idUser}/role-change", browserAuthHandler.ChangeAccountRole)
 	router.Delete("/admin/accounts/{idUser}", browserAuthHandler.DeleteAccount)
 	router.Get("/admin/costumers", browserAuthHandler.Customers)
 	router.Post("/admin/costumers", browserAuthHandler.CreateCustomer)

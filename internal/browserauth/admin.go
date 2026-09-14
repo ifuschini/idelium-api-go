@@ -113,6 +113,7 @@ type AdminRepository interface {
 	CreateAccount(request *http.Request, actor User, account AccountCreate) error
 	CreateAccountInvitation(request *http.Request, actor User, account AccountInvitationCreate) error
 	UpdateAccount(request *http.Request, actor User, account AccountUpdate) error
+	UpdateAccountRole(request *http.Request, actor User, accountID int64, roleID int64) error
 	DeleteAccount(request *http.Request, actor User, accountID int64) error
 	ListAdminCustomers(request *http.Request, query CustomerQuery) (CustomerPage, error)
 	CreateCustomer(request *http.Request, customer CustomerCreate) error
@@ -1454,6 +1455,33 @@ func (h *Handler) UpdateAccount(writer http.ResponseWriter, request *http.Reques
 	}
 	if err != nil {
 		h.internalError(writer, request, "update browser account", err)
+		return
+	}
+	h.Accounts(writer, request)
+}
+
+func (h *Handler) ChangeAccountRole(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "account.role.assign")
+	if !ok {
+		return
+	}
+	accountID, err := parsePathID(request.PathValue("idUser"))
+	if err != nil {
+		h.notFound(writer)
+		return
+	}
+	var input struct {
+		RoleID int64 `json:"roleId"`
+	}
+	if err := decodeJSON(writer, request, &input); err != nil || input.RoleID <= 0 {
+		validationError(writer, "roleId", "The role id field is required.")
+		return
+	}
+	if err := h.sessions.UpdateAccountRole(request, user, accountID, input.RoleID); errors.Is(err, ErrForbidden) || errors.Is(err, ErrNotFound) {
+		h.notFound(writer)
+		return
+	} else if err != nil {
+		h.internalError(writer, request, "change browser account role", err)
 		return
 	}
 	h.Accounts(writer, request)

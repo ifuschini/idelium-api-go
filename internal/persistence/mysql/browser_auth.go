@@ -578,6 +578,27 @@ func (r *BrowserAuthRepository) UpdateAccount(request *http.Request, actor brows
 	return requireAffected(result)
 }
 
+func (r *BrowserAuthRepository) UpdateAccountRole(request *http.Request, actor browserauth.User, accountID int64, roleID int64) error {
+	target, err := r.accountTarget(request, actor, accountID)
+	if err != nil {
+		return err
+	}
+	if !canManageAccount(actor, roleID, target.IDCostumer) {
+		return browserauth.ErrForbidden
+	}
+	if ok, err := existsByID(request.Context(), r.database, "roles", roleID); err != nil || !ok {
+		if err != nil {
+			return err
+		}
+		return browserauth.ErrForbidden
+	}
+	result, err := r.database.ExecContext(request.Context(), `UPDATE users SET role = ?, updated_at = ? WHERE id = ? AND idCostumer = ?`, roleID, time.Now().UTC(), accountID, target.IDCostumer)
+	if err != nil {
+		return safeDatabaseFailure("change browser account role", err)
+	}
+	return requireAffected(result)
+}
+
 func (r *BrowserAuthRepository) DeleteAccount(request *http.Request, actor browserauth.User, accountID int64) error {
 	target, err := r.accountTarget(request, actor, accountID)
 	if err != nil {
