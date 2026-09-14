@@ -425,6 +425,26 @@ func TestBrowserAuthRepositoryAccountsIntegration(t *testing.T) {
 	if err := repository.UpdateAccount(request, actor, browserauth.AccountUpdate{ID: createdID, Name: "Updated User", Password: "AnotherStrong123!"}); err != nil {
 		t.Fatalf("UpdateAccount() returned an error: %v", err)
 	}
+	if err := repository.CreateAccountInvitation(request, actor, browserauth.AccountInvitationCreate{Name: "Invited User", Email: "invited-update@example.test", Role: 3, IDCostumer: 11}); err != nil {
+		t.Fatalf("CreateAccountInvitation() returned an error: %v", err)
+	}
+	var invitedID int64
+	if err := database.QueryRowContext(ctx, "SELECT id FROM users WHERE email = 'invited-update@example.test'").Scan(&invitedID); err != nil {
+		t.Fatalf("read invited account: %v", err)
+	}
+	if err := repository.UpdateAccount(request, actor, browserauth.AccountUpdate{ID: invitedID, Name: "Invited User", Password: "AnotherStrong123!"}); err != nil {
+		t.Fatalf("UpdateAccount() for invited account returned an error: %v", err)
+	}
+	var updatedStatus string
+	if err := database.QueryRowContext(ctx, "SELECT status FROM users WHERE id = ?", invitedID).Scan(&updatedStatus); err != nil {
+		t.Fatalf("read updated account status: %v", err)
+	}
+	if updatedStatus != "active" {
+		t.Fatalf("expected password update to activate the account, got %q", updatedStatus)
+	}
+	if err := repository.DeleteAccount(request, actor, invitedID); err != nil {
+		t.Fatalf("DeleteAccount() for invited account returned an error: %v", err)
+	}
 	if err := repository.DeleteAccount(request, actor, 9); !errors.Is(err, browserauth.ErrNotFound) {
 		t.Fatalf("expected cross-tenant delete to be hidden, got %v", err)
 	}

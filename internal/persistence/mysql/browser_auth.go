@@ -563,7 +563,7 @@ func (r *BrowserAuthRepository) UpdateAccount(request *http.Request, actor brows
 	if err != nil {
 		return err
 	}
-	result, err := r.database.ExecContext(request.Context(), `UPDATE users SET name = ?, password = ?, updated_at = ? WHERE id = ?`, account.Name, hash, time.Now().UTC(), account.ID)
+	result, err := r.database.ExecContext(request.Context(), `UPDATE users SET name = ?, password = ?, status = CASE WHEN status = 'invited' THEN 'active' ELSE status END, updated_at = ? WHERE id = ?`, account.Name, hash, time.Now().UTC(), account.ID)
 	if err != nil {
 		return safeDatabaseFailure("update browser account", err)
 	}
