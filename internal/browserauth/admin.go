@@ -51,6 +51,7 @@ type Account struct {
 	IDCostumer int64  `json:"idCostumer"`
 	Costumer   string `json:"costumer"`
 	RoleName   string `json:"roleName"`
+	Status     string `json:"status"`
 }
 
 type AccountQuery struct {

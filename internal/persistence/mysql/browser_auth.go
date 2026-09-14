@@ -447,7 +447,7 @@ func (r *BrowserAuthRepository) ListAccounts(request *http.Request, actor browse
 	if query.Direction == "desc" {
 		direction = "DESC"
 	}
-	sqlQuery := `SELECT users.id, users.email, users.name, users.role, users.idCostumer, costumers.costumer, roles.name
+	sqlQuery := `SELECT users.id, users.email, users.name, users.role, users.idCostumer, costumers.costumer, roles.name, users.status
 		FROM users JOIN costumers ON users.idCostumer = costumers.id JOIN roles ON users.role = roles.id ` + where + ` ORDER BY ` + sort + ` ` + direction
 	if query.Paged {
 		sqlQuery += ` LIMIT ? OFFSET ?`
@@ -461,7 +461,7 @@ func (r *BrowserAuthRepository) ListAccounts(request *http.Request, actor browse
 	accounts := []browserauth.Account{}
 	for rows.Next() {
 		var account browserauth.Account
-		if err := rows.Scan(&account.ID, &account.Email, &account.Name, &account.Role, &account.IDCostumer, &account.Costumer, &account.RoleName); err != nil {
+		if err := rows.Scan(&account.ID, &account.Email, &account.Name, &account.Role, &account.IDCostumer, &account.Costumer, &account.RoleName, &account.Status); err != nil {
 			return browserauth.AccountPage{}, safeDatabaseFailure("scan browser account", err)
 		}
 		accounts = append(accounts, account)
