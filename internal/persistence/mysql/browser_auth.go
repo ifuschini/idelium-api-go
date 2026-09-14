@@ -559,11 +559,19 @@ func (r *BrowserAuthRepository) UpdateAccount(request *http.Request, actor brows
 	if !canManageAccount(actor, target.Role, target.IDCostumer) {
 		return browserauth.ErrForbidden
 	}
+	now := time.Now().UTC()
+	if account.Password == "" && account.ForceActivate {
+		result, err := r.database.ExecContext(request.Context(), `UPDATE users SET name = ?, status = 'active', updated_at = ? WHERE id = ? AND status = 'invited'`, account.Name, now, account.ID)
+		if err != nil {
+			return safeDatabaseFailure("activate invited browser account", err)
+		}
+		return requireAffected(result)
+	}
 	hash, err := browserauth.HashPasswordForRepository(account.Password)
 	if err != nil {
 		return err
 	}
-	result, err := r.database.ExecContext(request.Context(), `UPDATE users SET name = ?, password = ?, status = CASE WHEN status = 'invited' THEN 'active' ELSE status END, updated_at = ? WHERE id = ?`, account.Name, hash, time.Now().UTC(), account.ID)
+	result, err := r.database.ExecContext(request.Context(), `UPDATE users SET name = ?, password = ?, status = CASE WHEN status = 'invited' THEN 'active' ELSE status END, updated_at = ? WHERE id = ?`, account.Name, hash, now, account.ID)
 	if err != nil {
 		return safeDatabaseFailure("update browser account", err)
 	}

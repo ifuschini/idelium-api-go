@@ -98,9 +98,10 @@ type AccountInvitationCreate struct {
 }
 
 type AccountUpdate struct {
-	ID       int64
-	Name     string
-	Password string
+	ID            int64
+	Name          string
+	Password      string
+	ForceActivate bool
 }
 
 type AdminRepository interface {
@@ -1422,8 +1423,9 @@ func (h *Handler) UpdateAccount(writer http.ResponseWriter, request *http.Reques
 		return
 	}
 	var input struct {
-		Name     string `json:"name"`
-		Password string `json:"password"`
+		Name          string `json:"name"`
+		Password      string `json:"password"`
+		ForceActivate bool   `json:"forceActivate"`
 	}
 	if err := decodeJSON(writer, request, &input); err != nil {
 		validationError(writer, "payload", "The request payload is invalid.")
@@ -1433,16 +1435,18 @@ func (h *Handler) UpdateAccount(writer http.ResponseWriter, request *http.Reques
 	if strings.TrimSpace(input.Name) == "" {
 		errorsByField["name"] = []string{"The name field is required."}
 	}
-	if input.Password == "" {
+	if input.Password == "" && !input.ForceActivate {
 		errorsByField["password"] = []string{"The password field is required."}
-	} else if violations := passwordViolations(input.Password); len(violations) > 0 {
-		errorsByField["password"] = violations
+	} else if input.Password != "" {
+		if violations := passwordViolations(input.Password); len(violations) > 0 {
+			errorsByField["password"] = violations
+		}
 	}
 	if len(errorsByField) > 0 {
 		validationErrors(writer, errorsByField)
 		return
 	}
-	err = h.sessions.UpdateAccount(request, user, AccountUpdate{ID: accountID, Name: strings.TrimSpace(input.Name), Password: input.Password})
+	err = h.sessions.UpdateAccount(request, user, AccountUpdate{ID: accountID, Name: strings.TrimSpace(input.Name), Password: input.Password, ForceActivate: input.ForceActivate})
 	if errors.Is(err, ErrForbidden) || errors.Is(err, ErrNotFound) {
 		h.notFound(writer)
 		return
