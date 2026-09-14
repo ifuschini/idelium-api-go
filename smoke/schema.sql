@@ -14,7 +14,9 @@ CREATE TABLE costumers (
 
 CREATE TABLE roles (
   id INT PRIMARY KEY,
-  name VARCHAR(64) NOT NULL UNIQUE
+  name VARCHAR(64) NOT NULL UNIQUE,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL
 );
 
 CREATE TABLE users (

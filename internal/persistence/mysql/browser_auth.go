@@ -339,11 +339,30 @@ func safeCSVValue(value string) string {
 	return value
 }
 
-func (r *BrowserAuthRepository) ListRoles(_ *http.Request, actor browserauth.User) ([]browserauth.Role, bool, error) {
+func (r *BrowserAuthRepository) ListRoles(request *http.Request, actor browserauth.User) ([]browserauth.Role, bool, error) {
 	if actor.Role > 2 {
 		return nil, true, nil
 	}
-	query := `SELECT id, name, created_at, updated_at FROM roles`
+	// The Laravel roles table is not uniform across supported installations:
+	// older schemas contain only id/name, while current schemas also expose the
+	// timestamp columns. Select only columns that exist so a legacy database
+	// cannot turn this read-only endpoint into a 500.
+	createdAtExists, err := mysqlColumnExists(request.Context(), r.database, "roles", "created_at")
+	if err != nil {
+		return nil, false, safeDatabaseFailure("inspect browser role schema", err)
+	}
+	updatedAtExists, err := mysqlColumnExists(request.Context(), r.database, "roles", "updated_at")
+	if err != nil {
+		return nil, false, safeDatabaseFailure("inspect browser role schema", err)
+	}
+	columns := []string{"id", "name"}
+	if createdAtExists {
+		columns = append(columns, "created_at")
+	}
+	if updatedAtExists {
+		columns = append(columns, "updated_at")
+	}
+	query := `SELECT ` + strings.Join(columns, ", ") + ` FROM roles`
 	args := []any{}
 	if actor.Role == 2 {
 		query += ` WHERE id > ?`
@@ -358,7 +377,14 @@ func (r *BrowserAuthRepository) ListRoles(_ *http.Request, actor browserauth.Use
 	roles := []browserauth.Role{}
 	for rows.Next() {
 		var role browserauth.Role
-		if err := rows.Scan(&role.ID, &role.Name, &role.CreatedAt, &role.UpdatedAt); err != nil {
+		destinations := []any{&role.ID, &role.Name}
+		if createdAtExists {
+			destinations = append(destinations, &role.CreatedAt)
+		}
+		if updatedAtExists {
+			destinations = append(destinations, &role.UpdatedAt)
+		}
+		if err := rows.Scan(destinations...); err != nil {
 			return nil, false, safeDatabaseFailure("scan browser roles", err)
 		}
 		roles = append(roles, role)
