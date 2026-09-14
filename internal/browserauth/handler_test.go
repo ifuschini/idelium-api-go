@@ -140,6 +140,9 @@ func (s *sessionsStub) CreateAccount(_ *http.Request, _ User, account AccountCre
 	s.createdAccount = account
 	return s.accountErr
 }
+func (s *sessionsStub) CreateAccountInvitation(_ *http.Request, _ User, _ AccountInvitationCreate) error {
+	return s.accountErr
+}
 func (s *sessionsStub) UpdateAccount(_ *http.Request, _ User, account AccountUpdate) error {
 	s.updatedAccount = account
 	return s.accountErr

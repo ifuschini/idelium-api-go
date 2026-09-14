@@ -90,6 +90,13 @@ type AccountCreate struct {
 	IDCostumer int64
 }
 
+type AccountInvitationCreate struct {
+	Name       string
+	Email      string
+	Role       int64
+	IDCostumer int64
+}
+
 type AccountUpdate struct {
 	ID       int64
 	Name     string
@@ -102,6 +109,7 @@ type AdminRepository interface {
 	UpdateProfilePassword(request *http.Request, actor User, password string) (Profile, error)
 	ListAccounts(request *http.Request, actor User, query AccountQuery) (AccountPage, error)
 	CreateAccount(request *http.Request, actor User, account AccountCreate) error
+	CreateAccountInvitation(request *http.Request, actor User, account AccountInvitationCreate) error
 	UpdateAccount(request *http.Request, actor User, account AccountUpdate) error
 	DeleteAccount(request *http.Request, actor User, accountID int64) error
 	ListAdminCustomers(request *http.Request, query CustomerQuery) (CustomerPage, error)
@@ -1354,6 +1362,53 @@ func (h *Handler) CreateAccount(writer http.ResponseWriter, request *http.Reques
 		return
 	}
 	h.Accounts(writer, request)
+}
+
+func (h *Handler) CreateAccountInvitation(writer http.ResponseWriter, request *http.Request) {
+	user, ok := h.requireCapability(writer, request, "accounts.manage")
+	if !ok {
+		return
+	}
+	var input struct {
+		DisplayName string `json:"displayName"`
+		Email       string `json:"email"`
+		RoleID      string `json:"roleId"`
+		TeamID      string `json:"teamId"`
+		TenantID    string `json:"tenantId"`
+	}
+	if err := decodeJSON(writer, request, &input); err != nil {
+		validationError(writer, "payload", "The request payload is invalid.")
+		return
+	}
+	roleID, roleErr := strconv.ParseInt(strings.TrimSpace(input.RoleID), 10, 64)
+	teamID, teamErr := strconv.ParseInt(strings.TrimSpace(input.TeamID), 10, 64)
+	if roleErr != nil || teamErr != nil || strings.TrimSpace(input.DisplayName) == "" || !strings.Contains(input.Email, "@") {
+		validationError(writer, "invitation", "The invitation details are invalid.")
+		return
+	}
+	tenantID := teamID
+	if user.Role == 1 && strings.TrimSpace(input.TenantID) != "" {
+		if parsed, err := strconv.ParseInt(strings.TrimSpace(input.TenantID), 10, 64); err == nil {
+			tenantID = parsed
+		}
+	}
+	if user.Role != 1 {
+		tenantID = user.activeTenant()
+	}
+	if tenantID <= 0 {
+		validationError(writer, "tenantId", "The tenant id field is required.")
+		return
+	}
+	err := h.sessions.CreateAccountInvitation(request, user, AccountInvitationCreate{Name: strings.TrimSpace(input.DisplayName), Email: strings.TrimSpace(input.Email), Role: roleID, IDCostumer: tenantID})
+	if errors.Is(err, ErrForbidden) {
+		h.forbidden(writer)
+		return
+	}
+	if err != nil {
+		h.internalError(writer, request, "create browser account invitation", err)
+		return
+	}
+	writeJSON(writer, http.StatusCreated, map[string]string{"status": "invited"})
 }
 
 func (h *Handler) UpdateAccount(writer http.ResponseWriter, request *http.Request) {

@@ -136,6 +136,9 @@ func (fakeBrowserAuthRepository) ListAccounts(*http.Request, browserauth.User, b
 func (fakeBrowserAuthRepository) CreateAccount(*http.Request, browserauth.User, browserauth.AccountCreate) error {
 	return nil
 }
+func (fakeBrowserAuthRepository) CreateAccountInvitation(*http.Request, browserauth.User, browserauth.AccountInvitationCreate) error {
+	return nil
+}
 func (fakeBrowserAuthRepository) UpdateAccount(*http.Request, browserauth.User, browserauth.AccountUpdate) error {
 	return nil
 }

@@ -515,6 +515,42 @@ func (r *BrowserAuthRepository) CreateAccount(request *http.Request, actor brows
 	return nil
 }
 
+func (r *BrowserAuthRepository) CreateAccountInvitation(request *http.Request, actor browserauth.User, account browserauth.AccountInvitationCreate) error {
+	if !canManageAccount(actor, account.Role, account.IDCostumer) {
+		return browserauth.ErrForbidden
+	}
+	if ok, err := existsByID(request.Context(), r.database, "roles", account.Role); err != nil || !ok {
+		if err != nil {
+			return err
+		}
+		return browserauth.ErrForbidden
+	}
+	if ok, err := existsByID(request.Context(), r.database, "costumers", account.IDCostumer); err != nil || !ok {
+		if err != nil {
+			return err
+		}
+		return browserauth.ErrForbidden
+	}
+	var duplicate int
+	err := r.database.QueryRowContext(request.Context(), `SELECT 1 FROM users WHERE email = ? LIMIT 1`, account.Email).Scan(&duplicate)
+	if err == nil {
+		return browserauth.ErrForbidden
+	}
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return safeDatabaseFailure("check browser invitation email", err)
+	}
+	temporaryPassword, err := browserauth.HashPasswordForRepository(randomUUID())
+	if err != nil {
+		return err
+	}
+	now := time.Now().UTC()
+	_, err = r.database.ExecContext(request.Context(), `INSERT INTO users (name, password, email, role, idCostumer, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'invited', ?, ?)`, account.Name, temporaryPassword, account.Email, account.Role, account.IDCostumer, now, now)
+	if err != nil {
+		return safeDatabaseFailure("create browser account invitation", err)
+	}
+	return nil
+}
+
 func (r *BrowserAuthRepository) UpdateAccount(request *http.Request, actor browserauth.User, account browserauth.AccountUpdate) error {
 	target, err := r.accountTarget(request, actor, account.ID)
 	if err != nil {
