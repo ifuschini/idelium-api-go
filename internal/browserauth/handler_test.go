@@ -522,6 +522,15 @@ func TestChangeCustomerValidatesAndRecordsAudit(t *testing.T) {
 		t.Fatalf("unexpected tenant switch: status=%d body=%s switch=%#v audit=%#v", response.Code, response.Body.String(), sessions.switched, sessions.recorded)
 	}
 
+	legacyRequest := httptest.NewRequest(http.MethodPut, "/menu/header/42", strings.NewReader(`{}`))
+	legacyRequest.SetPathValue("idCostumer", "42")
+	legacyRequest.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "opaque-value"})
+	legacyResponse := httptest.NewRecorder()
+	handler.ChangeCustomer(legacyResponse, legacyRequest)
+	if legacyResponse.Code != http.StatusOK || sessions.switched.Reason != "customer-switch" {
+		t.Fatalf("expected empty switch payload compatibility, got %d %#v", legacyResponse.Code, sessions.switched)
+	}
+
 	missing := &sessionsStub{user: User{ID: 7, TenantID: 11, Role: 1}}
 	missingHandler := NewHandler(usersStub{}, missing, testLogger())
 	missingHandler.now = func() time.Time { return time.Date(2026, time.August, 27, 12, 0, 0, 0, time.UTC) }

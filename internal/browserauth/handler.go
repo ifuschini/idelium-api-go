@@ -288,11 +288,18 @@ func (h *Handler) ChangeCustomer(writer http.ResponseWriter, request *http.Reque
 	}
 	decoder := json.NewDecoder(http.MaxBytesReader(writer, request.Body, 16<<10))
 	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&input); err != nil || strings.TrimSpace(input.Reason) == "" {
+	if err := decoder.Decode(&input); err != nil {
 		writeJSON(writer, http.StatusUnprocessableEntity, map[string]any{"message": "The given data was invalid.", "errors": map[string][]string{"reason": {"The reason field is required."}}})
 		return
 	}
-	expiresAt, err := parseFutureTime(input.ExpiresAt, h.now().UTC())
+	now := h.now().UTC()
+	if strings.TrimSpace(input.Reason) == "" {
+		input.Reason = "customer-switch"
+	}
+	if strings.TrimSpace(input.ExpiresAt) == "" {
+		input.ExpiresAt = now.Add(time.Hour).Format(time.RFC3339)
+	}
+	expiresAt, err := parseFutureTime(input.ExpiresAt, now)
 	if err != nil {
 		writeJSON(writer, http.StatusUnprocessableEntity, map[string]any{"message": "The given data was invalid.", "errors": map[string][]string{"expiresAt": {"The expires at must be a date after now."}}})
 		return
@@ -307,7 +314,7 @@ func (h *Handler) ChangeCustomer(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 	reason := strings.TrimSpace(input.Reason)
-	if err := h.sessions.SwitchTenant(request.Context(), TenantSwitch{SessionID: sessionID, UserID: user.ID, ActorTenant: user.TenantID, ActiveTenant: targetTenantID, Reason: reason, ExpiresAt: expiresAt, Now: h.now().UTC()}); err != nil {
+	if err := h.sessions.SwitchTenant(request.Context(), TenantSwitch{SessionID: sessionID, UserID: user.ID, ActorTenant: user.TenantID, ActiveTenant: targetTenantID, Reason: reason, ExpiresAt: expiresAt, Now: now}); err != nil {
 		h.internalError(writer, request, "switch browser tenant", err)
 		return
 	}
