@@ -31,7 +31,7 @@ func (repository *PlatformCatalogRepository) CreateCatalog(ctx context.Context, 
 	if !ok {
 		return fmt.Errorf("unsupported platform catalog kind %q", kind)
 	}
-	columns, args, err := mutationValues(definition.columns, definition.required, values)
+	columns, args, err := mutationValues(definition.columns, definition.required, normalizeCatalogValues(kind, values))
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (repository *PlatformCatalogRepository) UpdateCatalog(ctx context.Context, 
 	if !ok || id <= 0 {
 		return fmt.Errorf("unsupported platform catalog update")
 	}
-	columns, args, err := mutationValues(definition.columns, definition.required, values)
+	columns, args, err := mutationValues(definition.columns, definition.required, normalizeCatalogValues(kind, values))
 	if err != nil {
 		return err
 	}
@@ -70,6 +70,28 @@ func (repository *PlatformCatalogRepository) UpdateCatalog(ctx context.Context, 
 		return fmt.Errorf("platform catalog row not found")
 	}
 	return nil
+}
+
+func normalizeCatalogValues(kind string, values map[string]any) map[string]any {
+	if kind != "managed-platform" || values == nil {
+		return values
+	}
+	if _, hasHostname := values["hostname"]; hasHostname {
+		return values
+	}
+	if legacyHostname, hasLegacyHostname := values["addressname"]; hasLegacyHostname {
+		values = cloneCatalogValues(values)
+		values["hostname"] = legacyHostname
+	}
+	return values
+}
+
+func cloneCatalogValues(values map[string]any) map[string]any {
+	clone := make(map[string]any, len(values)+1)
+	for key, value := range values {
+		clone[key] = value
+	}
+	return clone
 }
 
 // DeleteManagedPlatform deletes one managed execution platform.

@@ -24,3 +24,12 @@ func TestMutationValuesRejectsMissingRequiredField(t *testing.T) {
 		t.Fatal("expected missing required field error")
 	}
 }
+
+func TestNormalizeCatalogValuesAcceptsLegacyManagedPlatformHostname(t *testing.T) {
+	values := normalizeCatalogValues("managed-platform", map[string]any{
+		"addressname": "runner.local",
+	})
+	if values["hostname"] != "runner.local" {
+		t.Fatalf("expected legacy hostname alias, got %#v", values)
+	}
+}
