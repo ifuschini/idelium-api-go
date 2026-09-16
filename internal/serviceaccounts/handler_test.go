@@ -2,6 +2,7 @@ package serviceaccounts
 
 import (
 	"bytes"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +13,16 @@ import (
 
 	"github.com/idelium/idelium-api-go/internal/httpx"
 )
+
+func TestParseExpirationAcceptsDateInputFromBrowserForms(t *testing.T) {
+	parsed, err := parseExpiration(json.RawMessage(`"2026-12-15"`))
+	if err != nil {
+		t.Fatalf("expected date-only expiration to parse: %v", err)
+	}
+	if parsed.UTC().Format("2006-01-02") != "2026-12-15" {
+		t.Fatalf("unexpected expiration: %s", parsed.UTC())
+	}
+}
 
 func TestServiceAccountRoutesFailClosedWithoutPayloadLeak(t *testing.T) {
 	router := chi.NewRouter()

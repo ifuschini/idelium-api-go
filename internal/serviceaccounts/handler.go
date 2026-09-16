@@ -85,13 +85,18 @@ func (h Handler) Store(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var in struct {
-		Name      string     `json:"name"`
-		ProjectID *int64     `json:"idProject"`
-		Scopes    []string   `json:"scopes"`
-		ExpiresAt *time.Time `json:"expiresAt"`
+		Name      string          `json:"name"`
+		ProjectID *int64          `json:"idProject"`
+		Scopes    []string        `json:"scopes"`
+		ExpiresAt json.RawMessage `json:"expiresAt"`
 	}
 	if json.NewDecoder(http.MaxBytesReader(w, r.Body, 64<<10)).Decode(&in) != nil || strings.TrimSpace(in.Name) == "" {
 		httpx.WriteError(w, r, 400, "INVALID_SERVICE_ACCOUNT", "The service-account name is required.")
+		return
+	}
+	expiresAt, err := parseExpiration(in.ExpiresAt)
+	if err != nil {
+		httpx.WriteError(w, r, 400, "INVALID_SERVICE_ACCOUNT", "The service-account expiration date is invalid.")
 		return
 	}
 	b := make([]byte, 32)
@@ -100,13 +105,31 @@ func (h Handler) Store(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	secret := base64.RawURLEncoding.EncodeToString(b)
-	a := Account{Name: strings.TrimSpace(in.Name), ProjectID: in.ProjectID, Scopes: in.Scopes, ExpiresAt: in.ExpiresAt, CredentialID: base64.RawURLEncoding.EncodeToString(b[:12])}
+	a := Account{Name: strings.TrimSpace(in.Name), ProjectID: in.ProjectID, Scopes: in.Scopes, ExpiresAt: expiresAt, CredentialID: base64.RawURLEncoding.EncodeToString(b[:12])}
 	created, e := h.repository.Create(r.Context(), u.ActiveTenant(), a, secret)
 	if e != nil {
 		httpx.WriteError(w, r, 500, "SERVICE_ACCOUNT_UNAVAILABLE", "Service account could not be created.")
 		return
 	}
 	httpx.WriteJSON(w, 201, map[string]any{"serviceAccount": created, "secret": secret})
+}
+
+func parseExpiration(raw json.RawMessage) (*time.Time, error) {
+	if len(raw) == 0 || string(raw) == "null" {
+		return nil, nil
+	}
+	var value string
+	if err := json.Unmarshal(raw, &value); err != nil {
+		return nil, err
+	}
+	if parsed, err := time.Parse(time.RFC3339, value); err == nil {
+		return &parsed, nil
+	}
+	parsed, err := time.ParseInLocation("2006-01-02", value, time.UTC)
+	if err != nil {
+		return nil, err
+	}
+	return &parsed, nil
 }
 func (h Handler) Revoke(w http.ResponseWriter, r *http.Request) {
 	id, e := strconv.ParseInt(chi.URLParam(r, "serviceAccount"), 10, 64)
