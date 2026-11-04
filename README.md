@@ -5,109 +5,32 @@ Laravel API. It is being delivered incrementally so Idelium Web, Idelium CLI,
 Idelium runners, existing databases, and Docker deployments remain compatible
 throughout the migration.
 
-The migration strategy is documented in [MIGRATION_PLAN.md](MIGRATION_PLAN.md)
-and translated into executable epics in
-[docs/migration/epics.md](docs/migration/epics.md).
-The current migration cursor and GitHub issue mapping are maintained in
-[docs/migration/progress.md](docs/migration/progress.md).
-Consequential architecture choices are indexed in
-[docs/adr/README.md](docs/adr/README.md), beginning with the accepted
-[route-level strangler migration model](docs/adr/0001-strangler-migration-model.md).
+The service currently provides validated configuration, structured and redacted
+request logging, health endpoints, legacy CLI API-key authentication, and
+read-only platform catalog endpoints. No Laravel business route is owned by Go
+yet; ownership will move only after compatibility and tenant-isolation gates
+pass.
 
-## Current scope
+Operational and technical documentation is grouped in the
+[documentation index](docs/README.md).
 
-The repository currently provides the production foundation for the new API:
+## Quick start
 
-- validated configuration with Docker secret-file support;
-- structured, redacted request logging;
-- correlation identifiers and a stable error envelope;
-- liveness and MySQL-backed readiness endpoints;
-- Laravel-compatible legacy CLI customer API-key authentication;
-- read-only legacy-compatible platform type and status catalog endpoints;
-- bounded HTTP and database timeouts;
-- graceful shutdown;
-- unit, race, and container build gates;
-- the initial OpenAPI contract and Laravel route inventory.
+Go is expected to be installed locally, or commands can be run through the
+pinned builder image in the Dockerfile.
 
-The complete, reproducible Laravel route baseline is available in
-[docs/contracts/laravel-routes.md](docs/contracts/laravel-routes.md), with its
-machine-readable counterpart in
-[docs/contracts/laravel-routes.json](docs/contracts/laravel-routes.json).
-The [route consumer map](docs/contracts/consumer-route-map.md) records which
-Laravel routes are used by Idelium Web, CLI, runners, Docker operations, and
-the published wiki workflows, including unresolved consumer references.
-The generated
-[compatibility contract backlog](docs/contracts/compatibility-backlog.md)
-tracks the evidence required before each production-visible Laravel route can
-move to Go.
-The [sanitized golden fixture policy](docs/contracts/golden-fixture-policy.md)
-defines the bounded, synthetic evidence format used by future Laravel-versus-Go
-differential tests and provides a validator that prevents sensitive headers,
-credentials, and real tenant identities from entering committed fixtures.
-The generated
-[migration ownership matrix](docs/contracts/migration-ownership-matrix.md)
-assigns every production-visible route to a transaction-owning aggregate,
-records its effective owner, and enforces the no-dual-write migration rule.
-The [route-switch gate policy](docs/operations/route-switch-gates.md) defines
-required compatibility evidence, independent approvals, progressive rollout
-stages, stop thresholds, and the Laravel rollback procedure.
+```sh
+make verify
+make integration-test
+docker build -t idelium/api-go:local .
+```
 
-No Laravel business route is owned by Go yet. Route ownership will move only
-after its compatibility and tenant-isolation gates pass.
+Run the service with a reachable MySQL instance:
 
-The bounded startup, serving, signal, and shutdown behavior is documented in
-[docs/operations/runtime-lifecycle.md](docs/operations/runtime-lifecycle.md).
-The [worker and migration process controls](docs/operations/process-skeletons.md)
-are shipped in the pinned image. The integration worker is disabled until the
-Laravel queue drain is verified and it acquires the database single-consumer
-lease; migration modes remain explicit and fail closed.
-The mandatory repository assets and the automated checks that protect them are
-documented in
-[docs/operations/repository-foundation.md](docs/operations/repository-foundation.md).
-The required, independently visible GitHub Actions checks are documented in
-[docs/operations/ci-gates.md](docs/operations/ci-gates.md).
-SBOM generation and fail-closed code and image vulnerability policies are
-documented in
-[docs/operations/supply-chain-gates.md](docs/operations/supply-chain-gates.md).
-
-## Endpoints
-
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/health/live` | Process liveness and build identity. |
-| `GET` | `/health/ready` | Readiness including a bounded MySQL ping. |
-| `GET` | `/admin/platforms/types` | Legacy-compatible read-only platform type catalog. |
-| `GET` | `/admin/platforms/status` | Legacy-compatible read-only platform status catalog. |
-
-Health and catalog error responses never include database connection strings or
-credentials.
-Health probe semantics, caching rules, and orchestrator guidance are documented
-in [docs/operations/health-contracts.md](docs/operations/health-contracts.md).
-The shared correlation, redacted logging, panic recovery, and security-header
-contract is documented in
-[docs/operations/http-safety-observability.md](docs/operations/http-safety-observability.md).
-The legacy CLI customer API-key authentication boundary is documented in
-[docs/operations/legacy-cli-api-key-authentication.md](docs/operations/legacy-cli-api-key-authentication.md).
-The first Go-owned CLI configuration graph read is documented in
-[docs/operations/cli-test-cycle-reads.md](docs/operations/cli-test-cycle-reads.md).
-The Go-owned CLI test read path is documented in
-[docs/operations/cli-test-reads.md](docs/operations/cli-test-reads.md).
-The Go-owned CLI step read path is documented in
-[docs/operations/cli-step-reads.md](docs/operations/cli-step-reads.md).
-The Go-owned CLI plugin read paths are documented in
-[docs/operations/cli-plugin-reads.md](docs/operations/cli-plugin-reads.md).
-The Go-owned CLI environment read paths are documented in
-[docs/operations/cli-environment-reads.md](docs/operations/cli-environment-reads.md).
-The opt-in remote smoke runner for Go-owned CLI configuration reads is
-documented in
-[docs/operations/cli-remote-smoke-tests.md](docs/operations/cli-remote-smoke-tests.md).
-Graph-level Laravel-Go equivalence for a full CLI configuration cycle is
-documented in
-[docs/operations/cli-graph-equivalence.md](docs/operations/cli-graph-equivalence.md).
-CLI missing-reference and tenant-scoped `404` diagnostics are documented in
-[docs/operations/cli-missing-reference-diagnostics.md](docs/operations/cli-missing-reference-diagnostics.md).
-Cross-tenant denial coverage for the CLI configuration graph is documented in
-[docs/operations/cli-cross-tenant-denial.md](docs/operations/cli-cross-tenant-denial.md).
+```sh
+IDELIUM_DB_PASSWORD_FILE=/run/secrets/db_password \
+go run ./cmd/api
+```
 
 ## Configuration
 
@@ -133,37 +56,6 @@ Cross-tenant denial coverage for the CLI configuration graph is documented in
 | `IDELIUM_DB_CONNECTION_MAX_LIFETIME` | `5m` | Maximum connection lifetime. |
 
 Production deployments should provide the database password through a mounted
-secret file. Configuration errors stop startup with safe diagnostics.
-Detailed precedence, validation, redaction, and rollback behavior is documented
-in [docs/operations/database-configuration.md](docs/operations/database-configuration.md).
-The isolated MariaDB harness and its coverage boundaries are documented in
-[docs/operations/mysql-integration-testing.md](docs/operations/mysql-integration-testing.md).
-
-## Local verification
-
-Go is expected to be installed locally, or commands can be run through the
-pinned builder image in the Dockerfile.
-
-```sh
-make verify
-make integration-test
-docker build -t idelium/api-go:local .
-```
-
-Run the service with a reachable MySQL instance:
-
-```sh
-IDELIUM_DB_PASSWORD_FILE=/run/secrets/db_password \
-go run ./cmd/api
-```
-
-## Architecture
-
-The service is a modular monolith. HTTP handlers depend on application services,
-application services depend on tenant-scoped repository interfaces, and MySQL
-implementations remain inside persistence packages. Generated API and query code
-will be committed for reproducible reviews.
-
-## License
-
-Licensed under the Apache License 2.0. See [LICENSE](LICENSE).
+secret file. Configuration errors stop startup with safe diagnostics. See the
+[documentation index](docs/README.md) for detailed configuration and operations
+guidance.
