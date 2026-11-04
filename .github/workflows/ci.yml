@@ -42,6 +42,9 @@ jobs:
       - name: Run contract tests
         run: make contract-test
 
+      - name: Check internal Markdown links
+        run: make markdown-links-check
+
       - name: Scan Go dependencies and reachable code
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
 

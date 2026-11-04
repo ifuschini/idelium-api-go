@@ -61,15 +61,17 @@ class RepositoryFoundationTests(unittest.TestCase):
         self.assertIn("USER 65532:65532", dockerfile)
         self.assertNotRegex(dockerfile, r"(?m)^FROM [^\n]*(?::latest)(?:\s|$)")
 
-    def test_readme_documents_scope_verification_and_license(self) -> None:
+    def test_readme_keeps_the_overview_quick_start_configuration_and_docs_index(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
-        self.assertIn("## Current scope", readme)
-        self.assertIn("## Local verification", readme)
+        self.assertIn("## Quick start", readme)
+        self.assertIn("## Configuration", readme)
         self.assertIn("make verify", readme)
         self.assertIn("make integration-test", readme)
-        self.assertIn("Apache License 2.0", readme)
+        self.assertIn("[documentation index](docs/README.md)", readme)
         self.assertNotIn("idelium.io", readme)
+        self.assertNotIn("## Endpoints", readme)
+        self.assertNotIn("## Architecture", readme)
 
 
 if __name__ == "__main__":
