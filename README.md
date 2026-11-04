@@ -139,6 +139,25 @@ in [docs/operations/database-configuration.md](docs/operations/database-configur
 The isolated MariaDB harness and its coverage boundaries are documented in
 [docs/operations/mysql-integration-testing.md](docs/operations/mysql-integration-testing.md).
 
+## Quick start
+
+The local stack requires Docker Compose and both repositories checked out next to
+each other. From their parent directory:
+
+```sh
+git clone https://github.com/ifuschini/idelium-api-go.git
+git clone https://github.com/ifuschini/idelium-api.git
+cd idelium-api-go
+make dev-up
+```
+
+The stack starts the Go API at <http://localhost:18080>, the Laravel API at
+<http://localhost:18081>, and a disposable MariaDB instance seeded with
+synthetic smoke fixtures. `make dev-up` creates a local-only database password
+file in `secrets/dev_db_password`; this file is ignored by Git and must not be
+used outside this development stack. To stop the containers, run
+`make dev-down`.
+
 ## Local verification
 
 Go is expected to be installed locally, or commands can be run through the

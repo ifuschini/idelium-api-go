@@ -4,6 +4,7 @@
 *.out
 *.test
 .env
+/secrets/dev_db_password
 .idea/
 .vscode/
 .DS_Store

@@ -1,6 +1,14 @@
 GO ?= go
 
-.PHONY: baseline-migration-check build cli-smoke contract-test docker-default-image-switch-check format format-check integration-test laravel-readonly-maintenance-check laravel-schema-freeze-check openapi-check operations-handover-check rollback-rehearsal-check smoke-targets-check staging-cutover-check test test-race vet verify
+.PHONY: baseline-migration-check build cli-smoke contract-test dev-down dev-up docker-default-image-switch-check format format-check integration-test laravel-readonly-maintenance-check laravel-schema-freeze-check openapi-check operations-handover-check rollback-rehearsal-check smoke-targets-check staging-cutover-check test test-race vet verify
+
+dev-up:
+	@test -f ../idelium-api/ideliumapi/Dockerfile || (echo "Laravel source must be checked out beside this repository at ../idelium-api." >&2; exit 1)
+	@umask 077; mkdir -p secrets; if [ ! -s secrets/dev_db_password ]; then od -An -N32 -tx1 /dev/urandom | tr -d ' \n' > secrets/dev_db_password; fi
+	docker compose -f docker-compose.yml up --build -d
+
+dev-down:
+	docker compose -f docker-compose.yml down --remove-orphans
 
 baseline-migration-check:
 	python3 scripts/build_go_baseline_migration.py \
