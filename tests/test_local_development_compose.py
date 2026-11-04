@@ -28,6 +28,7 @@ class LocalDevelopmentComposeTests(unittest.TestCase):
 
         self.assertIn("dev-up:", makefile)
         self.assertIn("dev-down:", makefile)
+        self.assertIn("chmod 0444 secrets/dev_db_password", makefile)
         self.assertIn("## Quick start", readme)
         self.assertIn("make dev-up", readme)
         self.assertIn("make dev-down", readme)

@@ -4,7 +4,7 @@ GO ?= go
 
 dev-up:
 	@test -f ../idelium-api/ideliumapi/Dockerfile || (echo "Laravel source must be checked out beside this repository at ../idelium-api." >&2; exit 1)
-	@umask 077; mkdir -p secrets; if [ ! -s secrets/dev_db_password ]; then od -An -N32 -tx1 /dev/urandom | tr -d ' \n' > secrets/dev_db_password; fi
+	@umask 077; mkdir -p secrets; if [ ! -s secrets/dev_db_password ]; then od -An -N32 -tx1 /dev/urandom | tr -d ' \n' > secrets/dev_db_password; fi; chmod 0444 secrets/dev_db_password
 	docker compose -f docker-compose.yml up --build -d
 
 dev-down:
