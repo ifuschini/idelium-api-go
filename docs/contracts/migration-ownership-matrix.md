@@ -234,7 +234,8 @@ does not require database restoration or reverse data replication.
 ## Deployment and rollback
 
 This baseline is governance-only: it moves no traffic, performs no writes,
-and changes no database schema. Laravel remains the effective and fallback
-owner for every recorded route. Deployment publishes the matrix; rollback is
+and changes no database schema. Every aggregate stays `laravel-primary` and
+Laravel remains the fallback owner; route owners marked `go` are the target
+owners. Deployment publishes the matrix; rollback is
 a Git revert. Differential HTTP testing is not applicable until a route is
 implemented in both runtimes.
